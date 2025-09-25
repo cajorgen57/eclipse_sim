@@ -1,0 +1,4 @@
+{
+  "available": ["Ion Cannon","Advanced Mining","Wormhole Generator"],
+  "tier_counts": {"I":5,"II":6,"III":4}
+}

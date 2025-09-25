@@ -1,0 +1,4 @@
+{
+  "available": ["Plasma Cannon","Fusion Drive","Positron Computer"],
+  "tier_counts": {"I":6,"II":5,"III":4}
+}
