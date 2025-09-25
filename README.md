@@ -1,6 +1,6 @@
 # Eclipse AI Toolkit
 
-This repository contains an experimental toolkit for parsing snapshots of an *Eclipse: Second Dawn for the Galaxy* board, reconstructing a game state, simulating likely outcomes, and producing turn recommendations. The code is structured as a lightweight Python package (`eclipse_ai`) that can be imported into downstream projects or used from notebooks that orchestrate camera input, state overrides, and plan visualizations.
+This repository contains an experimental toolkit for parsing snapshots of an *Eclipse: New Dawn for the Galaxy* board, reconstructing a game state, simulating likely outcomes, and producing turn recommendations. The code is structured as a lightweight Python package (`eclipse_ai`) that can be imported into downstream projects or used from notebooks that orchestrate camera input, state overrides, and plan visualizations.
 
 ## High-level workflow
 
