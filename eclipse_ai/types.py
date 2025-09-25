@@ -1,6 +1,7 @@
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict, is_dataclass
-from typing import Dict, List, Optional, Tuple, Any
+import sys
+from dataclasses import dataclass, field, asdict, is_dataclass, fields
+from typing import Dict, List, Optional, Tuple, Any, get_args, get_origin, get_type_hints
 from enum import Enum
 import json
 
@@ -8,12 +9,13 @@ def _build_dataclass(cls, data: Dict[str, Any]):
     """Recursively coerce nested dicts/lists into a dataclass instance."""
     if not is_dataclass(cls):
         return data
+    type_hints = get_type_hints(cls, globalns=sys.modules[cls.__module__].__dict__)
     kwargs = {}
     for f in fields(cls):
         if f.name not in data:
             continue  # keep default
         v = data[f.name]
-        ft = f.type
+        ft = type_hints.get(f.name, f.type)
         origin = get_origin(ft)
 
         if is_dataclass(ft) and isinstance(v, dict):
