@@ -81,14 +81,6 @@ def plan_overlays(plan: Any, plan_index: int = 1) -> List[Dict[str, Any]]:
             overlays.append(_label_overlay(text=f"{aname}  " + _fmt_ev(ev, risk), anchor_hex=None, plan_index=plan_index, step=i, color=color))
     return overlays
 
-def overlays_for_plans(plans: List[Any]) -> List[Dict[str, Any]]:
-    """Flatten overlays for a list of plans with per-plan indexing and a legend."""
-    out: List[Dict[str, Any]] = []
-    for idx, plan in enumerate(plans, start=1):
-        out.extend(plan_overlays(plan, plan_index=idx))
-    out.append(_legend_overlay())
-    return out
-
 # Helpers
 
 def _get_steps(plan: Any):
@@ -180,6 +172,3 @@ def _top_picks_from_notes(notes_json: str) -> str:
     except Exception:
         return ""
 
-def _legend_overlay() -> Dict[str, Any]:
-    text = "Legend: green≤0.15 risk < yellow≤0.35 < orange≤0.60 < red"
-    return {"type": "legend", "text": text}

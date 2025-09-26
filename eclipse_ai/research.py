@@ -15,7 +15,7 @@ def discounted_cost(player: PlayerState, tech: Tech, band_cost: Optional[int] = 
     if tech.is_rare:
         return max(min_cost, base)
     discount = player.tech_count_by_category.get(tech.category, 0)
-    return max(min_cost, base - discount)
+    return max(1, base - discount)
 
 
 def can_afford(player: PlayerState, tech: Tech, band_cost: Optional[int] = None) -> bool:
@@ -63,16 +63,6 @@ def ensure_evolution_pool(player: PlayerState) -> Dict[str, Any]:
         while len(pool["tiles"]) < size:
             pool["tiles"].append(None)
     return pool
-
-
-def produce_mutagen(player: PlayerState) -> int:
-    """Apply passive Mutagen production for Octantis factions."""
-    income = int(player.special_resources.get("mutagen_income", 0)) if player.special_resources else 0
-    if income <= 0:
-        return 0
-    current = player.special_resources.get("mutagen", 0)
-    player.special_resources["mutagen"] = int(current) + income
-    return income
 
 
 def _mutagen_trade_actions(player: PlayerState) -> List[Action]:
