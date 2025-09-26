@@ -14,7 +14,7 @@ _ORION_TURN1_ROUND1_4P: Dict[str, Any] = {
             "player_id": "P1",
             "color": "purple",
             "known_techs": ["Gauss Shield", "Neutron Bombs"],
-            "resources": {"money": 3, "science": 1, "materials": 5},
+            "resources": {"money": 3, "science": 3, "materials": 5},
             "ship_designs": {
                 "interceptor": {
                     "computer": 1,
@@ -94,8 +94,7 @@ _ORION_TURN1_ROUND1_4P: Dict[str, Any] = {
                 "id": "230",
                 "ring": 1,
                 "planets": [
-                    {"type": "yellow", "colonized_by": "P1"},
-                    {"type": "blue", "colonized_by": "P1"},
+                    {"type": "pink", "colonized_by": "P1"},
                     {"type": "brown", "colonized_by": "P1"},
                 ],
                 "pieces": {
@@ -103,7 +102,7 @@ _ORION_TURN1_ROUND1_4P: Dict[str, Any] = {
                         "ships": {"interceptor": 0, "cruiser": 1},
                         "starbase": 0,
                         "discs": 1,
-                        "cubes": {"yellow": 1, "blue": 1, "brown": 1},
+                        "cubes": {"pink": 1, "brown": 1},
                     }
                 },
             },
@@ -112,15 +111,15 @@ _ORION_TURN1_ROUND1_4P: Dict[str, Any] = {
                 "ring": 1,
                 "planets": [
                     {"type": "yellow", "colonized_by": "P2"},
-                    {"type": "blue", "colonized_by": "P2"},
+                    {"type": "pink", "colonized_by": "P2"},
                     {"type": "brown", "colonized_by": "P2"},
                 ],
                 "pieces": {
                     "P2": {
-                        "ships": {"interceptor": 2},
+                        "ships": {"interceptor": 1},
                         "starbase": 0,
                         "discs": 1,
-                        "cubes": {"yellow": 1, "blue": 1, "brown": 1},
+                        "cubes": {"yellow": 1, "pink": 1, "brown": 1},
                     }
                 },
             },
