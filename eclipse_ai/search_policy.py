@@ -648,7 +648,14 @@ def _activate_single_ship(state: GameState, player: PlayerState, ship_class: str
         if src_hex.has_gcds:
             raise ValueError("GCDS blocks movement through the Galactic Center")
 
-        connection_type = classify_connection(state, player, current_hex_id, next_hex_id)
+        connection_type = classify_connection(
+            state,
+            player,
+            current_hex_id,
+            next_hex_id,
+            ship_design=design,
+            ship_class=ship_class,
+        )
         if connection_type not in LEGAL_CONNECTION_TYPES:
             raise ValueError("No legal connection between hexes")
 

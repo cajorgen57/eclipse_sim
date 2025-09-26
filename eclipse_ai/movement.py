@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Sequence
 
-from .game_models import GameState, Hex, PlayerState
+from .game_models import GameState, Hex, PlayerState, ShipDesign
 
 _DEFAULT_MOVE_ACTIVATIONS = 3
 
@@ -35,7 +35,15 @@ def max_ship_activations_per_action(player: Optional[PlayerState], is_reaction: 
         return _DEFAULT_MOVE_ACTIVATIONS
 
 
-def classify_connection(state: GameState, player: Optional[PlayerState], src_id: str, dst_id: str) -> Optional[str]:
+def classify_connection(
+    state: GameState,
+    player: Optional[PlayerState],
+    src_id: str,
+    dst_id: str,
+    *,
+    ship_design: Optional[ShipDesign] = None,
+    ship_class: Optional[str] = None,
+) -> Optional[str]:
     """Classify the link between two hexes for movement validation.
 
     Returns one of ``"wormhole"``, ``"warp"``, ``"wg"`` (wormhole generator
@@ -56,18 +64,20 @@ def classify_connection(state: GameState, player: Optional[PlayerState], src_id:
     if src_hex is None or dst_hex is None:
         return None
 
-    if _is_warp_connection(src_hex, dst_hex):
+    if _is_warp_connection(src_hex, dst_hex) and _warp_network_enabled(state, player):
         return "warp"
 
     if _has_full_wormhole(map_state, src_id, dst_id):
         return "wormhole"
 
-    player_has_wg = bool(getattr(player, "has_wormhole_generator", False))
+    player_has_wg = _player_has_wormhole_generator(player)
     if player_has_wg and _has_half_wormhole_for_wg(map_state, src_id, dst_id):
         return "wg"
 
     if _is_neighbor(map_state, src_id, dst_id):
-        return "jump"
+        if _ship_has_jump_drive(player, ship_design, ship_class):
+            return "jump"
+        return None
 
     return None
 
@@ -133,6 +143,54 @@ def _has_wormhole(hex_obj: Hex, edge: int) -> bool:
             pass
     wormholes = getattr(hex_obj, "wormholes", ()) or ()
     return edge in set(int(e) for e in wormholes)
+
+
+def _player_has_wormhole_generator(player: Optional[PlayerState]) -> bool:
+    if not player:
+        return False
+    if bool(getattr(player, "has_wormhole_generator", False)):
+        return True
+    known = set(str(t).lower() for t in getattr(player, "known_techs", []) or [])
+    owned = set(str(t).lower() for t in getattr(player, "owned_tech_ids", []) or [])
+    if "wormhole generator" in known or "wormhole_generator" in owned:
+        return True
+    return False
+
+
+def _ship_has_jump_drive(
+    player: Optional[PlayerState],
+    design: Optional[ShipDesign],
+    ship_class: Optional[str],
+) -> bool:
+    if design and getattr(design, "has_jump_drive", False):
+        return True
+    if not player:
+        return False
+    designs = getattr(player, "ship_designs", {}) or {}
+    if ship_class:
+        candidate = designs.get(ship_class)
+        if candidate and getattr(candidate, "has_jump_drive", False):
+            return True
+    return any(getattr(d, "has_jump_drive", False) for d in designs.values())
+
+
+def _warp_network_enabled(state: Optional[GameState], player: Optional[PlayerState]) -> bool:
+    if state is None:
+        return False
+    flags = getattr(state, "feature_flags", {}) or {}
+    if flags:
+        for key in ("warp_portals", "rotA", "warp_network", "warp", "warp_portal_network"):
+            if bool(flags.get(key)):
+                return True
+        # Explicit feature map provided without warp support -> disabled
+        return False
+    # Default to allowing warp if the player explicitly knows a warp tech
+    if player:
+        known = set(str(t).lower() for t in getattr(player, "known_techs", []) or [])
+        if any("warp" in tech for tech in known):
+            return True
+    # No explicit feature flags: assume the standard warp network is active when portals exist
+    return True
 
 
 __all__ = [
