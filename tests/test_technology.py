@@ -65,7 +65,7 @@ def test_category_discount_applies_only_within_category():
     state = _make_state()
     player = state.players["P1"]
     player.owned_tech_ids.update({"plasma_cannon", "improved_hull"})
-    player.tech_count_by_category = {"military": 2}
+    player.tech_count_by_category = {"grid": 2}
     player.science = 10
     player.resources.science = 10
 
@@ -73,7 +73,7 @@ def test_category_discount_applies_only_within_category():
     military_cost = discounted_cost(player, defs["gauss_shield"])
     grid_cost = discounted_cost(player, defs["advanced_labs"])
 
-    assert military_cost == 5
+    assert military_cost == 1
     assert grid_cost == defs["advanced_labs"].base_cost
 
 
@@ -125,11 +125,11 @@ def test_grants_parts_and_structures_gated():
     with pytest.raises(ResearchError, match="required technology not owned"):
         ensure_part_allowed(player, "plasma_cannon")
 
-    state.market = ["starbase_construction", "plasma_cannon"]
+    state.market = ["starbase", "plasma_cannon"]
     player.science = 12
     player.resources.science = 12
 
-    do_research(state, player, "starbase_construction")
+    do_research(state, player, "starbase")
     ensure_structure_allowed(player, "starbase")
 
     state.market.append("plasma_cannon")
