@@ -15,6 +15,8 @@ from .game_models import (
     GameState,
     Action,
     Score,
+    Disc,
+    ColonyShips,
 )
 from .main import recommend
 from .search_policy import MCTSPlanner, Plan, PlanStep
@@ -35,6 +37,8 @@ __all__ = [
     "GameState",
     "Action",
     "Score",
+    "Disc",
+    "ColonyShips",
     "MCTSPlanner",
     "Plan",
     "PlanStep",

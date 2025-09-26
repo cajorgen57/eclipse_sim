@@ -77,6 +77,39 @@ class ActionType(str, Enum):
     RESEARCH = "Research"
     DIPLOMACY = "Diplomacy"
     PASS = "Pass"
+    REACTION = "Reaction"
+
+
+@dataclass
+class Disc:
+    id: str
+    extra: bool = False
+
+
+def _default_population() -> Dict[str, int]:
+    return {"yellow": 0, "blue": 0, "brown": 0}
+
+
+def _default_action_spaces() -> Dict[str, List[Disc]]:
+    return {
+        "explore": [],
+        "influence": [],
+        "research": [],
+        "upgrade": [],
+        "build": [],
+        "move": [],
+        "reaction": [],
+    }
+
+
+@dataclass
+class ColonyShips:
+    face_up: Dict[str, int] = field(
+        default_factory=lambda: {"yellow": 0, "blue": 0, "brown": 0, "wild": 0}
+    )
+    face_down: Dict[str, int] = field(
+        default_factory=lambda: {"yellow": 0, "blue": 0, "brown": 0, "wild": 0}
+    )
 
 @dataclass
 class Resources:
@@ -140,14 +173,25 @@ class PlayerState:
     color: str
     known_techs: List[str] = field(default_factory=list)
     resources: Resources = field(default_factory=Resources)
+    income: Resources = field(default_factory=Resources)
     ship_designs: Dict[str, ShipDesign] = field(default_factory=dict)  # interceptor, cruiser, dreadnought, starbase
     reputation: List[int] = field(default_factory=list)
     diplomacy: Dict[str, str] = field(default_factory=dict)
+    influence_track: List[Disc] = field(default_factory=list)
+    action_spaces: Dict[str, List[Disc]] = field(default_factory=_default_action_spaces)
+    colonies: Dict[str, Dict[str, int]] = field(default_factory=dict)
+    population: Dict[str, int] = field(default_factory=_default_population)
+    colony_ships: ColonyShips = field(default_factory=ColonyShips)
+    passed: bool = False
+    collapsed: bool = False
     has_wormhole_generator: bool = False
+
 
 @dataclass
 class MapState:
     hexes: Dict[str, Hex] = field(default_factory=dict)
+    adjacency: Dict[str, List[str]] = field(default_factory=dict)
+
 
 @dataclass
 class GameState:
@@ -157,6 +201,11 @@ class GameState:
     map: MapState = field(default_factory=MapState)
     tech_display: TechDisplay = field(default_factory=TechDisplay)
     bags: Dict[str, Dict[str, int]] = field(default_factory=dict)  # bag per ring: tile_type -> count
+    phase: str = "ACTION"
+    starting_player: Optional[str] = None
+    pending_starting_player: Optional[str] = None
+    turn_order: List[str] = field(default_factory=list)
+    turn_index: int = 0
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=2)
@@ -167,6 +216,7 @@ class GameState:
     def apply_overrides(self, overrides: Dict[str, Any]) -> "GameState":
         _deep_override(self, overrides)
         return self
+
 
 @dataclass
 class Action:
