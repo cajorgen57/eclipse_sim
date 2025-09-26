@@ -246,87 +246,104 @@
   "shapers": {
     "name": "Shapers of Dorado",
     "expansion": "sotr",
-    "starting_sector": 401,
-    "trade_rate": {"goods": 3, "resources": 1},
-    "starting_storage": {"money": 3, "science": 4, "materials": 2},
-    "starting_resources": {"money": 1, "science": 2, "materials": 1},
-    "starting_colonies": {"home": {"science": 2, "materials": 1}},
-    "starting_ships": {"home": {"interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
-    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
-    "starting_techs": ["Soliton Cannon"],
     "starting_discs_delta": 0,
-    "colony_ships": 3,
+    "starting_resources": { "money": null, "science": null, "materials": null },
+    "starting_techs": ["Soliton Cannon"],
+    "rare_techs_starting": [],
+    "starting_ships": { "home": { "interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0 } },
+    "starting_structures": { "home": { "orbital": 0, "monolith": 0 } },
+    "trade_rate_money": [3,1],
     "action_overrides": {},
-    "build_limits": {},
-    "vp_bonuses": {},
+    "build_overrides": {},
+    "explore_overrides": {},
+    "move_overrides": { "move_ship_activations_per_action": 2 },
     "cannot_build": [],
+    "vp_bonuses": {},
+    "special_rules": {
+      "time_distortion_enabled": true,
+      "distortion_pool_size": 2
+    },
     "notes": [
-      "Starts with Soliton Cannon technology and access to Rift weapons."
+      "Starts with Soliton Cannon technology and maintains a Distortion pool for Time Distortion tiles."
     ]
   },
-  "pyxis": {
+  "unity": {
     "name": "Pyxis Unity",
     "expansion": "sotr",
-    "starting_sector": 402,
-    "trade_rate": {"goods": 3, "resources": 1},
-    "starting_storage": {"money": 3, "science": 3, "materials": 4},
-    "starting_resources": {"money": 1, "science": 1, "materials": 2},
-    "starting_colonies": {"home": {"money": 1, "materials": 1}},
-    "starting_ships": {"home": {"interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
-    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
-    "starting_techs": ["Transmatter"],
     "starting_discs_delta": 0,
-    "colony_ships": 3,
-    "action_overrides": {},
-    "build_limits": {"starbase_replacement": "Deathmoon"},
-    "vp_bonuses": {},
+    "starting_resources": { "money": 0, "science": 0, "materials": 0 },
+    "starting_techs": ["Advanced Robotics"],
+    "rare_techs_starting": [],
+    "starting_ships": { "home": { "interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0 } },
+    "starting_structures": { "home": { "orbital": 0, "monolith": 0, "deathmoon": 0 } },
+    "trade_rate_money": [3,1],
+    "action_overrides": { "combination_actions_enabled": true },
+    "build_overrides": {},
+    "explore_overrides": {},
+    "move_overrides": { "move_ship_activations_per_action": 2 },
     "cannot_build": ["starbase"],
+    "vp_bonuses": { "endgame_per_deathmoon": 4 },
+    "special_rules": {
+      "single_resource_transmatter": true,
+      "starbase_minis_are_deathmoons": true,
+      "destroy_deathmoon_opponent_rep_draw": 3
+    },
     "notes": [
-      "Starbases are replaced by Deathmoons with Transmatter drives."
+      "Starbases are treated as Deathmoons with Transmatter logistics and cannot be built as standard Starbases."
     ]
   },
   "octantis_autonomy": {
     "name": "Octantis Autonomy",
     "expansion": "sotr",
-    "starting_sector": 403,
-    "trade_rate": {"goods": 3, "resources": 1},
-    "starting_storage": {"money": 3, "science": 3, "materials": 3},
-    "starting_resources": {"money": 1, "science": 2, "materials": 1},
-    "starting_colonies": {"home": {"science": 1, "materials": 1}},
-    "starting_ships": {"home": {"interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
-    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
-    "starting_techs": ["Evolution Protocol"],
     "starting_discs_delta": 0,
-    "colony_ships": 3,
+    "starting_resources": { "money": null, "science": null, "materials": null },
+    "starting_techs": ["Fusion Drive"],
+    "rare_techs_starting": [],
+    "starting_ships": { "home": { "interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0 } },
+    "starting_structures": { "home": { "orbital": 0, "monolith": 0 } },
+    "trade_rate_money": [3,1],
     "action_overrides": {},
-    "build_limits": {},
-    "vp_bonuses": {},
+    "build_overrides": {},
+    "explore_overrides": {},
+    "move_overrides": { "move_ship_activations_per_action": 2 },
     "cannot_build": [],
+    "vp_bonuses": {},
+    "special_rules": {
+      "evolution_enabled": true,
+      "evolution_pool_size": 5,
+      "mutagen_production_per_round": 2,
+      "colony_update_evolution_pool": true,
+      "colony_update_distortion_pool": true
+    },
     "notes": [
-      "Evolution: maintain an Evolution tile pool. During your turn you may flip Colony Ships to discard and redraw that many Evolution tiles.",
-      "Uses shared Evolution tiles with Hydran Progress when both factions are present."
+      "Evolution: maintain a five-tile Evolution pool refreshed via Colony Ships and produce Mutagen each round."
     ]
   },
   "octantis_vanguard": {
     "name": "Octantis Vanguard",
     "expansion": "sotr",
-    "starting_sector": 404,
-    "trade_rate": {"goods": 3, "resources": 1},
-    "starting_storage": {"money": 3, "science": 3, "materials": 3},
-    "starting_resources": {"money": 1, "science": 1, "materials": 2},
-    "starting_colonies": {"home": {"science": 1, "materials": 1}},
-    "starting_ships": {"home": {"interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
-    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
-    "starting_techs": ["Evolution Protocol"],
     "starting_discs_delta": 0,
-    "colony_ships": 3,
+    "starting_resources": { "money": null, "science": null, "materials": null },
+    "starting_techs": ["Fusion Drive"],
+    "rare_techs_starting": [],
+    "starting_ships": { "home": { "interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0 } },
+    "starting_structures": { "home": { "orbital": 0, "monolith": 0 } },
+    "trade_rate_money": [3,1],
     "action_overrides": {},
-    "build_limits": {},
-    "vp_bonuses": {},
+    "build_overrides": {},
+    "explore_overrides": {},
+    "move_overrides": { "move_ship_activations_per_action": 2 },
     "cannot_build": [],
+    "vp_bonuses": {},
+    "special_rules": {
+      "evolution_enabled": true,
+      "evolution_pool_size": 5,
+      "mutagen_production_per_round": 2,
+      "colony_update_evolution_pool": true,
+      "colony_update_distortion_pool": true
+    },
     "notes": [
-      "Evolution: maintain an Evolution tile pool. During your turn you may flip Colony Ships to discard and redraw that many Evolution tiles.",
-      "Vanguard side emphasises military upgrades combined with Evolution bonuses."
+      "Evolution: maintain a five-tile Evolution pool refreshed via Colony Ships and produce Mutagen each round."
     ]
   }
 }

@@ -7,6 +7,7 @@ from .technology import discounted_cost, can_research, load_tech_definitions
 from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources
 from .ship_parts import SHIP_PARTS, SHIP_BLUEPRINT_SLOTS, MOBILE_SHIPS
 from .types import ShipDesign
+from .research import enumerate_research_actions
 
 # =============================
 # Config
@@ -132,6 +133,7 @@ def _enum_research(state: GameState, you: PlayerState) -> List[Action]:
             out.append(Action(ActionType.RESEARCH, {"tech": tech, "approx_cost": cost, "note": "stretch"}))
         if len(out) >= 5:
             break
+    out.extend(enumerate_research_actions(state, you))
     return out
 
 def _enum_build(state: GameState, you: PlayerState) -> List[Action]:
@@ -141,9 +143,11 @@ def _enum_build(state: GameState, you: PlayerState) -> List[Action]:
     contested = [hx for hx in your_hexes if _enemy_presence_in_hex(state, you.player_id, hx) > 0]
 
     # Build starbase in contested hex if affordable
-    for hx in contested:
-        if mats >= BUILD_COST["starbase"]:
-            out.append(Action(ActionType.BUILD, {"hex": hx.id, "starbase": 1}))
+    banned = set(you.cannot_build or set())
+    if "starbase" not in banned:
+        for hx in contested:
+            if mats >= BUILD_COST["starbase"]:
+                out.append(Action(ActionType.BUILD, {"hex": hx.id, "starbase": 1}))
 
     # Build ships in any controlled hex
     for hx in your_hexes:
@@ -406,6 +410,14 @@ def validate_build(player: PlayerState, thing: Any, hex_id: str) -> None:
     for struct in ("orbital", "monolith"):
         if struct in thing:
             structures[struct] = structures.get(struct, 0) + int(thing[struct])
+
+    banned = set(player.cannot_build or set())
+    for cls in list(ships.keys()):
+        if _normalize_ship_class(cls) in banned:
+            raise RulesViolation(f"{player.player_id} cannot build {cls}")
+    for struct in list(structures.keys()):
+        if _normalize_ship_class(struct) in banned:
+            raise RulesViolation(f"{player.player_id} cannot build {struct}")
 
     total_builds = sum(ships.values()) + sum(structures.values())
     if total_builds == 0:

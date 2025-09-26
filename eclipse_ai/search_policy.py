@@ -6,6 +6,7 @@ import math, random, copy
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
 from .rules_engine import legal_actions
 from .evaluator import evaluate_action
+from .movement import max_ship_activations_per_action
 from .technology import do_research, ResearchError, load_tech_definitions
 
 # =============================
@@ -385,14 +386,14 @@ def _apply_move_action(state: GameState, pid: str, payload: Dict[str, Any]) -> N
     if not activations:
         raise ValueError("MOVE requires activations payload")
 
-    is_reaction = bool(payload.get("is_reaction") or payload.get("reaction"))
-    max_activations = 1 if is_reaction else 3
-    if len(activations) > max_activations:
-        raise ValueError("Too many ship activations for this action")
-
     player = working.players.get(pid)
     if player is None:
         raise ValueError("Unknown player for MOVE")
+
+    is_reaction = bool(payload.get("is_reaction") or payload.get("reaction"))
+    max_activations = max_ship_activations_per_action(player, is_reaction=is_reaction)
+    if len(activations) > max_activations:
+        raise ValueError("Too many ship activations for this action")
 
     for activation in activations:
         _execute_activation(working, player, activation)
