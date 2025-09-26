@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Sequence
 import math, random, copy
 
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
@@ -9,6 +9,7 @@ from .rules_engine import legal_actions
 from .evaluator import evaluate_action
 from .movement import LEGAL_CONNECTION_TYPES, classify_connection, max_ship_activations_per_action
 from .technology import do_research, ResearchError, load_tech_definitions
+from .pathing import compute_connectivity
 
 # =============================
 # Public data structures
@@ -24,6 +25,8 @@ class Plan:
     steps: List[PlanStep] = field(default_factory=list)
     total_score: float = 0.0
     risk: float = 0.0
+    state_summary: Dict[str, Any] = field(default_factory=dict)
+    result_state: Optional[GameState] = None
 
 # =============================
 # MCTS with P-UCT priors
@@ -57,6 +60,10 @@ class MCTSPlanner:
         Run MCTS from the given state for a single player's turn horizon.
         Opponents are not simulated; this is a myopic planner for quick advice.
         """
+        # Refresh metadata on the live state so downstream consumers can inspect
+        # the new game-state hints (possible actions, mobility flags, reachability).
+        base_actions = legal_actions(state, player_id)
+        self._gather_metadata(state, player_id, allowed_actions=base_actions)
         root = _Node(state=copy.deepcopy(state), player_id=player_id)
 
         # Expand root once to create priors
@@ -89,20 +96,23 @@ class MCTSPlanner:
 
         # Extract top-k plans from root children by visit count, then by Q
         children = sorted(root.children, key=lambda n: (n.N, n.Q), reverse=True)
-        out: List[Plan] = []
-        for child in children[:top_k]:
-            steps, total_score, risk = self._best_line(child, max_depth=depth, base_state=root.state)
-            out.append(Plan(steps=steps, total_score=total_score, risk=risk))
-        if not out:
-            # Fallback: single-ply ranking
-            root_actions = legal_actions(state, player_id)
-            scored = []
-            for a in root_actions:
-                sc = evaluate_action(state, a)
-                scored.append(Plan(steps=[PlanStep(a, sc)], total_score=sc.expected_vp, risk=sc.risk))
-            scored.sort(key=lambda p: p.total_score, reverse=True)
-            return scored[:top_k]
-        return out
+        validated: List[Plan] = []
+        for child in children:
+            actions = self._collect_action_sequence(child, max_depth=depth)
+            if not actions:
+                continue
+            plan = self._simulate_plan(state, player_id, actions, enforce_legality=True)
+            if plan is None:
+                continue
+            validated.append(plan)
+            if len(validated) >= top_k:
+                break
+
+        if not validated:
+            # Fallback: single-ply ranking using the already-computed legal actions.
+            validated = self._fallback_plans(state, player_id, base_actions, top_k)
+
+        return validated[:top_k]
 
     # ---- core steps ----
 
@@ -184,26 +194,151 @@ class MCTSPlanner:
 
     # ---- plan extraction ----
 
-    def _best_line(self, node: '_Node', max_depth: int = 2, base_state: Optional[GameState] = None) -> Tuple[List[PlanStep], float, float]:
-        steps: List[PlanStep] = []
-        total, disc = 0.0, 1.0
-        risks: List[float] = []
+    def _collect_action_sequence(self, node: '_Node', max_depth: int = 2) -> List[Action]:
+        actions: List[Action] = []
         curr = node
-        theoretical_game_state = copy.deepcopy(base_state) if base_state is not None else copy.deepcopy(node.parent.state if node.parent else curr.state)
         for _ in range(max_depth):
             if curr.action is None:
                 break
-            score = evaluate_action(theoretical_game_state, curr.action)
-            steps.append(PlanStep(curr.action, score))
-            total += disc * float(score.expected_vp)
-            risks.append(float(score.risk))
-            disc *= self.discount
-            theoretical_game_state = _forward_model(theoretical_game_state, curr.player_id, curr.action)
+            actions.append(curr.action)
             if not curr.children:
                 break
             curr = max(curr.children, key=lambda c: c.Q)
-        avg_risk = sum(risks)/len(risks) if risks else 0.0
-        return steps, total, avg_risk
+        return actions
+
+    def _simulate_plan(
+        self,
+        base_state: GameState,
+        player_id: str,
+        actions: Sequence[Action],
+        *,
+        enforce_legality: bool = False,
+    ) -> Optional[Plan]:
+        working = copy.deepcopy(base_state)
+        steps: List[PlanStep] = []
+        total = 0.0
+        disc = 1.0
+        risks: List[float] = []
+
+        allowed = legal_actions(working, player_id)
+        meta_before = self._gather_metadata(working, player_id, allowed_actions=allowed)
+
+        if not actions:
+            summary = self._extract_state_summary(working, player_id)
+            return Plan(steps=[], total_score=0.0, risk=0.0, state_summary=summary, result_state=working)
+
+        for action in actions:
+            if enforce_legality and action not in allowed:
+                return None
+
+            score = evaluate_action(working, action)
+            steps.append(PlanStep(action, score))
+            total += disc * float(score.expected_vp)
+            risks.append(float(score.risk))
+
+            working = _forward_model(working, player_id, action)
+            allowed = legal_actions(working, player_id)
+            meta_after = self._gather_metadata(working, player_id, allowed_actions=allowed)
+
+            total += disc * self._mobility_bonus(meta_after)
+            total += disc * self._connectivity_bonus(meta_before, meta_after)
+
+            meta_before = meta_after
+            disc *= self.discount
+
+        summary = self._extract_state_summary(working, player_id)
+        avg_risk = sum(risks) / len(risks) if risks else 0.0
+        return Plan(steps=steps, total_score=total, risk=avg_risk, state_summary=summary, result_state=working)
+
+    def _fallback_plans(
+        self,
+        state: GameState,
+        player_id: str,
+        base_actions: Sequence[Action],
+        top_k: int,
+    ) -> List[Plan]:
+        out: List[Plan] = []
+        for action in base_actions:
+            plan = self._simulate_plan(state, player_id, [action], enforce_legality=True)
+            if plan is None:
+                continue
+            out.append(plan)
+            if len(out) >= top_k:
+                break
+        if not out:
+            # ensure at least a pass plan exists
+            plan = self._simulate_plan(state, player_id, [], enforce_legality=True)
+            if plan is not None:
+                out.append(plan)
+        return out
+
+    def _gather_metadata(
+        self,
+        state: GameState,
+        player_id: str,
+        *,
+        allowed_actions: Optional[Sequence[Action]] = None,
+    ) -> Dict[str, Any]:
+        if allowed_actions is None:
+            allowed_actions = legal_actions(state, player_id)
+        try:
+            reach = compute_connectivity(state, player_id)
+            state.connectivity_metrics[player_id] = {
+                "reachable": sorted(reach),
+                "count": len(reach),
+            }
+            reach_count = len(reach)
+        except Exception:
+            reach_count = 0
+
+        possible_actions = set(getattr(state, "possible_actions", set()) or set())
+        return {
+            "possible_actions": possible_actions,
+            "can_move_ships": bool(getattr(state, "can_move_ships", False)),
+            "can_explore": bool(getattr(state, "can_explore", False)),
+            "connectivity_count": reach_count,
+        }
+
+    def _mobility_bonus(self, meta: Dict[str, Any]) -> float:
+        bonus = 0.0
+        if meta.get("can_move_ships"):
+            bonus += 0.05
+        if meta.get("can_explore"):
+            bonus += 0.04
+        possible_actions = meta.get("possible_actions") or set()
+        bonus += 0.01 * min(6, len(possible_actions))
+        reach = int(meta.get("connectivity_count", 0) or 0)
+        bonus += 0.02 * min(5, reach) / 5.0
+        return bonus
+
+    def _connectivity_bonus(self, before: Dict[str, Any], after: Dict[str, Any]) -> float:
+        b = int(before.get("connectivity_count", 0) or 0)
+        a = int(after.get("connectivity_count", 0) or 0)
+        delta = a - b
+        if delta == 0:
+            return 0.0
+        return max(-0.5, min(0.5, 0.05 * delta))
+
+    def _extract_state_summary(self, state: GameState, player_id: str) -> Dict[str, Any]:
+        possible_actions = getattr(state, "possible_actions", set()) or set()
+        actions_list = []
+        for act in possible_actions:
+            try:
+                actions_list.append(act.value)  # type: ignore[attr-defined]
+            except Exception:
+                actions_list.append(str(act))
+        metrics = getattr(state, "connectivity_metrics", {}).get(player_id, {}) if getattr(state, "connectivity_metrics", None) else {}
+        summary: Dict[str, Any] = {
+            "possible_actions": sorted(actions_list),
+            "can_explore": bool(getattr(state, "can_explore", False)),
+            "can_move_ships": bool(getattr(state, "can_move_ships", False)),
+        }
+        if metrics:
+            summary["connectivity"] = {
+                "count": int(metrics.get("count", 0) or 0),
+                "reachable": list(metrics.get("reachable", [])),
+            }
+        return summary
 
     # ---- helpers ----
 
@@ -241,6 +376,17 @@ _SHIP_COSTS = {"interceptor":2, "cruiser":3, "dreadnought":5}
 _STARBASE_COST = 4
 _SCIENCE_COST_BASE = 3  # rough
 
+
+def _refresh_connectivity(state: GameState, pid: str) -> None:
+    try:
+        reach = compute_connectivity(state, pid)
+        state.connectivity_metrics[pid] = {
+            "reachable": sorted(reach),
+            "count": len(reach),
+        }
+    except Exception:
+        pass
+
 def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
     """Very small deterministic forward model sufficient for short planning.
     Applies optimistic but resource-aware state changes. Non-destructive via deepcopy.
@@ -257,6 +403,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
 
     if t == ActionType.PASS:
         # Terminal in our single-player horizon; no change
+        _refresh_connectivity(s, pid)
         return s
 
     if t == ActionType.RESEARCH:
@@ -268,6 +415,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
                 do_research(s, you, tech)
             except ResearchError:
                 pass
+        _refresh_connectivity(s, pid)
         return s
 
     if t == ActionType.BUILD:
@@ -294,13 +442,16 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
             mats -= _STARBASE_COST
             hx.pieces[pid].starbase += 1
         you.resources.materials = mats
+        _refresh_connectivity(s, pid)
         return s
 
     if t == ActionType.MOVE:
         try:
             _apply_move_action(s, pid, p)
         except ValueError:
+            _refresh_connectivity(state, pid)
             return state  # illegal move payloads are ignored in the forward model
+        _refresh_connectivity(s, pid)
         return s
 
     if t == ActionType.EXPLORE:
@@ -314,6 +465,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
                 key = max(bag, key=lambda k: bag[k])
                 if bag[key] > 0:
                     bag[key] -= 1
+        _refresh_connectivity(s, pid)
         return s
 
     if t == ActionType.INFLUENCE:
@@ -328,6 +480,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
             for color, dv in inc.items():
                 key = {"yellow":"y","blue":"b","brown":"p"}.get(color, "y")
                 hx.pieces[pid].cubes[key] = hx.pieces[pid].cubes.get(key, 0) + max(0, int(dv))
+        _refresh_connectivity(s, pid)
         return s
 
     if t == ActionType.DIPLOMACY:
@@ -335,6 +488,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
         target = p.get("with")
         if target:
             you.diplomacy[target] = "ally"
+        _refresh_connectivity(s, pid)
         return s
 
     if t == ActionType.UPGRADE:
@@ -346,9 +500,11 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
                 if hasattr(sd, k):
                     setattr(sd, k, max(0, getattr(sd, k) + int(dv)))
             you.ship_designs[cls] = sd
+        _refresh_connectivity(s, pid)
         return s
 
     # Unknown action -> no-op
+    _refresh_connectivity(s, pid)
     return s
 
 # =============================

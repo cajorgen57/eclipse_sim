@@ -97,6 +97,7 @@ def recommend(
             "score": float(p.total_score),
             "risk": float(p.risk),
             "steps": steps,
+            "state_summary": dict(p.state_summary),
             "overlays": plan_overlays(p)
         })
 
