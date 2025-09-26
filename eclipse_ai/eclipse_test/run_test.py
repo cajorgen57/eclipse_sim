@@ -245,15 +245,26 @@ p.add_argument("--tech",  default="tech.jpg")
 p.add_argument("--sims",  type=int, default=200)
 p.add_argument("--depth", type=int, default=2)
 p.add_argument("--topk",  type=int, default=5)
+p.add_argument(
+    "--output",
+    help="Optional path to write the summarized test result JSON."
+)
 args = p.parse_args()
 
 manual = {"_planner": {"simulations": args.sims, "depth": args.depth, "risk_aversion": 0.25}}
 state = GameState.from_dict(ORION_ROUND1_STATE)
 out = recommend(args.board, args.tech, prior_state=state, manual_inputs=manual, top_k=args.topk)
-print(json.dumps({
-  "round": out.get("round"),
-  "active_player": out.get("active_player"),
-  "plans": out.get("plans")[:3],   # show top 3
-  "enemy_posteriors": out.get("enemy_posteriors", {}),
-  "expected_bags": out.get("expected_bags", {})
-}, indent=2))
+
+summary = {
+    "round": out.get("round"),
+    "active_player": out.get("active_player"),
+    "plans": out.get("plans")[:3],   # show top 3
+    "enemy_posteriors": out.get("enemy_posteriors", {}),
+    "expected_bags": out.get("expected_bags", {}),
+}
+
+if args.output:
+    with open(args.output, "w", encoding="utf-8") as fh:
+        json.dump(summary, fh, indent=2)
+
+print(json.dumps(summary, indent=2))
