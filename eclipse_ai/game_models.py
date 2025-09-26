@@ -4,6 +4,7 @@ from dataclasses import dataclass, field, asdict, is_dataclass, fields
 from typing import Dict, List, Optional, Tuple, Any, get_args, get_origin, get_type_hints
 from enum import Enum
 import json
+from .types import ShipDesign
 
 def _build_dataclass(cls, data: Dict[str, Any]):
     """Recursively coerce nested dicts/lists into a dataclass instance."""
@@ -77,6 +78,39 @@ class ActionType(str, Enum):
     RESEARCH = "Research"
     DIPLOMACY = "Diplomacy"
     PASS = "Pass"
+    REACTION = "Reaction"
+
+
+@dataclass
+class Disc:
+    id: str
+    extra: bool = False
+
+
+def _default_population() -> Dict[str, int]:
+    return {"yellow": 0, "blue": 0, "brown": 0}
+
+
+def _default_action_spaces() -> Dict[str, List[Disc]]:
+    return {
+        "explore": [],
+        "influence": [],
+        "research": [],
+        "upgrade": [],
+        "build": [],
+        "move": [],
+        "reaction": [],
+    }
+
+
+@dataclass
+class ColonyShips:
+    face_up: Dict[str, int] = field(
+        default_factory=lambda: {"yellow": 0, "blue": 0, "brown": 0, "wild": 0}
+    )
+    face_down: Dict[str, int] = field(
+        default_factory=lambda: {"yellow": 0, "blue": 0, "brown": 0, "wild": 0}
+    )
 
 @dataclass
 class Resources:
@@ -84,7 +118,24 @@ class Resources:
     science: int = 0
     materials: int = 0
 
-from .types import ShipDesign
+
+
+@dataclass
+class ShipDesign:
+    computer: int = 0
+    shield: int = 0
+    initiative: int = 0
+    hull: int = 1
+    cannons: int = 0
+    missiles: int = 0
+    drive: int = 0  # legacy single-drive field kept for backward compatibility
+    drives: int = 0
+    has_jump_drive: bool = False
+    interceptor_bays: int = 0
+    def movement_value(self) -> int:
+        """Return the total movement points provided by installed drives."""
+        return max(0, int(self.drives if self.drives else self.drive))
+
 
 @dataclass
 class Pieces:
@@ -104,12 +155,16 @@ class Hex:
     id: str
     ring: int
     wormholes: List[int] = field(default_factory=list)  # 0..5 edges present
+    neighbors: Dict[int, str] = field(default_factory=dict)  # edge -> neighbor hex id
     planets: List[Planet] = field(default_factory=list)
     pieces: Dict[str, Pieces] = field(default_factory=dict)  # player_id -> Pieces
     ancients: int = 0
     monolith: bool = False
     orbital: bool = False
     anomaly: bool = False
+    explored: bool = True
+    has_warp_portal: bool = False
+    has_gcds: bool = False
 
 @dataclass
 class TechDisplay:
@@ -122,14 +177,26 @@ class PlayerState:
     color: str
     known_techs: List[str] = field(default_factory=list)
     resources: Resources = field(default_factory=Resources)
+    income: Resources = field(default_factory=Resources)
     ship_designs: Dict[str, ShipDesign] = field(default_factory=dict)  # interceptor, cruiser, dreadnought, starbase
     reputation: List[int] = field(default_factory=list)
     diplomacy: Dict[str, str] = field(default_factory=dict)
     available_components: Dict[str, int] = field(default_factory=dict)
+    influence_track: List[Disc] = field(default_factory=list)
+    action_spaces: Dict[str, List[Disc]] = field(default_factory=_default_action_spaces)
+    colonies: Dict[str, Dict[str, int]] = field(default_factory=dict)
+    population: Dict[str, int] = field(default_factory=_default_population)
+    colony_ships: ColonyShips = field(default_factory=ColonyShips)
+    passed: bool = False
+    collapsed: bool = False
+    has_wormhole_generator: bool = False
+
 
 @dataclass
 class MapState:
     hexes: Dict[str, Hex] = field(default_factory=dict)
+    adjacency: Dict[str, List[str]] = field(default_factory=dict)
+
 
 @dataclass
 class GameState:
@@ -139,6 +206,11 @@ class GameState:
     map: MapState = field(default_factory=MapState)
     tech_display: TechDisplay = field(default_factory=TechDisplay)
     bags: Dict[str, Dict[str, int]] = field(default_factory=dict)  # bag per ring: tile_type -> count
+    phase: str = "ACTION"
+    starting_player: Optional[str] = None
+    pending_starting_player: Optional[str] = None
+    turn_order: List[str] = field(default_factory=list)
+    turn_index: int = 0
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=2)
@@ -149,6 +221,7 @@ class GameState:
     def apply_overrides(self, overrides: Dict[str, Any]) -> "GameState":
         _deep_override(self, overrides)
         return self
+
 
 @dataclass
 class Action:
