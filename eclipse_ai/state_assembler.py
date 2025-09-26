@@ -227,6 +227,15 @@ def _initialise_player_state(player: PlayerState, definitions: Optional[Dict[str
     player.tech_count_by_category = dict(player.tech_count_by_category or {})
     player.unlocked_parts = set(player.unlocked_parts or set())
     player.unlocked_structures = set(player.unlocked_structures or set())
+    player.species_flags = dict(player.species_flags or {})
+    player.action_overrides = dict(player.action_overrides or {})
+    player.build_overrides = dict(player.build_overrides or {})
+    player.move_overrides = dict(player.move_overrides or {})
+    player.explore_overrides = dict(player.explore_overrides or {})
+    player.cannot_build = set(player.cannot_build or set())
+    player.vp_bonuses = dict(player.vp_bonuses or {})
+    player.species_pools = dict(player.species_pools or {})
+    player.special_resources = dict(player.special_resources or {})
 
     name_to_id = {t.name.lower(): tid for tid, t in tech_defs.items()}
     for entry in list(player.known_techs or []):
