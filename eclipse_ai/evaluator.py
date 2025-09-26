@@ -101,7 +101,7 @@ def _score_move(state: GameState, pid: str, payload: Dict[str, Any]) -> Score:
 
     # Build combat query from state + payload
     cq = _combat_query_from_state(state, pid, h_from, h_to, move_ships, ancient_count=ancients)
-    cq["n_sims"] = int(payload.get("n_sims", 4000))
+    cq["n_sims"] = int(payload.get("n_sims", 50))
     res = score_combat(cq)
 
     # Post-control EV if attacker wins: ability to claim planets / monolith

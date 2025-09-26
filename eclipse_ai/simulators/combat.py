@@ -92,8 +92,8 @@ class Ship:
     weapons: Dict[str, int]  # e.g., {"ion":2,"plasma":1}
     missiles: int = 0
 
-def alive(self) -> bool:
-    return self.hull > 0
+    def alive(self) -> bool:
+        return self.hull > 0
 
 @dataclass
 class Fleet:
@@ -141,56 +141,56 @@ class _SimConfig:
     attacker_initial_counts: Dict[str,int] = field(default_factory=dict)
     defender_initial_counts: Dict[str,int] = field(default_factory=dict)
 
-@staticmethod
-def _default_weapon_thresholds() -> Dict[str,int]:
-    # These defaults are plausible for Eclipse 2E style combat but configurable.
-    return {"ion":6, "plasma":5, "gauss":4, "antimatter":4, "missiles":5}
+    @staticmethod
+    def _default_weapon_thresholds() -> Dict[str,int]:
+        # These defaults are plausible for Eclipse 2E style combat but configurable.
+        return {"ion":6, "plasma":5, "gauss":4, "antimatter":4, "missiles":5}
 
-@staticmethod
-def _generic_design_for(cls: str, aggregate: Dict[str,Any]) -> Dict[str,Any]:
-    # Fallback if per-class designs are not supplied. Tunable placeholders.
-    base = {
-        "interceptor": {"initiative":3,"hull":1,"computer":aggregate.get("computer",0),"shield":aggregate.get("shield",0),"weapons":aggregate.get("weapons",{"ion":1}),"missiles":aggregate.get("missiles",0)},
-        "cruiser":     {"initiative":2,"hull":2,"computer":aggregate.get("computer",0),"shield":aggregate.get("shield",0),"weapons":aggregate.get("weapons",{"ion":2}),"missiles":aggregate.get("missiles",0)},
-        "dreadnought": {"initiative":1,"hull":3,"computer":aggregate.get("computer",0),"shield":aggregate.get("shield",0),"weapons":aggregate.get("weapons",{"ion":3}),"missiles":aggregate.get("missiles",0)},
-        "starbase":    {"initiative":4,"hull":2,"computer":aggregate.get("computer",0),"shield":aggregate.get("shield",0),"weapons":aggregate.get("weapons",{"ion":2}),"missiles":0},
-        "ancient":     {"initiative":2,"hull":2,"computer":1,"shield":1,"weapons":{"ion":2},"missiles":0},
-    }
-    return base.get(cls, {"initiative":2,"hull":1,"computer":0,"shield":0,"weapons":{"ion":1},"missiles":0})
+    @staticmethod
+    def _generic_design_for(cls: str, aggregate: Dict[str,Any]) -> Dict[str,Any]:
+        # Fallback if per-class designs are not supplied. Tunable placeholders.
+        base = {
+            "interceptor": {"initiative":3,"hull":1,"computer":aggregate.get("computer",0),"shield":aggregate.get("shield",0),"weapons":aggregate.get("weapons",{"ion":1}),"missiles":aggregate.get("missiles",0)},
+            "cruiser":     {"initiative":2,"hull":2,"computer":aggregate.get("computer",0),"shield":aggregate.get("shield",0),"weapons":aggregate.get("weapons",{"ion":2}),"missiles":aggregate.get("missiles",0)},
+            "dreadnought": {"initiative":1,"hull":3,"computer":aggregate.get("computer",0),"shield":aggregate.get("shield",0),"weapons":aggregate.get("weapons",{"ion":3}),"missiles":aggregate.get("missiles",0)},
+            "starbase":    {"initiative":4,"hull":2,"computer":aggregate.get("computer",0),"shield":aggregate.get("shield",0),"weapons":aggregate.get("weapons",{"ion":2}),"missiles":0},
+            "ancient":     {"initiative":2,"hull":2,"computer":1,"shield":1,"weapons":{"ion":2},"missiles":0},
+        }
+        return base.get(cls, {"initiative":2,"hull":1,"computer":0,"shield":0,"weapons":{"ion":1},"missiles":0})
 
-@classmethod
-def from_query(cls, query: Dict[str,Any]) -> "_SimConfig":
-    weapon_thresholds = dict(cls._default_weapon_thresholds())
-    weapon_thresholds.update(query.get("weapon_thresholds", {}))
+    @classmethod
+    def from_query(cls, query: Dict[str,Any]) -> "_SimConfig":
+        weapon_thresholds = dict(cls._default_weapon_thresholds())
+        weapon_thresholds.update(query.get("weapon_thresholds", {}))
 
-    n_sims = int(query.get("n_sims", 4000))
-    seed = int(query.get("seed", 12345))
-    rep_tile_ev = float(query.get("rep_tile_ev", 1.0))
-    ship_vp = {"interceptor":0.5, "cruiser":1.0, "dreadnought":2.0, "starbase":1.0, "ancient":1.0}
-    ship_vp.update(query.get("ship_vp", {}))
-    round_cap = int(query.get("round_cap", 20))
-    simultaneous = bool(query.get("simultaneous_at_same_initiative", True))
-    targeting = str(query.get("targeting", "focus_fire"))
+        n_sims = int(query.get("n_sims", 4000))
+        seed = int(query.get("seed", 12345))
+        rep_tile_ev = float(query.get("rep_tile_ev", 1.0))
+        ship_vp = {"interceptor":0.5, "cruiser":1.0, "dreadnought":2.0, "starbase":1.0, "ancient":1.0}
+        ship_vp.update(query.get("ship_vp", {}))
+        round_cap = int(query.get("round_cap", 20))
+        simultaneous = bool(query.get("simultaneous_at_same_initiative", True))
+        targeting = str(query.get("targeting", "focus_fire"))
 
-    atk = query.get("attacker", {})
-    dfd = query.get("defender", {})
-    atk_fleet, atk_init = _build_fleet("attacker", atk)
-    dfd_fleet, dfd_init = _build_fleet("defender", dfd)
+        atk = query.get("attacker", {})
+        dfd = query.get("defender", {})
+        atk_fleet, atk_init = _build_fleet("attacker", atk)
+        dfd_fleet, dfd_init = _build_fleet("defender", dfd)
 
-    return cls(
-        weapon_thresholds=weapon_thresholds,
-        n_sims=n_sims,
-        seed=seed,
-        rep_tile_ev=rep_tile_ev,
-        ship_vp=ship_vp,
-        round_cap=round_cap,
-        simultaneous_at_same_initiative=simultaneous,
-        targeting=targeting,
-        attacker=atk_fleet,
-        defender=dfd_fleet,
-        attacker_initial_counts=atk_init,
-        defender_initial_counts=dfd_init,
-    )
+        return cls(
+            weapon_thresholds=weapon_thresholds,
+            n_sims=n_sims,
+            seed=seed,
+            rep_tile_ev=rep_tile_ev,
+            ship_vp=ship_vp,
+            round_cap=round_cap,
+            simultaneous_at_same_initiative=simultaneous,
+            targeting=targeting,
+            attacker=atk_fleet,
+            defender=dfd_fleet,
+            attacker_initial_counts=atk_init,
+            defender_initial_counts=dfd_init,
+        )
 
 # =============================
 # Fleet building
@@ -243,8 +243,8 @@ class _CombatSim:
         # Deep-copy fleets without importing copy module
         self.rng = rng
         self.cfg = cfg
-        self.attacker = Fleet(owner="attacker", ships=[_copy_ship(s) for s in cfg.attacker.ships])
-        self.defender = Fleet(owner="defender", ships=[_copy_ship(s) for s in cfg.defender.ships])
+        self.attacker = Fleet(owner="attacker", ships=[self._copy_ship(s) for s in cfg.attacker.ships])
+        self.defender = Fleet(owner="defender", ships=[self._copy_ship(s) for s in cfg.defender.ships])
         self.start_attacker_count = self.attacker.total_ships()
         self.start_defender_count = self.defender.total_ships()
 
@@ -338,11 +338,11 @@ class _CombatSim:
                 if dice <= 0:
                     continue
                 # choose targets per die according to targeting policy
-                for _d in range(dice):
-                    tgt_idx = _select_target_index(self.rng, target, self.cfg.targeting)
-                    tgt = target.ships[tgt_idx]
-                    thr = _to_hit_threshold(self.cfg.weapon_thresholds["missiles"], ship.computer, tgt.shield)
-                    hits = _roll_hits(self.rng, 1, thr)
+                    for _d in range(dice):
+                        tgt_idx = self._select_target_index(self.rng, target, self.cfg.targeting)
+                        tgt = target.ships[tgt_idx]
+                        thr = self._to_hit_threshold(self.cfg.weapon_thresholds["missiles"], ship.computer, tgt.shield)
+                        hits = self._roll_hits(self.rng, 1, thr)
                     if hits > 0:
                         records.append((tgt_idx, hits))
                 # missiles are one-shot
@@ -351,13 +351,13 @@ class _CombatSim:
                 if initiative is None or ship.initiative != initiative:
                     continue
                 # fire all cannon-type weapons
-                for wname, dice in ship.weapons.items():
-                    base_thr = self.cfg.weapon_thresholds.get(wname, 6)
-                    for _ in range(dice):
-                        tgt_idx = _select_target_index(self.rng, target, self.cfg.targeting)
-                        tgt = target.ships[tgt_idx]
-                        thr = _to_hit_threshold(base_thr, ship.computer, tgt.shield)
-                        hits = _roll_hits(self.rng, 1, thr)
+                    for wname, dice in ship.weapons.items():
+                        base_thr = self.cfg.weapon_thresholds.get(wname, 6)
+                        for _ in range(dice):
+                            tgt_idx = self._select_target_index(self.rng, target, self.cfg.targeting)
+                            tgt = target.ships[tgt_idx]
+                            thr = self._to_hit_threshold(base_thr, ship.computer, tgt.shield)
+                            hits = self._roll_hits(self.rng, 1, thr)
                         if hits > 0:
                             records.append((tgt_idx, hits))
         return records
@@ -374,13 +374,14 @@ class _CombatSim:
         for idx, h in agg.items():
             if idx >= len(target.ships):
                 continue
-            _apply_damage_to_index(target, idx, h)
+            self._apply_damage_to_index(target, idx, h)
         # Any overflow due to destroyed targets not existing anymore? Already handled by alive() check.
 
     # =============================
     # Dice mechanics and targeting
     # =============================
 
+    @staticmethod
     def _to_hit_threshold(base: int, computer: int, shield: int) -> int:
         # Clamp between 2 and 6; 6 always hits only if base<=6 and mods not pushing above 6.
         thr = base - (computer - shield)
@@ -388,6 +389,7 @@ class _CombatSim:
         if thr > 6: thr = 6
         return thr
 
+    @staticmethod
     def _roll_hits(rng: random.Random, dice: int, threshold: int) -> int:
         hits = 0
         for _ in range(dice):
@@ -396,6 +398,7 @@ class _CombatSim:
                 hits += 1
         return hits
 
+    @staticmethod
     def _select_target_index(rng: random.Random, fleet: Fleet, policy: str) -> int:
         # Choose among alive ships according to policy
         alive_indices = [i for i, s in enumerate(fleet.ships) if s.alive()]
@@ -420,27 +423,28 @@ class _CombatSim:
         # default: focus_fire
         return min(alive_indices, key=key_focus)
 
-    def _apply_damage_to_index(fleet: Fleet, idx: int, dmg: int):
+    def _apply_damage_to_index(self, fleet: Fleet, idx: int, dmg: int):
         if idx >= len(fleet.ships):
             return
         s = fleet.ships[idx]
         if not s.alive():  # if already dead, spill to next lowest hull
-            other_idx = _next_lowest_hull_index(fleet)
+            other_idx = self._next_lowest_hull_index(fleet)
             if other_idx is None:
                 return
-            _apply_damage_to_index(fleet, other_idx, dmg)
+            self._apply_damage_to_index(fleet, other_idx, dmg)
             return
         s.hull -= dmg
         if s.hull <= 0:
             s.hull = 0
 
-    def _next_lowest_hull_index(fleet: Fleet) -> Optional[int]:
+    def _next_lowest_hull_index(self, fleet: Fleet) -> Optional[int]:
         alive = [(i, s.hull) for i, s in enumerate(fleet.ships) if s.alive()]
         if not alive:
             return None
         alive.sort(key=lambda t: (t[1], fleet.ships[t[0]].initiative))
         return alive[0][0]
 
+    @staticmethod
     def _copy_ship(s: Ship) -> Ship:
         return Ship(
             cls=s.cls,
