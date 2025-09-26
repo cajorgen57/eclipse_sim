@@ -25,29 +25,38 @@ def _orion_turn_one_state() -> GameState:
                         "missiles": 0,
                         "drive": 1,
                     }
+                    "cruiser": {
+                        "computer": 1,
+                        "shield": 1,
+                        "initiative": 3,
+                        "hull": 1,
+                        "cannons": 1,
+                        "missiles": 0,
+                        "drive": 1,
+                    }
                 },
                 "known_techs": [],
             },
             "hydran": {
                 "player_id": "hydran",
                 "color": "blue",
-                "resources": {"money": 3, "science": 5, "materials": 2},
+                "resources": {"money": 2, "science": 5, "materials": 2},
                 "known_techs": [],
             },
         },
         "map": {
             "hexes": {
                 # Orion home system with occupied planets and starting fleet.
-                "000": {
-                    "id": "000",
-                    "ring": 0,
+                "232": {
+                    "id": "232",
+                    "ring": 2,
                     "planets": [
-                        {"type": "yellow", "colonized_by": "orion"},
-                        {"type": "blue", "colonized_by": None},
+                        {"type": "brown", "colonized_by": "orion"},
+                        {"type": "pink", "colonized_by": "orion"},
                     ],
                     "pieces": {
                         "orion": {
-                            "ships": {"interceptor": 2},
+                            "ships": {"cruiser": 1},
                             "starbase": 0,
                             "discs": 1,
                             "cubes": {"yellow": 2, "blue": 1},
@@ -58,31 +67,21 @@ def _orion_turn_one_state() -> GameState:
                     "monolith": False,
                 },
                 # Adjacent unexplored sector with open planets to encourage influence/explore.
-                "101": {
-                    "id": "101",
-                    "ring": 1,
-                    "planets": [
-                        {"type": "brown", "colonized_by": None},
-                        {"type": "yellow", "colonized_by": None},
-                    ],
-                    "pieces": {},
-                    "ancients": 0,
-                    "monolith": False,
-                },
+   
                 # Rival home system to show enemy presence.
-                "200": {
-                    "id": "200",
-                    "ring": 1,
+                "224": {
+                    "id": "224",
+                    "ring": 2,
                     "planets": [
                         {"type": "yellow", "colonized_by": "hydran"},
                         {"type": "brown", "colonized_by": None},
                     ],
                     "pieces": {
                         "hydran": {
-                            "ships": {"interceptor": 2},
+                            "ships": {"interceptor": 1},
                             "starbase": 0,
                             "discs": 1,
-                            "cubes": {"yellow": 2, "brown": 1},
+                            "cubes": {"pink": 2, "orange": 1},
                             "discovery": 0,
                         }
                     },
