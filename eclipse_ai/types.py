@@ -18,6 +18,21 @@ def _build_dataclass(cls, data: Dict[str, Any]):
         ft = type_hints.get(f.name, f.type)
         origin = get_origin(ft)
 
+        if v is None:
+            # Treat nulls for dataclass/container fields as "use the default".
+            # Many callers omit nested structures entirely and some serializers
+            # explicitly emit `null`; in those cases we still want the default
+            # dataclass/list/dict instance instead of propagating ``None`` and
+            # breaking attribute access later on (e.g. PlayerState.resources
+            # should remain a Resources dataclass). Only fall back to the
+            # default when the target type is a dataclass or collection; simple
+            # Optional scalars should still honour the explicit ``None``.
+            union_args = get_args(ft) if origin is not None else ()
+            if is_dataclass(ft) or origin in (list, dict) or any(
+                is_dataclass(arg) for arg in union_args if arg is not type(None)
+            ):
+                continue
+
         if is_dataclass(ft) and isinstance(v, dict):
             kwargs[f.name] = _build_dataclass(ft, v)
         elif origin is list and isinstance(v, list):
