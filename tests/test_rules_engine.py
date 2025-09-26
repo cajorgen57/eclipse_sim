@@ -11,14 +11,14 @@ def _orion_turn_one_state() -> GameState:
         "players": {
             "orion": {
                 "player_id": "orion",
-                "color": "purple",
+                "color": "black",
                 # Orion starts with strong materials economy and modest science.
-                "resources": {"money": 3, "science": 4, "materials": 3},
+                "resources": {"money": 3, "science": 3, "materials": 5},
                 # Basic interceptor design matching the reference ship sheet.
                 "ship_designs": {
                     "interceptor": {
                         "computer": 1,
-                        "shield": 0,
+                        "shield": 1,
                         "initiative": 2,
                         "hull": 1,
                         "cannons": 1,
@@ -30,8 +30,8 @@ def _orion_turn_one_state() -> GameState:
             },
             "hydran": {
                 "player_id": "hydran",
-                "color": "green",
-                "resources": {"money": 3, "science": 3, "materials": 2},
+                "color": "blue",
+                "resources": {"money": 3, "science": 5, "materials": 2},
                 "known_techs": [],
             },
         },
