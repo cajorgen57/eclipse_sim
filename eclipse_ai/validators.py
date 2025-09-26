@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 
 from .rules_engine import legal_actions
 
@@ -13,16 +13,31 @@ def _fmt_action(a: Dict[str, Any]) -> str:
     return f"{t}:{p}"
 
 
+def _extract_action_shape(candidate: Any) -> Tuple[Any, Dict[str, Any]]:
+    """Return an action identifier and payload for dicts or dataclass actions."""
+    if isinstance(candidate, dict):
+        return (
+            candidate.get("action") or candidate.get("type"),
+            candidate.get("payload") or {},
+        )
+    act_type = getattr(candidate, "type", None)
+    if hasattr(act_type, "value"):
+        act_type = act_type.value
+    payload = getattr(candidate, "payload", {}) or {}
+    return act_type, payload
+
+
 def _is_action_legal(state: Dict[str, Any], player_id: int, action: Dict[str, Any]) -> bool:
     allowed = legal_actions(state, player_id)
     # Normalize comparison: match on action type/name and required payload keys
-    atype = action.get("action") or action.get("type")
-    for a in allowed:
-        if (a.get("action") == atype or a.get("type") == atype):
+    atype, payload = _extract_action_shape(action)
+    have = set((payload or {}).keys())
+    for candidate in allowed:
+        cand_type, cand_payload = _extract_action_shape(candidate)
+        if cand_type == atype:
             # Optional: shallow payload key subset check
-            need = set((a.get("payload") or {}).keys())
-            have = set((action.get("payload") or {}).keys())
-            if need.issubset(have) or not need:
+            needed = set((cand_payload or {}).keys())
+            if needed.issubset(have) or not needed:
                 return True
     return False
 
@@ -33,11 +48,11 @@ def assert_test_case_legal(test: Dict[str, Any]) -> None:
 
     Required fields:
       test["state"]: full game state dict
-      test["player_id"]: int
+      test["player_id"]: str | int
       test["proposed_action"]: {"action": str, "payload": dict}
     """
     state = test["state"]
-    pid = int(test["player_id"])
+    pid = test["player_id"]
     action = test["proposed_action"]
 
     if not _is_action_legal(state, pid, action):
