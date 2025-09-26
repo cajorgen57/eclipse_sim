@@ -1,8 +1,56 @@
 from __future__ import annotations
 from typing import Optional, Dict, Any, Set
+import csv
+import os
+from collections import Counter, defaultdict
+from dataclasses import dataclass
 from copy import deepcopy
 
 from .game_models import GameState, PlayerState, Resources, MapState, TechDisplay, Pieces
+
+_ROUND_EXPLORED_FRACTION = 0.33
+
+
+@dataclass(frozen=True)
+class _TileCatalog:
+    total_by_ring: Dict[int, int]
+    tile_ids_by_ring: Dict[int, Set[str]]
+    all_tile_ids: Set[str]
+
+
+def _load_tile_catalog() -> _TileCatalog:
+    """Read the exploration tile CSV and index counts by ring."""
+    csv_path = os.path.join(os.path.dirname(__file__), "..", "eclipse_tiles.csv")
+    totals: Counter[int] = Counter()
+    by_ring: Dict[int, Set[str]] = defaultdict(set)
+    try:
+        with open(os.path.abspath(csv_path), newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            for row in reader:
+                sector = row.get("Sector")
+                tile = row.get("TileNumber")
+                if not sector or not tile:
+                    continue
+                try:
+                    ring = int(sector)
+                except ValueError:
+                    continue
+                tile_id = str(tile).strip()
+                if not tile_id:
+                    continue
+                totals[ring] += 1
+                by_ring[ring].add(tile_id)
+    except FileNotFoundError:
+        return _TileCatalog(total_by_ring={}, tile_ids_by_ring={}, all_tile_ids=set())
+    all_ids = set().union(*by_ring.values()) if by_ring else set()
+    return _TileCatalog(
+        total_by_ring=dict(totals),
+        tile_ids_by_ring={r: set(ids) for r, ids in by_ring.items()},
+        all_tile_ids=all_ids,
+    )
+
+
+_TILE_CATALOG = _load_tile_catalog()
 
 # -----------------------------
 # Public API
@@ -33,6 +81,7 @@ def assemble_state(
 
     # Ensure bag placeholders for observed rings
     _ensure_bags_for_rings(gs)
+    _populate_explore_bags(gs)
 
     # Apply manual inputs
     if manual_inputs:
@@ -100,6 +149,54 @@ def _ensure_bags_for_rings(gs: GameState) -> None:
         key = f"R{r}"
         if key not in gs.bags:
             gs.bags[key] = {}  # placeholder; upstream uncertainty module can populate a PF on demand
+
+
+def _populate_explore_bags(gs: GameState) -> None:
+    """Backfill exploration bag sizes using CSV totals and board state."""
+    if not _TILE_CATALOG.total_by_ring:
+        return
+    round_num = max(1, int(getattr(gs, "round", 1)))
+    player_count = max(1, len(getattr(gs, "players", {}) or {}))
+    explored_by_ring = _count_explored_tiles(gs, player_count)
+
+    for ring, total in _TILE_CATALOG.total_by_ring.items():
+        key = f"R{ring}"
+        bag = gs.bags.setdefault(key, {})
+        if bag and sum(bag.values()) > 0:
+            # Caller already supplied explicit bag contents; trust it.
+            continue
+
+        # Estimate explored tiles either from the board or heuristic round progression.
+        heuristic = int(total * min(1.0, max(0.0, (round_num - 1) * _ROUND_EXPLORED_FRACTION)))
+        explored = max(explored_by_ring.get(ring, 0), heuristic)
+        remaining = max(0, total - explored)
+
+        if remaining > 0:
+            gs.bags[key] = {"unknown": remaining}
+        else:
+            gs.bags[key] = {}
+
+
+def _count_explored_tiles(gs: GameState, player_count: int) -> Counter[int]:
+    counts: Counter[int] = Counter()
+    fallback: Counter[int] = Counter()
+    for hx in gs.map.hexes.values():
+        ring = max(1, int(getattr(hx, "ring", 1)))
+        fallback[ring] += 1
+        hid = str(getattr(hx, "id", "")).strip()
+        if hid and hid in _TILE_CATALOG.tile_ids_by_ring.get(ring, set()):
+            counts[ring] += 1
+
+    for ring, fallback_count in fallback.items():
+        if counts[ring] >= fallback_count:
+            continue
+        additional = fallback_count - counts[ring]
+        if ring == 1:
+            additional = max(0, additional - player_count)
+        if additional > 0:
+            counts[ring] += additional
+
+    return counts
 
 # -----------------------------
 # Manual inputs
