@@ -2,7 +2,8 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Tuple
-
+from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources, ShipDesign
+from .technology import discounted_cost, can_research, load_tech_definitions
 from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources
 from .ship_parts import SHIP_PARTS, SHIP_BLUEPRINT_SLOTS, MOBILE_SHIPS
 from .types import ShipDesign
@@ -111,19 +112,23 @@ def _enum_explore(state: GameState, you: PlayerState) -> List[Action]:
 
 def _enum_research(state: GameState, you: PlayerState) -> List[Action]:
     out: List[Action] = []
-    avail = list(state.tech_display.available) if state.tech_display else []
-    known = set(you.known_techs or [])
-    science = you.resources.science if you.resources else 0
+    if not state.tech_definitions:
+        state.tech_definitions = load_tech_definitions()
+    avail = list(state.market)
+    known = set(you.owned_tech_ids or set())
+    science = you.science
     # Sort by a simple preference: combat techs, mobility, economy
     priority = sorted(avail, key=_tech_priority_key, reverse=True)
     for tech in priority:
         if tech in known:
             continue
-        cost = _approx_tech_cost(tech, len(known))
-        if science >= cost:
+        tech_obj = state.tech_definitions.get(tech)
+        if tech_obj is None:
+            continue
+        cost = discounted_cost(you, tech_obj)
+        if science >= cost and can_research(state, you, tech):
             out.append(Action(ActionType.RESEARCH, {"tech": tech, "approx_cost": cost}))
-        # propose one stretch pick even if not fully affordable (you might have discounts)
-        elif len(out) < 1 and science >= max(1, cost - 1):
+        elif len(out) < 1 and science + 1 >= cost and can_research(state, you, tech):
             out.append(Action(ActionType.RESEARCH, {"tech": tech, "approx_cost": cost, "note": "stretch"}))
         if len(out) >= 5:
             break

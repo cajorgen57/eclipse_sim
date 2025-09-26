@@ -44,7 +44,8 @@ def _score_explore(state: GameState, pid: str, payload: Dict[str, Any]) -> Score
 
     you = state.players.get(pid) if state.players else None
     draws = int(payload.get("draws", 1))
-    wormhole_gen = ("Wormhole Generator" in (you.known_techs if you else [])) or bool(payload.get("wormhole_generator", False))
+    owned = you.owned_tech_ids if you and you.owned_tech_ids else set()
+    wormhole_gen = ("wormhole_generator" in owned) or bool(payload.get("wormhole_generator", False))
     discs_available = int(payload.get("discs_available", 1))
     colony_ships = dict(payload.get("colony_ships", {"yellow":1,"blue":1,"brown":1,"wild":0}))
     p_connect_default = float(payload.get("p_connect_default", 0.70))

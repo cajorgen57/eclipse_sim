@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from copy import deepcopy
 
 from .game_models import GameState, PlayerState, Resources, MapState, TechDisplay, Pieces
+from .technology import load_tech_definitions
 
 _ROUND_EXPLORED_FRACTION = 0.33
 
@@ -72,6 +73,8 @@ def assemble_state(
       - manual_inputs can be nested dicts or dot-path overrides (e.g., "players.you.resources.money": 12).
     """
     gs = deepcopy(prior_state) if prior_state is not None else _default_state()
+    if not gs.tech_definitions:
+        gs.tech_definitions = load_tech_definitions()
     # Update core
     gs.map = map_state
     gs.tech_display = tech_display
@@ -83,9 +86,15 @@ def assemble_state(
     _ensure_bags_for_rings(gs)
     _populate_explore_bags(gs)
 
+    # Ensure player tech state derived from any known tech lists remains consistent.
+    for p in gs.players.values():
+        _initialise_player_state(p, gs.tech_definitions)
+
     # Apply manual inputs
     if manual_inputs:
         _apply_manual_inputs(gs, manual_inputs)
+        for p in gs.players.values():
+            _initialise_player_state(p, gs.tech_definitions)
 
     _validate_existing_designs(gs)
 
@@ -117,10 +126,13 @@ def apply_overrides(state: GameState, manual_inputs: Dict[str, Any]) -> GameStat
 
 def _default_state() -> GameState:
     players = {
-        "you": PlayerState(player_id="you", color="orange", resources=Resources(10,7,6)),
-        "blue": PlayerState(player_id="blue", color="blue", resources=Resources(8,6,7))
+        "you": PlayerState(player_id="you", color="orange", resources=Resources(10,7,6), influence_discs=3),
+        "blue": PlayerState(player_id="blue", color="blue", resources=Resources(8,6,7), influence_discs=3)
     }
     gs = GameState(round=6, active_player="you", players=players, map=MapState(), tech_display=TechDisplay())
+    for p in gs.players.values():
+        _initialise_player_state(p, gs.tech_definitions)
+    gs.tech_definitions = load_tech_definitions()
     # Provide a minimal example bag so exploration math runs. Caller should replace with real counts.
     gs.bags = {"R2": {"ancient":3, "monolith":1, "money2":4, "science2":4, "materials2":4}}
     return gs
@@ -133,7 +145,9 @@ def _reconcile_players_from_map(gs: GameState) -> None:
             if pid not in present:
                 present.add(pid)
                 # Neutral defaults
-                gs.players[pid] = PlayerState(player_id=pid, color=pid, resources=Resources(6,6,6))
+                new_player = PlayerState(player_id=pid, color=pid, resources=Resources(6,6,6))
+                _initialise_player_state(new_player, gs.tech_definitions)
+                gs.players[pid] = new_player
             # Ensure Pieces data structure is well-formed
             p = hx.pieces[pid]
             if p.cubes is None:
@@ -201,6 +215,39 @@ def _count_explored_tiles(gs: GameState, player_count: int) -> Counter[int]:
     return counts
 
 
+def _initialise_player_state(player: PlayerState, definitions: Optional[Dict[str, "Tech"]]=None) -> None:
+    from .technology import load_tech_definitions  # local import to avoid cycles
+
+    tech_defs = definitions or load_tech_definitions()
+    player.science = int(player.science or player.resources.science)
+    if player.influence_discs is None:
+        player.influence_discs = 0
+    player.influence_discs = int(player.influence_discs)
+    player.owned_tech_ids = set(player.owned_tech_ids or set())
+    player.tech_count_by_category = dict(player.tech_count_by_category or {})
+    player.unlocked_parts = set(player.unlocked_parts or set())
+    player.unlocked_structures = set(player.unlocked_structures or set())
+
+    name_to_id = {t.name.lower(): tid for tid, t in tech_defs.items()}
+    for entry in list(player.known_techs or []):
+        tid = name_to_id.get(entry.lower())
+        if tid:
+            player.owned_tech_ids.add(tid)
+
+    # Recompute caches from owned techs
+    player.tech_count_by_category.clear()
+    player.unlocked_parts.clear()
+    player.unlocked_structures.clear()
+    for tid in list(player.owned_tech_ids):
+        tech = tech_defs.get(tid)
+        if not tech:
+            continue
+        player.tech_count_by_category[tech.category] = player.tech_count_by_category.get(tech.category, 0) + 1
+        player.unlocked_parts.update(tech.grants_parts)
+        player.unlocked_structures.update(tech.grants_structures)
+        if tech.name not in player.known_techs:
+            player.known_techs.append(tech.name)
+            
 def _validate_existing_designs(gs: GameState) -> None:
     try:
         from .rules_engine import validate_design

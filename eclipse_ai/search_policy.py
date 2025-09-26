@@ -6,6 +6,7 @@ import math, random, copy
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
 from .rules_engine import legal_actions
 from .evaluator import evaluate_action
+from .technology import do_research, ResearchError, load_tech_definitions
 
 # =============================
 # Public data structures
@@ -256,11 +257,13 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
 
     if t == ActionType.RESEARCH:
         tech = str(p.get("tech", ""))
-        if tech and tech not in you.known_techs:
-            you.known_techs.append(tech)
-            # subtract rough science cost
-            cost = max(2, _SCIENCE_COST_BASE + min(2, len(you.known_techs)//4))
-            you.resources.science = max(0, you.resources.science - cost)
+        if tech:
+            if not s.tech_definitions:
+                s.tech_definitions = load_tech_definitions()
+            try:
+                do_research(s, you, tech)
+            except ResearchError:
+                pass
         return s
 
     if t == ActionType.BUILD:
