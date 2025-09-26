@@ -92,7 +92,14 @@ class ShipDesign:
     hull: int = 1
     cannons: int = 0
     missiles: int = 0
-    drive: int = 0
+    drive: int = 0  # legacy single-drive field kept for backward compatibility
+    drives: int = 0
+    has_jump_drive: bool = False
+    interceptor_bays: int = 0
+
+    def movement_value(self) -> int:
+        """Return the total movement points provided by installed drives."""
+        return max(0, int(self.drives if self.drives else self.drive))
 
 @dataclass
 class Pieces:
@@ -112,11 +119,15 @@ class Hex:
     id: str
     ring: int
     wormholes: List[int] = field(default_factory=list)  # 0..5 edges present
+    neighbors: Dict[int, str] = field(default_factory=dict)  # edge -> neighbor hex id
     planets: List[Planet] = field(default_factory=list)
     pieces: Dict[str, Pieces] = field(default_factory=dict)  # player_id -> Pieces
     ancients: int = 0
     monolith: bool = False
     anomaly: bool = False
+    explored: bool = True
+    has_warp_portal: bool = False
+    has_gcds: bool = False
 
 @dataclass
 class TechDisplay:
@@ -132,6 +143,7 @@ class PlayerState:
     ship_designs: Dict[str, ShipDesign] = field(default_factory=dict)  # interceptor, cruiser, dreadnought, starbase
     reputation: List[int] = field(default_factory=list)
     diplomacy: Dict[str, str] = field(default_factory=dict)
+    has_wormhole_generator: bool = False
 
 @dataclass
 class MapState:
