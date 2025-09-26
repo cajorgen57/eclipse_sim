@@ -8,7 +8,7 @@ from typing import Any, Dict, Iterable, Set
 import pytest
 
 from eclipse_ai.rules_engine import RulesConfig, legal_actions
-from eclipse_ai.types import Action, ActionType, GameState
+from eclipse_ai.game_models import Action, ActionType, GameState
 
 
 _BASE_STATE: Dict[str, Any] = {

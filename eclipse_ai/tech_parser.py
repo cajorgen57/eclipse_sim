@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Tuple
 import os, json, re
 
-from .types import TechDisplay
+from .game_models import TechDisplay
 
 # Optional deps
 try:

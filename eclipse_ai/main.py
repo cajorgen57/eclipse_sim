@@ -7,7 +7,7 @@ from .board_parser import parse_board
 from .tech_parser import parse_tech
 from .state_assembler import assemble_state
 from .search_policy import MCTSPlanner, Plan, PlanStep
-from .types import GameState
+from .game_models import GameState
 from .uncertainty import BeliefState
 from .overlay import plan_overlays
 

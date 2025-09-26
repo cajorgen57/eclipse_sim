@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Tuple
 import math, random, copy
 
-from .types import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
+from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
 from .rules_engine import legal_actions
 from .evaluator import evaluate_action
 

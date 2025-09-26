@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Tuple
 
-from .types import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources, ShipDesign
+from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources, ShipDesign
 
 # =============================
 # Config
