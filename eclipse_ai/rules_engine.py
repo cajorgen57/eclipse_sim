@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict, is_dataclass
 from typing import List, Dict, Any, Optional, Tuple
 from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources, ShipDesign
 from .technology import discounted_cost, can_research, load_tech_definitions
@@ -325,6 +325,28 @@ def _validate_legacy_design(player: PlayerState, ship_key: str, design: ShipDesi
 def _coerce_ship_design(blueprint: Any) -> ShipDesign:
     if isinstance(blueprint, ShipDesign):
         return blueprint
+    if is_dataclass(blueprint):
+        data = asdict(blueprint)
+        mv = getattr(blueprint, "movement_value", None)
+        if callable(mv):
+            try:
+                data.setdefault("movement_value", mv())
+            except TypeError:
+                pass
+        elif mv is not None:
+            data.setdefault("movement_value", mv)
+        return _coerce_ship_design(data)
+    if hasattr(blueprint, "__dict__") and not isinstance(blueprint, dict):
+        data = dict(vars(blueprint))
+        mv = data.get("movement_value")
+        if mv is None:
+            method = getattr(blueprint, "movement_value", None)
+            if callable(method):
+                try:
+                    data["movement_value"] = method()
+                except TypeError:
+                    pass
+        return _coerce_ship_design(data)
     if isinstance(blueprint, dict):
         design = ShipDesign()
         for attr, aliases in (

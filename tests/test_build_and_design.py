@@ -9,6 +9,7 @@ from eclipse_ai.game_models import (
     Resources,
     Hex,
     Pieces,
+    ShipDesign as LegacyShipDesign,
 )
 from eclipse_ai.rules_engine import (
     BUILD_COST,
@@ -129,6 +130,16 @@ def test_values_cumulative():
     assert design.movement_value == 4
     assert design.initiative == 4
     assert design.energy_consumption == 4
+
+
+def test_legacy_game_model_design_supported():
+    player = _base_player()
+    legacy = LegacyShipDesign(drive=1, drives=1)
+
+    # Should not raise for pre-part aggregated blueprints.
+    validate_design(player, "interceptor", legacy)
+    assert legacy.drive == 1
+    assert legacy.movement_value() == 1
 
 
 def test_build_caps():
