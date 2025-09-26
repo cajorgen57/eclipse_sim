@@ -6,8 +6,10 @@ import argparse
 import json
 import textwrap
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Dict, List, Sequence
 from xml.sax.saxutils import escape
+
+from ..rules_engine import BUILD_COST
 
 
 SVG_WIDTH = 900
@@ -40,41 +42,288 @@ def _fmt_number(value, percent: bool = False) -> str:
     if percent:
         return f"{value * 100:.1f}%"
     return f"{value:.2f}"
-
-
-def _format_payload(payload) -> str:
-    if payload is None or payload == {}:
-        return "—"
-    if isinstance(payload, (str, int, float)):
-        return str(payload)
-    return json.dumps(payload, ensure_ascii=False)
-
-
 def _plan_body_lines(plan: dict) -> tuple[str, list[str]]:
     title = plan.get("label") or plan.get("action") or "Plan"
     score = _fmt_number(plan.get("score"))
-    risk = _fmt_number(plan.get("risk"), percent=True)
+    steps: Sequence[Dict[str, Any]] = plan.get("steps", [])
+    probabilistic = any(_is_probabilistic_step(step) for step in steps)
+    risk_value = plan.get("risk") if probabilistic else None
+    risk = _fmt_number(risk_value, percent=True) if probabilistic else "N/A"
     header = f"Score: {score}    Risk: {risk}"
 
     lines: list[str] = [header, ""]
-    steps: Iterable[dict] = plan.get("steps", [])
     if not steps:
         lines.append("No detailed steps provided.")
         return title, lines
 
     for idx, step in enumerate(steps, start=1):
-        action = step.get("action", "?")
-        payload = _format_payload(step.get("payload"))
-        stats_parts = []
-        if step.get("ev") is not None:
-            stats_parts.append(f"EV {_fmt_number(step['ev'])}")
-        if step.get("risk") is not None:
-            stats_parts.append(f"Risk {_fmt_number(step['risk'], percent=True)}")
-        stats = f" ({', '.join(stats_parts)})" if stats_parts else ""
-        raw_line = f"{idx}. {action}: {payload}{stats}"
-        wrapped = textwrap.wrap(raw_line, width=80) or [raw_line]
-        lines.extend(wrapped)
+        for raw_line in _render_step_lines(step, idx):
+            lines.extend(_wrap_preserving_indent(raw_line))
     return title, lines
+
+
+def _render_step_lines(step: Dict[str, Any], index: int) -> List[str]:
+    action = step.get("action", "?")
+    payload = step.get("payload") or {}
+    details = step.get("details") or {}
+    expected_vp = step.get("score")
+    action_key = str(action).lower()
+
+    summary = _summarize_step_header(index, action_key, payload)
+    lines = [summary]
+
+    cost_line = _describe_cost(action_key, payload)
+    if cost_line:
+        lines.append("   " + cost_line)
+
+    benefit_line = _describe_benefit(action_key, expected_vp, details)
+    if benefit_line:
+        lines.append("   " + benefit_line)
+
+    for reason in _describe_reason(action_key, payload, details):
+        lines.append("   " + reason)
+
+    if _is_probabilistic_step(step) and isinstance(step.get("risk"), (int, float)):
+        lines.append(f"   Risk: {step['risk'] * 100:.1f}% outcome variance")
+
+    return lines
+
+
+def _wrap_preserving_indent(line: str) -> List[str]:
+    indent = len(line) - len(line.lstrip(" "))
+    text = line.strip()
+    width = max(20, 80 - indent)
+    wrapped = textwrap.wrap(text, width=width) or [text]
+    prefix = " " * indent
+    return [prefix + part for part in wrapped]
+
+
+def _summarize_step_header(index: int, action_key: str, payload: Dict[str, Any]) -> str:
+    if action_key == "build":
+        location = payload.get("hex") or payload.get("at")
+        targets = _summarize_build_targets(payload)
+        loc_text = f" at {location}" if location else ""
+        return f"{index}. Build{loc_text} — {targets}"
+    if action_key == "move":
+        src = payload.get("from") or payload.get("source")
+        dst = payload.get("to") or payload.get("target")
+        ships = _summarize_ships(payload.get("ships"))
+        path = f"{src} → {dst}" if src or dst else "fleet reposition"
+        ship_text = f" with {ships}" if ships else ""
+        return f"{index}. Move {path}{ship_text}"
+    if action_key == "explore":
+        origin = payload.get("from") or payload.get("source")
+        target = payload.get("pos") or payload.get("hex") or payload.get("position")
+        draws = payload.get("draws") or payload.get("draw")
+        draw_text = f" ({draws} draw{'s' if draws and draws != 1 else ''})" if draws else ""
+        if origin and target:
+            return f"{index}. Explore from {origin} toward {target}{draw_text}"
+        if target:
+            return f"{index}. Explore new hex {target}{draw_text}"
+        return f"{index}. Explore{draw_text}"
+    if action_key == "research":
+        tech = payload.get("tech") or payload.get("technology")
+        return f"{index}. Research {tech or 'technology'}"
+    if action_key == "upgrade":
+        return f"{index}. Upgrade ship designs"
+    if action_key == "influence":
+        target = payload.get("hex") or payload.get("target")
+        return f"{index}. Influence {target or 'territory'}"
+    if action_key == "diplomacy":
+        ally = payload.get("with") or payload.get("ally")
+        return f"{index}. Diplomacy with {ally or 'opponent'}"
+    if action_key == "pass":
+        return f"{index}. Pass"
+    return f"{index}. {action_key.capitalize()}"
+
+
+def _describe_cost(action_key: str, payload: Dict[str, Any]) -> str:
+    if action_key == "build":
+        total = _estimate_build_cost(payload)
+        if total is not None:
+            return f"Resource cost: Materials {total}"
+    if action_key == "research":
+        if isinstance(payload.get("approx_cost"), (int, float)):
+            return f"Resource cost: Science ≈ {int(payload['approx_cost'])}"
+    cost_payload = payload.get("cost") or payload.get("costs")
+    if isinstance(cost_payload, dict) and cost_payload:
+        formatted = ", ".join(f"{k} {v}" for k, v in cost_payload.items())
+        return f"Resource cost: {formatted}"
+    return "Resource cost: None noted"
+
+
+def _describe_benefit(action_key: str, expected_vp: Any, details: Dict[str, Any]) -> str | None:
+    if not isinstance(expected_vp, (int, float)):
+        return None
+    text = f"Potential gain: ΔVP {expected_vp:+.2f}"
+    if action_key == "move" and isinstance(details, dict):
+        if "post_control_ev" in details:
+            text += f" (territory {details['post_control_ev']:+.2f})"
+    return text
+
+
+def _describe_reason(action_key: str, payload: Dict[str, Any], details: Dict[str, Any]) -> List[str]:
+    details = details if isinstance(details, dict) else {}
+    if action_key == "explore":
+        summary = _summarize_explore_notes(details.get("explore_notes"))
+        if summary:
+            return [f"Likely gains: {summary}"]
+        return ["Exploration value modeled from tile bag distribution."]
+    if action_key == "move":
+        if "combat_win_prob" in details:
+            win = float(details.get("combat_win_prob", 0.0)) * 100.0
+            atk = details.get("expected_losses_attacker")
+            dfn = details.get("expected_losses_defender")
+            parts = [f"Combat advantage: {win:.1f}% win chance"]
+            if isinstance(atk, (int, float)) and isinstance(dfn, (int, float)):
+                parts.append(
+                    f"Expected losses – attacker {atk:.1f}, defender {dfn:.1f}"
+                )
+            return parts
+        if details.get("positional"):
+            terr = details.get("territory_ev")
+            if isinstance(terr, (int, float)):
+                return [f"Positional play securing territory value {terr:+.2f} VP."]
+            return ["Positional move to improve board presence."]
+        return ["Fleet reposition without immediate combat."]
+    if action_key == "build":
+        contested = details.get("contested")
+        ships = details.get("ships")
+        extras: List[str] = []
+        if isinstance(ships, dict) and ships:
+            extras.append(f"New assets improve fleet mix: {_summarize_ships(ships)}")
+        if contested:
+            extras.append("Reinforces a contested hex against enemy presence.")
+        if not extras:
+            extras.append("Build action to expand military capacity.")
+        return extras
+    if action_key == "research":
+        tech = payload.get("tech") or payload.get("technology")
+        pressure = details.get("pressure")
+        if isinstance(pressure, (int, float)):
+            return [f"Tech pressure score {pressure:.2f} guides priority for {tech}."]
+        return [f"Researching {tech} to improve capabilities."]
+    if action_key == "upgrade":
+        delta = details.get("delta_power")
+        if isinstance(delta, (int, float)):
+            return [f"Design changes raise fleet power by {delta:.2f}."]
+        return ["Ship upgrades bolster future combats."]
+    if action_key == "influence":
+        income = details.get("income_delta")
+        if isinstance(income, dict) and income:
+            formatted = ", ".join(f"{k} {v:+d}" for k, v in income.items() if isinstance(v, int))
+            pv = details.get("pv")
+            if isinstance(pv, (int, float)):
+                return [f"Income shift ({formatted}) with PV factor {pv:.2f}."]
+            return [f"Income shift ({formatted})."]
+        return ["Influence realignment for better economy."]
+    if action_key == "diplomacy":
+        ally = payload.get("with") or payload.get("ally")
+        ships = details.get("ally_ships")
+        if isinstance(ships, (int, float)) and ally:
+            return [f"Alliance with {ally} covering {int(ships)} ships on the board."]
+        if ally:
+            return [f"Pursuing diplomatic pact with {ally}."]
+        return ["Diplomatic action to secure support."]
+    return []
+
+
+def _summarize_build_targets(payload: Dict[str, Any]) -> str:
+    parts: List[str] = []
+    ships = payload.get("ships")
+    if isinstance(ships, dict) and ships:
+        parts.append(_summarize_ships(ships))
+    for key in ("starbase", "orbital", "monolith"):
+        if int(payload.get(key, 0)) > 0:
+            parts.append(f"{int(payload[key])} {key}")
+    structures = payload.get("structures")
+    if isinstance(structures, dict) and structures:
+        parts.append(_summarize_ships(structures))
+    return ", ".join(parts) if parts else "expand forces"
+
+
+def _summarize_ships(ships: Dict[str, Any] | None) -> str:
+    if not isinstance(ships, dict) or not ships:
+        return ""
+    parts: List[str] = []
+    for cls, count in ships.items():
+        try:
+            n = int(count)
+        except (TypeError, ValueError):
+            continue
+        if n <= 0:
+            continue
+        name = str(cls)
+        parts.append(f"{n} {name}")
+    return ", ".join(parts)
+
+
+def _estimate_build_cost(payload: Dict[str, Any]) -> int | None:
+    total = 0
+    counted = False
+    ships = payload.get("ships")
+    if isinstance(ships, dict):
+        for cls, count in ships.items():
+            try:
+                n = int(count)
+            except (TypeError, ValueError):
+                continue
+            key = str(cls).lower()
+            if key in BUILD_COST and n > 0:
+                total += BUILD_COST[key] * n
+                counted = True
+    structures = payload.get("structures")
+    if isinstance(structures, dict):
+        for struct, count in structures.items():
+            try:
+                n = int(count)
+            except (TypeError, ValueError):
+                continue
+            key = str(struct).lower()
+            if key in BUILD_COST and n > 0:
+                total += BUILD_COST[key] * n
+                counted = True
+    for key in ("starbase", "orbital", "monolith"):
+        try:
+            n = int(payload.get(key, 0))
+        except (TypeError, ValueError):
+            continue
+        if key in BUILD_COST and n > 0:
+            total += BUILD_COST[key] * n
+            counted = True
+    return total if counted else None
+
+
+def _summarize_explore_notes(notes: Any) -> str | None:
+    if not isinstance(notes, str):
+        return None
+    try:
+        info = json.loads(notes)
+    except (ValueError, TypeError):
+        return None
+    top = info.get("top_picks") or []
+    if not top:
+        return None
+    pieces: List[str] = []
+    for entry in top[:3]:
+        cat = entry.get("category")
+        rate = entry.get("pick_rate")
+        avg = entry.get("avg_score")
+        if cat is None or rate is None or avg is None:
+            continue
+        pieces.append(f"{cat} ({float(rate)*100:.0f}% @ {float(avg):+.2f} VP)")
+    return "; ".join(pieces) if pieces else None
+
+
+def _is_probabilistic_step(step: Dict[str, Any]) -> bool:
+    action = str(step.get("action", "")).lower()
+    if action == "explore":
+        return True
+    if action == "move":
+        details = step.get("details")
+        if isinstance(details, dict) and ("combat_win_prob" in details):
+            return True
+    return False
 
 
 def render_report(data: dict, output_path: Path, *, title: str | None = None) -> None:
