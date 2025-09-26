@@ -1,118 +1,196 @@
-from eclipse_ai.rules_engine import legal_actions
-from eclipse_ai.types import ActionType, GameState
+"""Tests for the rules engine heuristics respecting Agents_Testing guidelines."""
+
+from __future__ import annotations
+
+import json
+from typing import Any, Dict, Iterable, Set
+
+import pytest
+
+from eclipse_ai.rules_engine import RulesConfig, legal_actions
+from eclipse_ai.types import Action, ActionType, GameState
 
 
-def _orion_turn_one_state() -> GameState:
-    """Construct a minimal, rules-respecting two-player opening state."""
-
-    state_dict = {
-        "round": 1,
-        "active_player": "orion",
-        "players": {
-            "orion": {
-                "player_id": "orion",
-                "color": "black",
-                # Orion starts with strong materials economy and modest science.
-                "resources": {"money": 3, "science": 3, "materials": 5},
-                # Basic interceptor design matching the reference ship sheet.
-                "ship_designs": {
-                    "interceptor": {
-                        "computer": 1,
-                        "shield": 1,
-                        "initiative": 2,
-                        "hull": 1,
-                        "cannons": 1,
-                        "missiles": 0,
-                        "drive": 1,
-                    }
-                    "cruiser": {
-                        "computer": 1,
-                        "shield": 1,
-                        "initiative": 3,
-                        "hull": 1,
-                        "cannons": 1,
-                        "missiles": 0,
-                        "drive": 1,
-                    }
+_BASE_STATE: Dict[str, Any] = {
+    "round": 2,
+    "active_player": "P1",
+    "players": {
+        "P1": {
+            "player_id": "P1",
+            "color": "orange",
+            "known_techs": [],
+            "resources": {"money": 6, "science": 5, "materials": 6},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
                 },
-                "known_techs": [],
-            },
-            "hydran": {
-                "player_id": "hydran",
-                "color": "blue",
-                "resources": {"money": 2, "science": 5, "materials": 2},
-                "known_techs": [],
+                "cruiser": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 3,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                },
             },
         },
-        "map": {
-            "hexes": {
-                # Orion home system with occupied planets and starting fleet.
-                "232": {
-                    "id": "232",
-                    "ring": 2,
-                    "planets": [
-                        {"type": "brown", "colonized_by": "orion"},
-                        {"type": "pink", "colonized_by": "orion"},
-                    ],
-                    "pieces": {
-                        "orion": {
-                            "ships": {"cruiser": 1},
-                            "starbase": 0,
-                            "discs": 1,
-                            "cubes": {"yellow": 2, "blue": 1},
-                            "discovery": 0,
-                        }
-                    },
-                    "ancients": 0,
-                    "monolith": False,
-                },
-                # Adjacent unexplored sector with open planets to encourage influence/explore.
-   
-                # Rival home system to show enemy presence.
-                "224": {
-                    "id": "224",
-                    "ring": 2,
-                    "planets": [
-                        {"type": "yellow", "colonized_by": "hydran"},
-                        {"type": "brown", "colonized_by": None},
-                    ],
-                    "pieces": {
-                        "hydran": {
-                            "ships": {"interceptor": 1},
-                            "starbase": 0,
-                            "discs": 1,
-                            "cubes": {"pink": 2, "orange": 1},
-                            "discovery": 0,
-                        }
-                    },
-                    "ancients": 0,
-                    "monolith": False,
-                },
-            }
+        "P2": {
+            "player_id": "P2",
+            "color": "blue",
+            "known_techs": ["Positron Computer"],
+            "resources": {"money": 4, "science": 3, "materials": 3},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                }
+            },
         },
-        # Tier I techs are available and affordable with current science.
-        "tech_display": {
-            "available": ["Plasma Cannon I", "Fusion Drive I", "Advanced Mining"],
-            "tier_counts": {"I": 6, "II": 0, "III": 0},
-        },
-        # First ring bag seeded so explore actions are legal.
-        "bags": {"R1": {"unknown": 6}},
-    }
-    return GameState.from_dict(state_dict)
+    },
+    "map": {
+        "hexes": {
+            "H1": {
+                "id": "H1",
+                "ring": 1,
+                "planets": [
+                    {"type": "yellow", "colonized_by": "P1"},
+                    {"type": "blue", "colonized_by": "P1"},
+                ],
+                "pieces": {
+                    "P1": {
+                        "ships": {"interceptor": 2},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"yellow": 2, "blue": 1},
+                    }
+                },
+            },
+            "H2": {
+                "id": "H2",
+                "ring": 2,
+                "planets": [
+                    {"type": "brown", "colonized_by": "P1"},
+                    {"type": "yellow", "colonized_by": "P2"},
+                ],
+                "pieces": {
+                    "P1": {
+                        "ships": {"cruiser": 1},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"brown": 1},
+                    },
+                    "P2": {
+                        "ships": {"interceptor": 1},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"yellow": 1},
+                    },
+                },
+            },
+            "H3": {
+                "id": "H3",
+                "ring": 2,
+                "planets": [
+                    {"type": "yellow", "colonized_by": None},
+                    {"type": "yellow", "colonized_by": None},
+                ],
+                "pieces": {},
+            },
+        }
+    },
+    "tech_display": {
+        "available": ["Plasma Cannon I", "Fusion Drive II", "Advanced Mining"],
+        "tier_counts": {"I": 6, "II": 3, "III": 1},
+    },
+    "bags": {"R1": {"unknown": 4}, "R2": {"unknown": 3}},
+}
 
 
-def test_orion_turn_one_action_suite():
-    state = _orion_turn_one_state()
-    actions = legal_actions(state, "orion")
-    action_types = {a.type for a in actions}
+@pytest.fixture(name="base_state")
+def fixture_base_state() -> GameState:
+    """Return an independent copy of the representative base scenario."""
 
-    # Ensure the core first-turn options are present.
-    assert ActionType.PASS in action_types
-    assert ActionType.EXPLORE in action_types
-    assert ActionType.BUILD in action_types
-    assert ActionType.RESEARCH in action_types
-    assert ActionType.INFLUENCE in action_types
+    payload = json.loads(json.dumps(_BASE_STATE))
+    return GameState.from_dict(payload)
 
-    # Confirm the dataclass conversion preserved nested structures.
-    assert state.players["orion"].resources.materials == 3
-    assert state.map.hexes["000"].pieces["orion"].ships["interceptor"] == 2
+
+def _action_types(actions: Iterable[Action]) -> Set[ActionType]:
+    return {a.type for a in actions}
+
+
+def test_unknown_player_only_passes() -> None:
+    """Missing players default to a solitary pass action."""
+
+    state = GameState()
+    actions = legal_actions(state, "ghost")
+    assert actions == [Action(ActionType.PASS, {})]
+
+
+def test_explore_considers_adjacent_rings(base_state: GameState) -> None:
+    """Exploration proposals draw from rings touching the player's footprint."""
+
+    actions = legal_actions(base_state, "P1")
+    explore_rings = {a.payload["ring"] for a in actions if a.type is ActionType.EXPLORE}
+    assert explore_rings == {1, 2}
+
+
+def test_research_respects_affordability(base_state: GameState) -> None:
+    """Research options ignore owned technologies and respect science availability."""
+
+    base_state.players["P1"].known_techs = ["Plasma Cannon I"]
+    base_state.players["P1"].resources.science = 4
+
+    actions = legal_actions(base_state, "P1")
+    research = [a for a in actions if a.type is ActionType.RESEARCH]
+
+    researched_techs = {a.payload["tech"] for a in research}
+    assert "Plasma Cannon I" not in researched_techs
+    for act in research:
+        approx_cost = act.payload["approx_cost"]
+        is_stretch = act.payload.get("note") == "stretch"
+        assert approx_cost <= 4 or is_stretch
+
+
+def test_build_prioritises_contested_starbase(base_state: GameState) -> None:
+    """A contested hex with sufficient materials yields a starbase recommendation."""
+
+    actions = legal_actions(base_state, "P1")
+    build_payloads = [a.payload for a in actions if a.type is ActionType.BUILD]
+    assert any(p.get("hex") == "H2" and p.get("starbase") == 1 for p in build_payloads)
+
+
+def test_influence_recommends_high_value_hex(base_state: GameState) -> None:
+    """Influence suggestions target the richest available neutral hex."""
+
+    actions = legal_actions(base_state, "P1")
+    influence = [a for a in actions if a.type is ActionType.INFLUENCE]
+    assert influence
+    assert influence[0].payload["hex"] == "H3"
+
+
+def test_influence_can_be_disabled(base_state: GameState) -> None:
+    """When influence is disabled the rules engine omits those actions entirely."""
+
+    config = RulesConfig(enable_influence=False)
+    actions = legal_actions(base_state, "P1", config)
+    assert ActionType.INFLUENCE not in _action_types(actions)
+
+
+def test_diplomacy_toggle_removes_offers(base_state: GameState) -> None:
+    """Disabling diplomacy removes diplomatic offers from the action list."""
+
+    config = RulesConfig(enable_diplomacy=False)
+    actions = legal_actions(base_state, "P1", config)
+    assert ActionType.DIPLOMACY not in _action_types(actions)
