@@ -5,6 +5,7 @@ from typing import Dict, Optional
 
 from .map.hex import Hex, MapGraph, rotated_wormholes
 from .map.decks import ExplorationDecks, HexTile, DiscoveryTile, ResourcePool
+from .pathing import is_pinned
 
 
 @dataclass
@@ -45,7 +46,10 @@ def choose_explore_target(state: ExploreState, player_id: str, target: str) -> N
         if neighbor_id not in state.map.hexes:
             continue
         neighbor = state.map.hexes[neighbor_id]
-        if neighbor.owner == player_id or neighbor.ships.get(player_id, 0) > 0:
+        if neighbor.owner == player_id:
+            ok = True
+            break
+        if neighbor.ships.get(player_id, 0) > 0 and not is_pinned(neighbor, player_id):
             ok = True
             break
     if not ok:

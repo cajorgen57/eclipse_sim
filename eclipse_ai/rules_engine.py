@@ -8,6 +8,8 @@ from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet
 from .ship_parts import SHIP_PARTS, SHIP_BLUEPRINT_SLOTS, MOBILE_SHIPS
 from .types import ShipDesign
 from .research import enumerate_research_actions
+from .alliances import allies_for_player
+from .pathing import is_pinned
 
 # =============================
 # Config
@@ -166,10 +168,24 @@ def _enum_build(state: GameState, you: PlayerState) -> List[Action]:
 def _enum_moves(state: GameState, you: PlayerState) -> List[Action]:
     out: List[Action] = []
     your_hexes = _player_hexes(state, you.player_id)
+    allies = set(allies_for_player(state, you.player_id))
+    phase = (getattr(state, "phase", "") or "").upper()
+    reaction_map = getattr(state, "reactions_active", {}) or {}
+    is_reaction = bool(you.passed)
+    if not is_reaction and phase == "ACTION":
+        is_reaction = bool(reaction_map.get(you.player_id))
+    elif phase == "REACTION":
+        is_reaction = True
+
     # 1) Assault in place if enemies present
     for hx in your_hexes:
+        pieces = hx.pieces.get(you.player_id)
+        if not pieces:
+            continue
+        if is_pinned(hx, you.player_id, state=state, allies=allies):
+            continue
         if _enemy_presence_in_hex(state, you.player_id, hx) > 0:
-            ships = dict(hx.pieces[you.player_id].ships)
+            ships = _movable_ships(pieces, single_ship=is_reaction)
             if ships:
                 out.append(Action(ActionType.MOVE, {"from": hx.id, "to": hx.id, "ships": ships}))
     # 2) Move toward valuable or enemy-held hexes (range-agnostic placeholder)
@@ -180,7 +196,12 @@ def _enum_moves(state: GameState, you: PlayerState) -> List[Action]:
         reverse=True
     )[:3]
     for src in your_hexes:
-        ships = dict(src.pieces[you.player_id].ships)
+        pieces = src.pieces.get(you.player_id)
+        if not pieces:
+            continue
+        if is_pinned(src, you.player_id, state=state, allies=allies):
+            continue
+        ships = _movable_ships(pieces, single_ship=is_reaction)
         if not ships:
             continue
         # aim at top 2 enemy hexes
@@ -613,6 +634,23 @@ def _dominant_planet_color(hx: Hex) -> Tuple[Optional[str], int]:
             elif t.startswith("p") or t.startswith("m"): counts["brown"] += 1
     color = max(counts, key=lambda k: counts[k]) if any(counts.values()) else None
     return (color, counts[color]) if color else (None, 0)
+
+
+def _movable_ships(pieces: Pieces, *, single_ship: bool = False) -> Dict[str, int]:
+    ships: Dict[str, int] = {}
+    for cls, count in (pieces.ships or {}).items():
+        if cls == "starbase":
+            continue
+        n = int(count or 0)
+        if n <= 0:
+            continue
+        ships[cls] = n
+    if not ships:
+        return {}
+    if not single_ship:
+        return ships
+    chosen = sorted(ships.keys())[0]
+    return {chosen: 1}
 
 def _tech_priority_key(name: str) -> float:
     s = name.lower()

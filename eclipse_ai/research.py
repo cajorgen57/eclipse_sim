@@ -1,7 +1,7 @@
 """Special research rules for expansion factions."""
 from __future__ import annotations
 
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from .game_models import GameState, PlayerState, Action, ActionType, Tech
 
@@ -10,10 +10,12 @@ def discounted_cost(player: PlayerState, tech: Tech, band_cost: Optional[int] = 
     """Compute a player's discounted price for a technology."""
 
     base = band_cost if band_cost is not None else tech.base_cost
+    min_cost = tech.cost_range[0] if getattr(tech, "cost_range", None) else tech.base_cost
+    base = max(base, min_cost)
     if tech.is_rare:
-        return max(1, base)
+        return max(min_cost, base)
     discount = player.tech_count_by_category.get(tech.category, 0)
-    return max(1, base - discount)
+    return max(min_cost, base - discount)
 
 
 def can_afford(player: PlayerState, tech: Tech, band_cost: Optional[int] = None) -> bool:

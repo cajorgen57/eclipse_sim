@@ -170,6 +170,8 @@ class Hex:
     anomaly: bool = False
     explored: bool = True
     has_warp_portal: bool = False
+    has_deep_warp_portal: bool = False
+    is_warp_nexus: bool = False
     has_gcds: bool = False
 
 @dataclass
@@ -267,6 +269,7 @@ class GameState:
     turn_index: int = 0
     feature_flags: Dict[str, bool] = field(default_factory=dict)
     alliances: Dict[str, Alliance] = field(default_factory=dict)
+    reactions_active: Dict[str, bool] = field(default_factory=dict)
 
     def to_json(self) -> str:
         def _normalize(value: Any) -> Any:

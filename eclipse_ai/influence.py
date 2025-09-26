@@ -4,6 +4,7 @@ from typing import Dict
 
 from .explore import ExploreState
 from .map.hex import MapGraph
+from .pathing import valid_edge
 
 
 def place_influence_disc(state: ExploreState, player_id: str, hex_id: str) -> None:
@@ -12,6 +13,9 @@ def place_influence_disc(state: ExploreState, player_id: str, hex_id: str) -> No
         raise ValueError("Cannot take control while Ancients remain on the hex")
     if hex_obj.gcds:
         raise ValueError("Galactic Center Defense System must be destroyed before control")
+    for owner, count in (hex_obj.ships or {}).items():
+        if owner != player_id and int(count or 0) > 0:
+            raise ValueError("Cannot Influence a hex containing enemy ships")
     hex_obj.owner = player_id
 
 
@@ -23,21 +27,18 @@ def _flags(state_or_flags) -> Dict[str, bool]:
 
 def connection_allows_influence(map_state: MapGraph, a: str, b: str, *, feature_flags=None, player_has_wg: bool = False) -> bool:
     flags = _flags(feature_flags)
-    if flags.get("warp_portals") and _both_have_portals(map_state, a, b):
-        return True
-    link = map_state.connection_type(a, b)
-    if link == "full":
-        return True
-    if link == "half" and player_has_wg:
-        return True
-    return False
+    return valid_edge(
+        map_state,
+        a,
+        b,
+        feature_flags=flags,
+        player_has_wormhole_generator=player_has_wg,
+    )
 
 
 def connection_allows_diplomacy(map_state: MapGraph, a: str, b: str, *, feature_flags=None) -> bool:
     flags = _flags(feature_flags)
-    if flags.get("warp_portals") and _both_have_portals(map_state, a, b):
-        return True
-    return map_state.connection_type(a, b) == "full"
+    return valid_edge(map_state, a, b, feature_flags=flags)
 
 
 def _both_have_portals(map_state: MapGraph, a: str, b: str) -> bool:
@@ -45,4 +46,4 @@ def _both_have_portals(map_state: MapGraph, a: str, b: str) -> bool:
     hex_b = map_state.hexes.get(b)
     if not hex_a or not hex_b:
         return False
-    return bool(hex_a.warp_portal and hex_b.warp_portal)
+    return bool(getattr(hex_a, "warp_portal", False) and getattr(hex_b, "warp_portal", False))

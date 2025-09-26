@@ -150,17 +150,25 @@ def ship_presence(state: GameState, hex_obj: Hex, player_id: str) -> Tuple[int, 
     """Return ``(friendly, enemy)`` ship counts for pinning checks."""
     if not hex_obj:
         return (0, 0)
-    friendly = 0
+    friendly = allied_strength_in(state, hex_obj, player_id)
     enemy = int(hex_obj.ancients or 0)
     for owner, pieces in (hex_obj.pieces or {}).items():
-        ships = _ship_count(pieces)
-        if owner == player_id:
-            friendly += ships
-        elif are_allied(state, owner, player_id):
-            friendly += ships
-        else:
-            enemy += ships
+        if owner == player_id or are_allied(state, owner, player_id):
+            continue
+        enemy += _ship_count(pieces)
     return friendly, enemy
+
+
+def allied_strength_in(state: GameState, hex_obj: Hex, player_id: str) -> int:
+    """Return the total ship strength contributed by the player and their allies."""
+
+    if not hex_obj:
+        return 0
+    total = 0
+    for owner, pieces in (hex_obj.pieces or {}).items():
+        if owner == player_id or are_allied(state, owner, player_id):
+            total += _ship_count(pieces)
+    return total
 
 
 def merge_combat_sides(state: GameState, defenders: Iterable[str], attackers: Iterable[str]) -> Tuple[List[str], List[str], bool]:
@@ -250,5 +258,6 @@ __all__ = [
     "join_alliance",
     "leave_alliance",
     "ship_presence",
+    "allied_strength_in",
     "merge_combat_sides",
 ]
