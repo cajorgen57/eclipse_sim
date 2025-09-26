@@ -21,6 +21,7 @@ from .game_models import (
 from .main import recommend
 from .search_policy import MCTSPlanner, Plan, PlanStep
 from .overlay import plan_overlays
+from .species_data import SpeciesConfig, get_species, all_species, get_registry
 from .uncertainty import BeliefState, DiscreteHMM, TileParticleFilter, TileParticle
 
 __all__ = [
@@ -47,5 +48,9 @@ __all__ = [
     "DiscreteHMM",
     "TileParticleFilter",
     "TileParticle",
+    "SpeciesConfig",
+    "get_species",
+    "all_species",
+    "get_registry",
     "__version__",
 ]
