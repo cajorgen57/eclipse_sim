@@ -1,7 +1,7 @@
 from __future__ import annotations
 import sys
 from dataclasses import dataclass, field, asdict, is_dataclass, fields
-from typing import Dict, List, Optional, Tuple, Any, get_args, get_origin, get_type_hints
+from typing import Dict, List, Optional, Tuple, Any, Set, Literal, get_args, get_origin, get_type_hints
 from enum import Enum
 import json
 
@@ -35,12 +35,18 @@ def _build_dataclass(cls, data: Dict[str, Any]):
 
         if is_dataclass(ft) and isinstance(v, dict):
             kwargs[f.name] = _build_dataclass(ft, v)
-        elif origin is list and isinstance(v, list):
+        elif origin in (list, set, tuple) and isinstance(v, (list, set, tuple)):
             (inner,) = get_args(ft) or (Any,)
             if inner and is_dataclass(inner):
-                kwargs[f.name] = [_build_dataclass(inner, x) if isinstance(x, dict) else x for x in v]
+                items = [_build_dataclass(inner, x) if isinstance(x, dict) else x for x in v]
             else:
-                kwargs[f.name] = v
+                items = list(v)
+            if origin is set:
+                kwargs[f.name] = set(items)
+            elif origin is tuple:
+                kwargs[f.name] = tuple(items)
+            else:
+                kwargs[f.name] = items
         elif origin is dict and isinstance(v, dict):
             kt, vt = get_args(ft) or (Any, Any)
             if vt and is_dataclass(vt):
@@ -123,15 +129,36 @@ class TechDisplay:
     available: List[str] = field(default_factory=list)
     tier_counts: Dict[str, int] = field(default_factory=lambda: {"I":0,"II":0,"III":0})
 
+Effect = Dict[str, Any]
+
+
+@dataclass
+class Tech:
+    id: str
+    name: str
+    category: Literal["military", "grid", "nano", "quantum", "rare", "biotech", "economy"]
+    base_cost: int
+    is_rare: bool = False
+    grants_parts: List[str] = field(default_factory=list)
+    grants_structures: List[str] = field(default_factory=list)
+    immediate_effect: Optional[Effect] = None
+
+
 @dataclass
 class PlayerState:
     player_id: str
     color: str
-    known_techs: List[str] = field(default_factory=list)
     resources: Resources = field(default_factory=Resources)
     ship_designs: Dict[str, ShipDesign] = field(default_factory=dict)  # interceptor, cruiser, dreadnought, starbase
     reputation: List[int] = field(default_factory=list)
     diplomacy: Dict[str, str] = field(default_factory=dict)
+    known_techs: List[str] = field(default_factory=list)
+    owned_tech_ids: Set[str] = field(default_factory=set)
+    tech_count_by_category: Dict[str, int] = field(default_factory=dict)
+    science: int = 0
+    influence_discs: int = 0
+    unlocked_parts: Set[str] = field(default_factory=set)
+    unlocked_structures: Set[str] = field(default_factory=set)
 
 @dataclass
 class MapState:
@@ -141,13 +168,26 @@ class MapState:
 class GameState:
     round: int = 1
     active_player: str = "you"
+    phase: str = "action"
     players: Dict[str, PlayerState] = field(default_factory=dict)
     map: MapState = field(default_factory=MapState)
     tech_display: TechDisplay = field(default_factory=TechDisplay)
     bags: Dict[str, Dict[str, int]] = field(default_factory=dict)  # bag per ring: tile_type -> count
+    tech_bags: Dict[str, List[str]] = field(default_factory=dict)
+    market: List[str] = field(default_factory=list)
+    tech_definitions: Dict[str, Tech] = field(default_factory=dict)
 
     def to_json(self) -> str:
-        return json.dumps(asdict(self), indent=2)
+        def _normalize(value: Any) -> Any:
+            if isinstance(value, set):
+                return sorted(value)
+            if isinstance(value, dict):
+                return {k: _normalize(v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [_normalize(v) for v in value]
+            return value
+
+        return json.dumps(_normalize(asdict(self)), indent=2)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "GameState":
