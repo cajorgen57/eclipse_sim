@@ -91,7 +91,7 @@ class MCTSPlanner:
         children = sorted(root.children, key=lambda n: (n.N, n.Q), reverse=True)
         out: List[Plan] = []
         for child in children[:top_k]:
-            steps, total_score, risk = self._best_line(child, max_depth=depth)
+            steps, total_score, risk = self._best_line(child, max_depth=depth, base_state=root.state)
             out.append(Plan(steps=steps, total_score=total_score, risk=risk))
         if not out:
             # Fallback: single-ply ranking
@@ -184,19 +184,21 @@ class MCTSPlanner:
 
     # ---- plan extraction ----
 
-    def _best_line(self, node: '_Node', max_depth: int = 2) -> Tuple[List[PlanStep], float, float]:
+    def _best_line(self, node: '_Node', max_depth: int = 2, base_state: Optional[GameState] = None) -> Tuple[List[PlanStep], float, float]:
         steps: List[PlanStep] = []
         total, disc = 0.0, 1.0
         risks: List[float] = []
         curr = node
+        theoretical_game_state = copy.deepcopy(base_state) if base_state is not None else copy.deepcopy(node.parent.state if node.parent else curr.state)
         for _ in range(max_depth):
-            if curr.prior_score is None and curr.action is not None:
-                curr.prior_score = evaluate_action(curr.state, curr.action)
-            if curr.prior_score is not None and curr.action is not None:
-                steps.append(PlanStep(curr.action, curr.prior_score))
-                total += disc * float(curr.prior_score.expected_vp)
-                risks.append(float(curr.prior_score.risk))
-                disc *= self.discount
+            if curr.action is None:
+                break
+            score = evaluate_action(theoretical_game_state, curr.action)
+            steps.append(PlanStep(curr.action, score))
+            total += disc * float(score.expected_vp)
+            risks.append(float(score.risk))
+            disc *= self.discount
+            theoretical_game_state = _forward_model(theoretical_game_state, curr.player_id, curr.action)
             if not curr.children:
                 break
             curr = max(curr.children, key=lambda c: c.Q)

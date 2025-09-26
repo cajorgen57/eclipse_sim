@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field, asdict, is_dataclass
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Set
 from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources, ShipDesign
 from .technology import discounted_cost, can_research, load_tech_definitions
 from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources
@@ -61,38 +61,67 @@ def legal_actions(state: GameState, player_id: str, config: Optional[RulesConfig
     """
     cfg = config or RulesConfig()
     acts: List[Action] = []
+    possible_actions: Set[ActionType] = set()
     you = state.players.get(player_id) if state.players else None
     if you is None:
+        state.possible_actions = {ActionType.PASS}
+        state.can_explore = False
+        state.can_move_ships = False
         return [Action(ActionType.PASS, {})]
 
     # Explore
-    acts.extend(_enum_explore(state, you))
+    explore_actions = _enum_explore(state, you)
+    if explore_actions:
+        possible_actions.add(ActionType.EXPLORE)
+    acts.extend(explore_actions)
 
     # Research
-    acts.extend(_enum_research(state, you))
+    research_actions = _enum_research(state, you)
+    if research_actions:
+        possible_actions.add(ActionType.RESEARCH)
+    acts.extend(research_actions)
 
     # Build
-    acts.extend(_enum_build(state, you))
+    build_actions = _enum_build(state, you)
+    if build_actions:
+        possible_actions.add(ActionType.BUILD)
+    acts.extend(build_actions)
 
     # Move (includes "assault in place" if enemies are already in hex)
-    acts.extend(_enum_moves(state, you))
+    move_actions = _enum_moves(state, you)
+    if move_actions:
+        possible_actions.add(ActionType.MOVE)
+    acts.extend(move_actions)
 
     # Upgrade (suggest small design improvements)
-    acts.extend(_enum_upgrades(state, you))
+    upgrade_actions = _enum_upgrades(state, you)
+    if upgrade_actions:
+        possible_actions.add(ActionType.UPGRADE)
+    acts.extend(upgrade_actions)
 
     # Influence
     if cfg.enable_influence:
-        acts.extend(_enum_influence(state, you))
+        influence_actions = _enum_influence(state, you)
+        if influence_actions:
+            possible_actions.add(ActionType.INFLUENCE)
+        acts.extend(influence_actions)
 
     # Diplomacy
     if cfg.enable_diplomacy:
-        acts.extend(_enum_diplomacy(state, you))
+        diplomacy_actions = _enum_diplomacy(state, you)
+        if diplomacy_actions:
+            possible_actions.add(ActionType.DIPLOMACY)
+        acts.extend(diplomacy_actions)
 
     # Pass is always an option
     acts.append(Action(ActionType.PASS, {}))
+    possible_actions.add(ActionType.PASS)
 
     # Deduplicate and cap
     uniq = _dedup_actions(acts)
+    state.possible_actions = possible_actions
+    state.can_explore = ActionType.EXPLORE in possible_actions
+    state.can_move_ships = ActionType.MOVE in possible_actions
     return uniq[:cfg.max_actions]
 
 # =============================

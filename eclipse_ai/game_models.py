@@ -271,6 +271,9 @@ class GameState:
     alliances: Dict[str, Alliance] = field(default_factory=dict)
     reactions_active: Dict[str, bool] = field(default_factory=dict)
     connectivity_metrics: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    possible_actions: Set[ActionType] = field(default_factory=set)
+    can_explore: bool = True
+    can_move_ships: bool = False
 
     def to_json(self) -> str:
         def _normalize(value: Any) -> Any:
