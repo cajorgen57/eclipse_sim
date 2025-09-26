@@ -213,6 +213,7 @@ ORION_ROUND1_STATE = {
                 "id": "outer_frontier",
                 "ring": 2,
                 "wormholes": [1, 4],
+                "explored": False,
                 "planets": [
                     {"type": "yellow", "colonized_by": None},
                     {"type": "blue", "colonized_by": None},
