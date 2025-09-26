@@ -92,7 +92,16 @@ def recommend(
     # 5) Package results
     out_plans: List[Dict[str, Any]] = []
     for p in plans:
-        steps = [{"action": s.action.type.value, "payload": s.action.payload, "score": float(s.score.expected_vp), "risk": float(s.score.risk)} for s in p.steps]
+        steps = [
+            {
+                "action": s.action.type.value,
+                "payload": s.action.payload,
+                "score": float(s.score.expected_vp),
+                "risk": float(s.score.risk),
+                "details": dict(s.score.details),
+            }
+            for s in p.steps
+        ]
         out_plans.append({
             "score": float(p.total_score),
             "risk": float(p.risk),
