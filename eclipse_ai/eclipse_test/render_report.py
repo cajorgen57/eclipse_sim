@@ -146,7 +146,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("test_report.svg"),
+        default=Path("tests") / "test_report.svg",
         help="Destination path for the rendered SVG report.",
     )
     parser.add_argument("--title", help="Optional custom title for the report header.")
