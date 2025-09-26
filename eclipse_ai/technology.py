@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
 from .game_models import GameState, PlayerState, Tech
+from .research import discounted_cost as _expansion_discounted_cost, can_afford
 
 
 class ResearchError(RuntimeError):
@@ -24,7 +25,7 @@ MARKET_SIZES_BY_PLAYER_COUNT = {
 
 
 def _tech_data_path() -> Path:
-    return Path(__file__).resolve().parent.parent / "data" / "tech.json"
+    return Path(__file__).resolve().parent / "data" / "tech.json"
 
 
 def load_tech_definitions() -> Dict[str, Tech]:
@@ -41,29 +42,45 @@ def load_tech_definitions() -> Dict[str, Tech]:
     except FileNotFoundError as exc:  # pragma: no cover - configuration error
         raise ResearchError(f"technology data file missing: {path}") from exc
 
+    entries = raw.get("techs", raw) if isinstance(raw, dict) else raw
+
     catalog: Dict[str, Tech] = {}
-    for entry in raw:
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        category = str(entry.get("category", "grid")).lower()
+        base_cost = int(entry.get("base_cost", entry.get("min_cost", 4)))
+        cost_range = entry.get("cost_range") or [base_cost, entry.get("max_cost", base_cost)]
+        if isinstance(cost_range, list) and len(cost_range) == 2:
+            cost_tuple = (int(cost_range[0]), int(cost_range[1]))
+        else:
+            cost_tuple = (base_cost, base_cost)
+
+        parts = entry.get("grants_parts", entry.get("unlocks_parts", [])) or []
+        structs = entry.get("grants_structures", entry.get("unlocks_structures", [])) or []
+
         tech = Tech(
             id=entry["id"],
             name=entry.get("name", entry["id"]),
-            category=entry.get("category", "grid"),
-            base_cost=int(entry.get("base_cost", 4)),
+            category=category,
+            base_cost=base_cost,
             is_rare=bool(entry.get("is_rare", False)),
-            grants_parts=list(entry.get("grants_parts", [])),
-            grants_structures=list(entry.get("grants_structures", [])),
+            cost_range=cost_tuple,
+            grants_parts=list(parts),
+            grants_structures=list(structs),
             immediate_effect=entry.get("immediate_effect"),
         )
         catalog[tech.id] = tech
+        catalog.setdefault(tech.name, tech)
 
     _TECH_DATA_CACHE = catalog
     return catalog
 
 
-def discounted_cost(player: PlayerState, tech: Tech) -> int:
+def discounted_cost(player: PlayerState, tech: Tech, band_cost: Optional[int] = None) -> int:
     """Return the Science cost after applying category discounts."""
 
-    discounts = player.tech_count_by_category.get(tech.category, 0)
-    return max(1, tech.base_cost - discounts)
+    return _expansion_discounted_cost(player, tech, band_cost)
 
 
 def _assert_phase_is_action(state: GameState) -> None:
@@ -179,7 +196,7 @@ def validate_research(state: GameState, player: PlayerState, tech_id: str) -> No
                 raise ResearchError("Rare tech already taken")
 
     cost = discounted_cost(player, tech)
-    if player.science < cost:
+    if not can_afford(player, tech):
         raise ResearchError("insufficient Science after discount")
 
 

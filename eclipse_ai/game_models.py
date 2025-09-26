@@ -187,6 +187,7 @@ class Tech:
     category: Literal["military", "grid", "nano", "quantum", "rare", "biotech", "economy"]
     base_cost: int
     is_rare: bool = False
+    cost_range: Tuple[int, int] = (0, 0)
     grants_parts: List[str] = field(default_factory=list)
     grants_structures: List[str] = field(default_factory=list)
     immediate_effect: Optional[Effect] = None

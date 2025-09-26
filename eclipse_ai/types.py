@@ -3,7 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, Literal, Tuple, TypedDict
+
+
+class Tech(TypedDict):
+    id: str
+    name: str
+    category: Literal["Military", "Grid", "Nano", "Rare"]
+    is_rare: bool
+    base_cost: int
+    cost_range: Tuple[int, int]
 
 
 @dataclass

@@ -1,12 +1,10 @@
-
 """Species-specific scoring helpers."""
 from __future__ import annotations
 
 from typing import Optional
 
 from ..game_models import GameState, PlayerState
-from .endgame import compute_endgame_vp, score_game
-from .species import deathmoon_reputation_draws, unity_deathmoon_bonus
+
 
 def unity_deathmoon_bonus(state: GameState, player: PlayerState) -> int:
     """Return the endgame VP bonus Unity receives for deployed Deathmoons."""
@@ -37,12 +35,3 @@ def _count_deathmoons(state: GameState, player_id: str) -> int:
             continue
         total += int(pieces.starbase or 0)
     return total
-
-
-__all__ = [
-    "compute_endgame_vp",
-    "score_game",
-    "unity_deathmoon_bonus",
-    "deathmoon_reputation_draws",
-]
-
