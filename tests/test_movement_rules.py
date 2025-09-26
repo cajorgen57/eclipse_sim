@@ -51,6 +51,7 @@ BASE_PLAYER = {
         },
     },
     "has_wormhole_generator": False,
+    "move_overrides": {},
 }
 
 ENEMY_PLAYER = {
@@ -60,6 +61,7 @@ ENEMY_PLAYER = {
     "resources": {"money": 3, "science": 3, "materials": 3},
     "ship_designs": copy.deepcopy(BASE_PLAYER["ship_designs"]),
     "has_wormhole_generator": False,
+    "move_overrides": {},
 }
 
 
@@ -130,6 +132,79 @@ def test_move_requires_explored_and_wormholes() -> None:
     assert state.map.hexes["B"].pieces["P1"].ships.get("interceptor", 0) == 1
 
 
+def test_activation_count_moves_multiple_ships_and_validates() -> None:
+    hexes = {
+        "Start": {
+            "id": "Start",
+            "ring": 1,
+            "wormholes": [0, 2],
+            "neighbors": {0: "Left", 2: "Right"},
+            "pieces": {"P1": {"ships": {"interceptor": 2}}},
+        },
+        "Left": {
+            "id": "Left",
+            "ring": 1,
+            "wormholes": [3],
+            "neighbors": {3: "Start"},
+            "pieces": {},
+        },
+        "Right": {
+            "id": "Right",
+            "ring": 1,
+            "wormholes": [5],
+            "neighbors": {5: "Start"},
+            "pieces": {},
+        },
+    }
+    state = _state_with_hexes(hexes)
+    _apply_move_action(
+        state,
+        "P1",
+        {
+            "activations": [
+                {"ship_class": "interceptor", "from": "Start", "path": ["Start", "Left"], "count": 2}
+            ]
+        },
+    )
+    assert state.map.hexes["Left"].pieces["P1"].ships.get("interceptor", 0) == 2
+    assert "interceptor" not in state.map.hexes["Start"].pieces["P1"].ships
+
+    state = _state_with_hexes(hexes)
+    with pytest.raises(ValueError):
+        _apply_move_action(
+            state,
+            "P1",
+            {
+                "activations": [
+                    {
+                        "ship_class": "interceptor",
+                        "from": "Start",
+                        "path": ["Start", "Left"],
+                        "count": 0,
+                    }
+                ]
+            },
+        )
+
+    state = _state_with_hexes(hexes)
+    with pytest.raises(ValueError):
+        _apply_move_action(
+            state,
+            "P1",
+            {
+                "activations": [
+                    {
+                        "ship_class": "interceptor",
+                        "from": "Start",
+                        "path": ["Start", "Left"],
+                        "count": 3,
+                    }
+                ]
+            },
+        )
+    assert state.map.hexes["Start"].pieces["P1"].ships.get("interceptor", 0) == 2
+
+
 def test_movement_points_stack_with_drives() -> None:
     hexes = {
         "H1": {"id": "H1", "ring": 1, "wormholes": [1], "neighbors": {1: "H2"}, "pieces": {"P1": {"ships": {"cruiser": 1}}}},
@@ -195,6 +270,51 @@ def test_movement_points_stack_with_drives() -> None:
                 ]
             },
         )
+
+
+def test_species_activation_limits_respected() -> None:
+    hexes = {
+        "Hub": {
+            "id": "Hub",
+            "ring": 1,
+            "wormholes": [0, 2, 4],
+            "neighbors": {0: "N1", 2: "N2", 4: "N3"},
+            "pieces": {"P1": {"ships": {"interceptor": 3}}},
+        },
+        "N1": {"id": "N1", "ring": 1, "wormholes": [3], "neighbors": {3: "Hub"}, "pieces": {}},
+        "N2": {"id": "N2", "ring": 1, "wormholes": [5], "neighbors": {5: "Hub"}, "pieces": {}},
+        "N3": {"id": "N3", "ring": 1, "wormholes": [1], "neighbors": {1: "Hub"}, "pieces": {}},
+    }
+    overrides = {"move_overrides": {"move_ship_activations_per_action": 2}}
+    state = _state_with_hexes(hexes, overrides)
+    with pytest.raises(ValueError):
+        _apply_move_action(
+            state,
+            "P1",
+            {
+                "activations": [
+                    {"ship_class": "interceptor", "from": "Hub", "path": ["Hub", "N1"]},
+                    {"ship_class": "interceptor", "from": "Hub", "path": ["Hub", "N2"]},
+                    {"ship_class": "interceptor", "from": "Hub", "path": ["Hub", "N3"]},
+                ]
+            },
+        )
+    assert state.map.hexes["Hub"].pieces["P1"].ships.get("interceptor", 0) == 3
+
+    state = _state_with_hexes(hexes, overrides)
+    _apply_move_action(
+        state,
+        "P1",
+        {
+            "activations": [
+                {"ship_class": "interceptor", "from": "Hub", "path": ["Hub", "N1"]},
+                {"ship_class": "interceptor", "from": "Hub", "path": ["Hub", "N2"]},
+            ]
+        },
+    )
+    assert state.map.hexes["Hub"].pieces["P1"].ships.get("interceptor", 0) == 1
+    assert state.map.hexes["N1"].pieces["P1"].ships.get("interceptor", 0) == 1
+    assert state.map.hexes["N2"].pieces["P1"].ships.get("interceptor", 0) == 1
 
 
 def test_pinning_on_exit_and_entry() -> None:
