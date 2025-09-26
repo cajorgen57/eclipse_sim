@@ -185,30 +185,6 @@ def run_cleanup(state: GameState) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Colony ships
-# ---------------------------------------------------------------------------
-
-def activate_colony_ship(
-    state: GameState,
-    player_id: str,
-    color: str,
-    count: int = 1,
-    *,
-    allow_upkeep: bool = False,
-) -> None:
-    if state.phase != "ACTION" and not (allow_upkeep and state.phase == "UPKEEP"):
-        raise PhaseError("Colony ships may only be activated during your action")
-    player = state.players[player_id]
-    available = player.colony_ships.face_up.get(color, 0)
-    if count < 0 or available < count:
-        raise ValueError("Not enough colony ships available")
-    player.colony_ships.face_up[color] = available - count
-    player.colony_ships.face_down[color] = (
-        player.colony_ships.face_down.get(color, 0) + count
-    )
-
-
-# ---------------------------------------------------------------------------
 # Influence helpers
 # ---------------------------------------------------------------------------
 
@@ -448,14 +424,6 @@ def _validate_single_move(payload: Dict[str, object]) -> None:
     total = sum(int(v) for v in ships.values())
     if total != 1:
         raise ValueError("Reaction move may activate only one ship")
-
-
-def _remove_disc_from_hex_for_testing(
-    state: GameState, player: PlayerState, hex_id: str
-) -> Disc:
-    """Testing hook to enforce removal restrictions."""
-
-    return _remove_disc_from_hex(state, player, hex_id, reason="influence")
 
 
 def _flip_colony_ships_up(player: PlayerState) -> None:

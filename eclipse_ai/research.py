@@ -10,12 +10,15 @@ def discounted_cost(player: PlayerState, tech: Tech, band_cost: Optional[int] = 
     """Compute a player's discounted price for a technology."""
 
     base = band_cost if band_cost is not None else tech.base_cost
-    min_cost = tech.cost_range[0] if getattr(tech, "cost_range", None) else tech.base_cost
-    base = max(base, min_cost)
     if tech.is_rare:
+        min_cost = tech.cost_range[0] if getattr(tech, "cost_range", None) else tech.base_cost
+        base = max(base, min_cost)
         return max(min_cost, base)
+    floor = 1
+    if band_cost is not None and getattr(tech, "cost_range", None):
+        floor = max(floor, tech.cost_range[0])
     discount = player.tech_count_by_category.get(tech.category, 0)
-    return max(min_cost, base - discount)
+    return max(floor, base - discount)
 
 
 def can_afford(player: PlayerState, tech: Tech, band_cost: Optional[int] = None) -> bool:
@@ -63,16 +66,6 @@ def ensure_evolution_pool(player: PlayerState) -> Dict[str, Any]:
         while len(pool["tiles"]) < size:
             pool["tiles"].append(None)
     return pool
-
-
-def produce_mutagen(player: PlayerState) -> int:
-    """Apply passive Mutagen production for Octantis factions."""
-    income = int(player.special_resources.get("mutagen_income", 0)) if player.special_resources else 0
-    if income <= 0:
-        return 0
-    current = player.special_resources.get("mutagen", 0)
-    player.special_resources["mutagen"] = int(current) + income
-    return income
 
 
 def _mutagen_trade_actions(player: PlayerState) -> List[Action]:

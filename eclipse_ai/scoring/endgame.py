@@ -352,9 +352,7 @@ def _extract_alliance_teams(state: Any, players: Mapping[str, Any]) -> Dict[str,
             continue
         teams.setdefault(str(team_id), []).append(str(pid))
     return teams
-  
-  
-  __all__ = [
+__all__ = [
     "diplomacy_vp",
     "traitor_penalty",
     "alliance_tile_vp",
