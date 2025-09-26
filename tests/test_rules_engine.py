@@ -126,7 +126,7 @@ _ORION_OPENING: Dict[str, Any] = {
             "player_id": "P1",
             "color": "purple",
             "known_techs": ["Gauss Shield", "Neutron Bombs"],  # Orion Hegemony starting tech (Rise of the Ancients)
-            "resources": {"money": 3, "science": 3, "materials": 5},
+            "resources": {"money": 3, "science": 1, "materials": 5},
             "ship_designs": {
                 "interceptor": {
                     "computer": 1,

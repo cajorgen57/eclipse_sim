@@ -126,7 +126,7 @@ def _enum_build(state: GameState, you: PlayerState) -> List[Action]:
             out.append(Action(ActionType.BUILD, {"hex": hx.id, "ships": {"cruiser": 1}}))
         if mats >= 2 * SHIP_COSTS["interceptor"]:
             out.append(Action(ActionType.BUILD, {"hex": hx.id, "ships": {"interceptor": 2}}))
-        elif mats >= SHIP_COSTS["interceptor"]:
+        if mats >= SHIP_COSTS["interceptor"]:
             out.append(Action(ActionType.BUILD, {"hex": hx.id, "ships": {"interceptor": 1}}))
 
     return out
