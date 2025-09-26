@@ -4,6 +4,7 @@ from typing import Dict, Any, List, Optional, Tuple
 import math, random, copy
 
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
+from .alliances import ship_presence
 from .rules_engine import legal_actions
 from .evaluator import evaluate_action
 from .movement import max_ship_activations_per_action
@@ -458,7 +459,7 @@ def _activate_single_ship(state: GameState, player: PlayerState, ship_class: str
             raise ValueError("Not enough interceptors to load into bay")
 
     # Enforce pinning when leaving the starting hex, including any interceptors we plan to carry.
-    _enforce_exit_pinning(current_hex, you, 1 + carried_interceptors)
+    _enforce_exit_pinning(state, current_hex, you, 1 + carried_interceptors)
 
     if carried_interceptors:
         _remove_ships_from_hex(current_hex, you, "interceptor", carried_interceptors)
@@ -491,16 +492,16 @@ def _activate_single_ship(state: GameState, player: PlayerState, ship_class: str
                 raise ValueError("No legal connection between hexes")
 
         # Leaving current hex after validating movement points.
-        _enforce_exit_pinning(src_hex, you, 1)
+        _enforce_exit_pinning(state, src_hex, you, 1)
         _move_ship_between_hexes(state, you, ship_class, current_hex_id, next_hex_id)
 
         dst_hex = _require_hex(state, next_hex_id)
-        enemy_in_dst = _count_enemy_ships(dst_hex, you)
+        enemy_in_dst = _count_enemy_ships(state, dst_hex, you)
         if idx < len(path) - 1:
             if dst_hex.has_gcds:
                 raise ValueError("Cannot move through the Galactic Center while GCDS is active")
             if enemy_in_dst > 0:
-                friendly_total = _count_friendly_ships(dst_hex, you)
+                friendly_total = _count_friendly_ships(state, dst_hex, you)
                 if friendly_total <= enemy_in_dst:
                     raise ValueError("Pinned upon entering contested hex")
 
@@ -615,27 +616,24 @@ def _remove_ships_from_hex(hex_obj: Hex, pid: str, ship_class: str, count: int) 
         del pieces.ships[ship_class]
 
 
-def _count_enemy_ships(hex_obj: Hex, pid: str) -> int:
-    total = int(hex_obj.ancients)
-    for owner, pieces in hex_obj.pieces.items():
-        if owner == pid:
-            continue
-        total += int(pieces.starbase)
-        total += sum(int(n) for n in pieces.ships.values())
-    return total
-
-
-def _count_friendly_ships(hex_obj: Hex, pid: str) -> int:
-    pieces = hex_obj.pieces.get(pid)
-    if pieces is None:
+def _count_enemy_ships(state: GameState, hex_obj: Hex, pid: str) -> int:
+    if not hex_obj:
         return 0
-    return int(pieces.starbase) + sum(int(n) for n in pieces.ships.values())
+    _, enemy = ship_presence(state, hex_obj, pid)
+    return enemy
 
 
-def _enforce_exit_pinning(hex_obj: Hex, pid: str, leaving: int) -> None:
-    enemy = _count_enemy_ships(hex_obj, pid)
+def _count_friendly_ships(state: GameState, hex_obj: Hex, pid: str) -> int:
+    if not hex_obj:
+        return 0
+    friendly, _ = ship_presence(state, hex_obj, pid)
+    return friendly
+
+
+def _enforce_exit_pinning(state: GameState, hex_obj: Hex, pid: str, leaving: int) -> None:
+    enemy = _count_enemy_ships(state, hex_obj, pid)
     if enemy <= 0:
         return
-    friendly = _count_friendly_ships(hex_obj, pid)
+    friendly = _count_friendly_ships(state, hex_obj, pid)
     if friendly - leaving < enemy:
         raise ValueError("Cannot leave contested hex without leaving pinned ships")
