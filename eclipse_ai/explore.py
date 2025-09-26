@@ -137,12 +137,14 @@ def has_half_connection_to_player(tile: HexTile, orient: int, player_id: str, st
     pos = state.map.explored_choice[player_id]
     wormholes = set(tile.wormholes)
     edges = state.map.connection_edges(pos)
-    for map_edge, (neighbor_id, _) in edges.items():
-        tile_edge = (map_edge - orient) % 6
-        if tile_edge not in wormholes:
-            continue
+    for map_edge, (neighbor_id, neighbor_edge) in edges.items():
         neighbor = state.map.hexes.get(neighbor_id)
         if not neighbor:
+            continue
+        tile_edge = (map_edge - orient) % 6
+        tile_has_wormhole = tile_edge in wormholes
+        neighbor_has_wormhole = neighbor.has_wormhole(neighbor_edge)
+        if not (tile_has_wormhole or neighbor_has_wormhole):
             continue
         if neighbor.has_presence(player_id):
             return True

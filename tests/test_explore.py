@@ -78,6 +78,18 @@ def test_place_requires_connection() -> None:
     assert placed.id == "T1"
 
 
+def test_wormhole_generator_allows_neighbor_wormhole_only() -> None:
+    tile = HexTile(id="Half", ring=1, wormholes=())
+    state = _make_state(sector_tiles=[tile], home_wormholes=(0,))
+    choose_explore_target(state, PLAYER_ID, "T1")
+    draw_sector_tile(state, PLAYER_ID, 1)
+    with pytest.raises(ValueError):
+        place_tile(state, PLAYER_ID, tile, orient=0)
+    state.players[PLAYER_ID].has_wormhole_generator = True
+    placed = place_tile(state, PLAYER_ID, tile, orient=0)
+    assert placed.id == "T1"
+
+
 def test_spawn_discovery_and_ancients() -> None:
     tile = HexTile(
         id="AncientDiscovery",
