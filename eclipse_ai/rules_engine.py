@@ -189,9 +189,18 @@ def _enum_moves(state: GameState, you: PlayerState) -> List[Action]:
             if ships:
                 out.append(Action(ActionType.MOVE, {"from": hx.id, "to": hx.id, "ships": ships}))
     # 2) Move toward valuable or enemy-held hexes (range-agnostic placeholder)
-    enemy_hexes = [hx for hx in state.map.hexes.values() if _enemy_presence_in_hex(state, you.player_id, hx) > 0]
+    enemy_hexes = [
+        hx
+        for hx in state.map.hexes.values()
+        if _is_explored_hex(hx) and _enemy_presence_in_hex(state, you.player_id, hx) > 0
+    ]
     valuable_empty = sorted(
-        [hx for hx in state.map.hexes.values() if _enemy_presence_in_hex(state, you.player_id, hx) == 0],
+        [
+            hx
+            for hx in state.map.hexes.values()
+            if _is_explored_hex(hx)
+            and _enemy_presence_in_hex(state, you.player_id, hx) == 0
+        ],
         key=_hex_value_key,
         reverse=True
     )[:3]
@@ -603,6 +612,20 @@ def _enum_diplomacy(state: GameState, you: PlayerState) -> List[Action]:
 
 def _player_hexes(state: GameState, pid: str) -> List[Hex]:
     return [hx for hx in state.map.hexes.values() if pid in hx.pieces]
+
+
+def _is_explored_hex(hx: Optional[Hex]) -> bool:
+    if not hx:
+        return False
+    explored = getattr(hx, "explored", None)
+    if explored is None:
+        # Treat missing data as explored only if the tile appears to be numbered.
+        # Most ingestion pipelines mark unknown frontier placeholders with a
+        # string id (e.g. "outer_frontier"). If the id looks numeric, assume
+        # the hex has been flipped; otherwise require an explicit flag.
+        hex_id = getattr(hx, "id", "") or ""
+        return bool(str(hex_id).strip().isdigit())
+    return bool(explored)
 
 def _enemy_presence_in_hex(state: GameState, pid: str, hx: Optional[Hex]) -> int:
     if not hx:
