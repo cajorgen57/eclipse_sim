@@ -4,6 +4,7 @@ from dataclasses import dataclass, field, asdict, is_dataclass, fields
 from typing import Dict, List, Optional, Tuple, Any, get_args, get_origin, get_type_hints
 from enum import Enum
 import json
+from .types import ShipDesign
 
 def _build_dataclass(cls, data: Dict[str, Any]):
     """Recursively coerce nested dicts/lists into a dataclass instance."""
@@ -117,6 +118,8 @@ class Resources:
     science: int = 0
     materials: int = 0
 
+
+
 @dataclass
 class ShipDesign:
     computer: int = 0
@@ -129,10 +132,10 @@ class ShipDesign:
     drives: int = 0
     has_jump_drive: bool = False
     interceptor_bays: int = 0
-
     def movement_value(self) -> int:
         """Return the total movement points provided by installed drives."""
         return max(0, int(self.drives if self.drives else self.drive))
+
 
 @dataclass
 class Pieces:
@@ -157,6 +160,7 @@ class Hex:
     pieces: Dict[str, Pieces] = field(default_factory=dict)  # player_id -> Pieces
     ancients: int = 0
     monolith: bool = False
+    orbital: bool = False
     anomaly: bool = False
     explored: bool = True
     has_warp_portal: bool = False
@@ -177,6 +181,7 @@ class PlayerState:
     ship_designs: Dict[str, ShipDesign] = field(default_factory=dict)  # interceptor, cruiser, dreadnought, starbase
     reputation: List[int] = field(default_factory=list)
     diplomacy: Dict[str, str] = field(default_factory=dict)
+    available_components: Dict[str, int] = field(default_factory=dict)
     influence_track: List[Disc] = field(default_factory=list)
     action_spaces: Dict[str, List[Disc]] = field(default_factory=_default_action_spaces)
     colonies: Dict[str, Dict[str, int]] = field(default_factory=dict)

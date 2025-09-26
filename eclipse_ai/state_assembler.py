@@ -87,6 +87,8 @@ def assemble_state(
     if manual_inputs:
         _apply_manual_inputs(gs, manual_inputs)
 
+    _validate_existing_designs(gs)
+
     return gs
 
 # -----------------------------
@@ -197,6 +199,20 @@ def _count_explored_tiles(gs: GameState, player_count: int) -> Counter[int]:
             counts[ring] += additional
 
     return counts
+
+
+def _validate_existing_designs(gs: GameState) -> None:
+    try:
+        from .rules_engine import validate_design
+    except ImportError:
+        return
+
+    for player in gs.players.values():
+        for ship_type, design in (player.ship_designs or {}).items():
+            try:
+                validate_design(player, ship_type, design)
+            except Exception:
+                raise
 
 # -----------------------------
 # Manual inputs

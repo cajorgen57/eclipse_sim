@@ -1,8 +1,11 @@
 from __future__ import annotations
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Tuple
 
-from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources, ShipDesign
+from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources
+from .ship_parts import SHIP_PARTS, SHIP_BLUEPRINT_SLOTS, MOBILE_SHIPS
+from .types import ShipDesign
 
 # =============================
 # Config
@@ -15,13 +18,33 @@ class RulesConfig:
     enable_diplomacy: bool = True
     max_actions: int = 40  # hard cap to avoid explosion
 
-# Ship material costs (approximate, tweak as needed for your edition/house rules)
-SHIP_COSTS = {
-    "interceptor": 2,
-    "cruiser": 3,
-    "dreadnought": 5,
+# Build costs and fleet caps share a single source of truth for the UI/tests.
+BUILD_COST: Dict[str, int] = {
+    "interceptor": 3,
+    "cruiser": 5,
+    "dreadnought": 8,
+    "starbase": 3,
+    "orbital": 5,
+    "monolith": 10,
+}
+
+FLEET_CAP: Dict[str, int] = {
+    "interceptor": 8,
+    "cruiser": 4,
+    "dreadnought": 2,
     "starbase": 4,
 }
+
+STRUCTURE_TECH_REQUIREMENTS: Dict[str, str] = {
+    "starbase": "Starbase",
+    "orbital": "Orbital",
+    "monolith": "Monolith",
+}
+
+
+class RulesViolation(ValueError):
+    """Raised when an attempted action violates the core rulebook."""
+
 
 # =============================
 # Public API
@@ -114,19 +137,19 @@ def _enum_build(state: GameState, you: PlayerState) -> List[Action]:
 
     # Build starbase in contested hex if affordable
     for hx in contested:
-        if mats >= SHIP_COSTS["starbase"]:
+        if mats >= BUILD_COST["starbase"]:
             out.append(Action(ActionType.BUILD, {"hex": hx.id, "starbase": 1}))
 
     # Build ships in any controlled hex
     for hx in your_hexes:
         # Try a few affordable bundles
-        if mats >= SHIP_COSTS["dreadnought"]:
+        if mats >= BUILD_COST["dreadnought"]:
             out.append(Action(ActionType.BUILD, {"hex": hx.id, "ships": {"dreadnought": 1}}))
-        if mats >= SHIP_COSTS["cruiser"]:
+        if mats >= BUILD_COST["cruiser"]:
             out.append(Action(ActionType.BUILD, {"hex": hx.id, "ships": {"cruiser": 1}}))
-        if mats >= 2 * SHIP_COSTS["interceptor"]:
+        if mats >= 2 * BUILD_COST["interceptor"]:
             out.append(Action(ActionType.BUILD, {"hex": hx.id, "ships": {"interceptor": 2}}))
-        if mats >= SHIP_COSTS["interceptor"]:
+        if mats >= BUILD_COST["interceptor"]:
             out.append(Action(ActionType.BUILD, {"hex": hx.id, "ships": {"interceptor": 1}}))
 
     return out
@@ -180,6 +203,308 @@ def _enum_upgrades(state: GameState, you: PlayerState) -> List[Action]:
     if counts.get("dreadnought", 0) > 0:
         out.append(Action(ActionType.UPGRADE, {"apply": {"dreadnought": {"hull": +1}}}))
     return out
+
+# =============================
+# Validators
+# =============================
+
+def validate_design(player: PlayerState, ship_type: str, blueprint: Any) -> None:
+    """Validate and normalise a ship blueprint according to the rulebook."""
+
+    design = _coerce_ship_design(blueprint)
+    ship_key = _normalize_ship_class(ship_type)
+    if ship_key not in SHIP_BLUEPRINT_SLOTS:
+        raise RulesViolation(f"Unknown ship type '{ship_type}' for design validation")
+
+    part_maps = _design_part_maps(design)
+    has_explicit_parts = any(part_maps[attr] for attr in part_maps)
+
+    if not has_explicit_parts:
+        _validate_legacy_design(player, ship_key, design)
+        return
+
+    slot_limit = SHIP_BLUEPRINT_SLOTS[ship_key]
+    totals = Counter()
+    known_techs = set(player.known_techs or [])
+
+    for attr, category in (
+        ("computer_parts", "computer"),
+        ("shield_parts", "shield"),
+        ("cannon_parts", "cannon"),
+        ("missile_parts", "missile"),
+        ("drive_parts", "drive"),
+        ("energy_sources", "energy"),
+        ("hull_parts", "hull"),
+    ):
+        clean = _sanitize_part_dict(getattr(design, attr, {}), category)
+        setattr(design, attr, clean)
+        for part_name, count in clean.items():
+            part = SHIP_PARTS.get(part_name)
+            if not part:
+                raise RulesViolation(f"Unknown ship part '{part_name}' on {ship_type}")
+            if part.category != category and not (category == "energy" and part.category == "energy"):
+                raise RulesViolation(
+                    f"Part '{part_name}' cannot be placed in {category} slots"
+                )
+            if part.requires_tech and part.requires_tech not in known_techs:
+                raise RulesViolation(
+                    f"{player.player_id} must research {part.requires_tech} before using {part.name}"
+                )
+            totals["slots"] += part.slots * count
+            totals["initiative"] += part.initiative * count
+            totals["energy_consumption"] += part.energy_consumption * count
+            totals["energy_production"] += part.energy_production * count
+            if part.category == "computer":
+                totals["computer"] += part.computer * count
+            if part.category == "shield":
+                totals["shield"] += part.shield * count
+            if part.category == "hull":
+                totals["hull"] += part.hull * count
+            if part.category == "cannon":
+                totals["cannon_power"] += part.weapon_strength * count
+            if part.category == "missile":
+                totals["missiles"] += part.missiles * count
+                totals["initiative"] += part.initiative * count
+            if part.category == "drive":
+                totals["movement"] += part.movement * count
+                totals["drive_count"] += count
+
+    if totals["slots"] > slot_limit:
+        raise RulesViolation(
+            f"{ship_type.title()} blueprint exceeds its {slot_limit}-slot limit"
+        )
+
+    if ship_key == "starbase" and totals["drive_count"] > 0:
+        raise RulesViolation("Starbases may not equip Drives")
+
+    design.initiative = totals["initiative"]
+    design.movement_value = totals["movement"]
+    design.energy_consumption = totals["energy_consumption"]
+    design.energy_production = totals["energy_production"]
+    design.computer = totals["computer"]
+    design.shield = totals["shield"]
+    design.hull = max(1, totals["hull"])
+    design.cannons = totals["cannon_power"]
+    design.missiles = totals["missiles"]
+    design.drive = totals["drive_count"]
+
+    if design.energy_production - design.energy_consumption < 0:
+        raise RulesViolation(
+            f"{ship_type.title()} design consumes more energy than it produces"
+        )
+
+    if ship_key in MOBILE_SHIPS and design.drive <= 0:
+        raise RulesViolation(f"{ship_type.title()} must include at least one Drive")
+
+
+def _validate_legacy_design(player: PlayerState, ship_key: str, design: ShipDesign) -> None:
+    """Fallback validation for older aggregated blueprints with no part data."""
+
+    if ship_key in MOBILE_SHIPS and design.drive <= 0:
+        raise RulesViolation(f"{ship_key.title()} must include at least one Drive")
+    if ship_key == "starbase" and design.drive > 0:
+        raise RulesViolation("Starbases may not equip Drives")
+    energy_delta = design.energy_production - design.energy_consumption
+    if energy_delta < 0:
+        raise RulesViolation(
+            f"{player.player_id}'s {ship_key} blueprint is energy negative"
+        )
+    if ship_key in MOBILE_SHIPS and design.movement_value < design.drive:
+        design.movement_value = design.drive
+
+
+def _coerce_ship_design(blueprint: Any) -> ShipDesign:
+    if isinstance(blueprint, ShipDesign):
+        return blueprint
+    if isinstance(blueprint, dict):
+        design = ShipDesign()
+        for attr, aliases in (
+            ("computer_parts", ["computer_parts", "computers"]),
+            ("shield_parts", ["shield_parts", "shields"]),
+            ("cannon_parts", ["cannon_parts", "cannons"]),
+            ("missile_parts", ["missile_parts", "missiles"]),
+            ("drive_parts", ["drive_parts", "drives"]),
+            ("energy_sources", ["energy_sources", "sources", "energy"]),
+            ("hull_parts", ["hull_parts", "hulls"]),
+        ):
+            for key in aliases:
+                if key in blueprint and isinstance(blueprint[key], dict):
+                    setattr(design, attr, dict(blueprint[key]))
+                    break
+        for key in (
+            "computer",
+            "shield",
+            "initiative",
+            "hull",
+            "cannons",
+            "missiles",
+            "drive",
+            "movement_value",
+            "energy_consumption",
+            "energy_production",
+        ):
+            if key in blueprint:
+                setattr(design, key, int(blueprint[key]))
+        return design
+    raise RulesViolation("Blueprint payload must be a ShipDesign or dict")
+
+
+def _sanitize_part_dict(parts: Optional[Dict[str, Any]], category: str) -> Dict[str, int]:
+    clean: Dict[str, int] = {}
+    if not parts:
+        return clean
+    for name, value in parts.items():
+        if value is None:
+            continue
+        count = int(value)
+        if count < 0:
+            raise RulesViolation(f"Cannot place a negative number of {category} parts")
+        if count == 0:
+            continue
+        clean[str(name)] = count
+    return clean
+
+
+def _design_part_maps(design: ShipDesign) -> Dict[str, Dict[str, int]]:
+    return {
+        "computer_parts": design.computer_parts,
+        "shield_parts": design.shield_parts,
+        "cannon_parts": design.cannon_parts,
+        "missile_parts": design.missile_parts,
+        "drive_parts": design.drive_parts,
+        "energy_sources": design.energy_sources,
+        "hull_parts": design.hull_parts,
+    }
+
+
+def _normalize_ship_class(ship_type: str) -> str:
+    return str(ship_type or "").strip().lower()
+
+
+def validate_build(player: PlayerState, thing: Any, hex_id: str) -> None:
+    """Validate a build action before applying it."""
+
+    if not isinstance(thing, dict):
+        raise RulesViolation("Build payload must be a dict")
+
+    state: Optional[GameState] = thing.get("state") or thing.get("game_state")
+    if not isinstance(state, GameState):
+        raise RulesViolation("Build validation requires the current GameState under 'state'")
+
+    ships = _sanitize_count_dict(thing.get("ships", {}))
+    structures = _sanitize_count_dict(thing.get("structures", {}))
+
+    # Support legacy payloads like {"starbase":1}
+    for cls in ("interceptor", "cruiser", "dreadnought", "starbase"):
+        if cls in thing:
+            ships[cls] = ships.get(cls, 0) + int(thing[cls])
+    for struct in ("orbital", "monolith"):
+        if struct in thing:
+            structures[struct] = structures.get(struct, 0) + int(thing[struct])
+
+    total_builds = sum(ships.values()) + sum(structures.values())
+    if total_builds == 0:
+        raise RulesViolation("Build action must create at least one ship or structure")
+    if total_builds > 2:
+        raise RulesViolation("Build action is limited to two ships/structures per action")
+
+    known_techs = set(player.known_techs or [])
+
+    cost = 0
+    for cls, count in ships.items():
+        key = _normalize_ship_class(cls)
+        if key not in BUILD_COST:
+            raise RulesViolation(f"Unsupported ship class '{cls}' for building")
+        cost += BUILD_COST[key] * count
+        if key == "starbase":
+            tech = STRUCTURE_TECH_REQUIREMENTS.get("starbase")
+            if tech and tech not in known_techs:
+                raise RulesViolation("Research Starbase before building one")
+    for struct, count in structures.items():
+        key = _normalize_ship_class(struct)
+        if key not in BUILD_COST:
+            raise RulesViolation(f"Unsupported structure '{struct}' for building")
+        cost += BUILD_COST[key] * count
+
+    if player.resources.materials < cost:
+        raise RulesViolation(
+            f"Building these units costs {cost} Materials but only {player.resources.materials} are available"
+        )
+
+    hx = state.map.hexes.get(hex_id) if state.map else None
+    if not hx:
+        raise RulesViolation(f"Hex '{hex_id}' does not exist")
+    pieces = hx.pieces.get(player.player_id)
+    if not pieces or pieces.discs <= 0:
+        raise RulesViolation("You must have an Influence Disc in the chosen hex to build there")
+
+    _enforce_structure_rules(player, hx, structures)
+
+    existing = _count_player_ships_on_board(state, player.player_id)
+    for cls, count in ships.items():
+        key = _normalize_ship_class(cls)
+        cap = FLEET_CAP.get(key)
+        if cap is not None and existing.get(key, 0) + count > cap:
+            raise RulesViolation(
+                f"Building {count} {key}s would exceed the fleet cap of {cap}"
+            )
+        supply = player.available_components.get(key)
+        if supply is not None and count > supply:
+            raise RulesViolation(
+                f"{player.player_id} has only {supply} {key} miniature(s) remaining"
+            )
+
+    for struct, count in structures.items():
+        supply = player.available_components.get(_normalize_ship_class(struct))
+        if supply is not None and count > supply:
+            raise RulesViolation(
+                f"{player.player_id} has only {supply} {struct} component(s) remaining"
+            )
+
+
+def _sanitize_count_dict(raw: Any) -> Dict[str, int]:
+    clean: Dict[str, int] = {}
+    if not isinstance(raw, dict):
+        return clean
+    for name, value in raw.items():
+        if value is None:
+            continue
+        count = int(value)
+        if count < 0:
+            raise RulesViolation("Cannot build a negative number of units")
+        if count == 0:
+            continue
+        clean[str(name)] = count
+    return clean
+
+
+def _enforce_structure_rules(player: PlayerState, hx: Hex, structures: Dict[str, int]) -> None:
+    for struct, count in structures.items():
+        key = _normalize_ship_class(struct)
+        if key not in ("orbital", "monolith"):
+            continue
+        tech = STRUCTURE_TECH_REQUIREMENTS.get(key)
+        if tech and tech not in set(player.known_techs or []):
+            raise RulesViolation(f"Research {tech} before building {struct}")
+        if count > 1:
+            raise RulesViolation(f"Only one {struct.title()} may be built in a hex")
+        if key == "orbital" and hx.orbital:
+            raise RulesViolation("Each hex may only contain one Orbital")
+        if key == "monolith" and hx.monolith:
+            raise RulesViolation("Each hex may only contain one Monolith")
+
+
+def _count_player_ships_on_board(state: GameState, player_id: str) -> Dict[str, int]:
+    totals: Counter[str] = Counter()
+    for hx in state.map.hexes.values():
+        pieces = hx.pieces.get(player_id)
+        if not pieces:
+            continue
+        for cls, count in pieces.ships.items():
+            totals[_normalize_ship_class(cls)] += int(count)
+        if pieces.starbase:
+            totals["starbase"] += int(pieces.starbase)
+    return dict(totals)
 
 def _enum_influence(state: GameState, you: PlayerState) -> List[Action]:
     out: List[Action] = []
