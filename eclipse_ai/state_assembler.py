@@ -96,6 +96,8 @@ def assemble_state(
         for p in gs.players.values():
             _initialise_player_state(p, gs.tech_definitions)
 
+    _validate_existing_designs(gs)
+
     return gs
 
 # -----------------------------
@@ -245,6 +247,19 @@ def _initialise_player_state(player: PlayerState, definitions: Optional[Dict[str
         player.unlocked_structures.update(tech.grants_structures)
         if tech.name not in player.known_techs:
             player.known_techs.append(tech.name)
+            
+def _validate_existing_designs(gs: GameState) -> None:
+    try:
+        from .rules_engine import validate_design
+    except ImportError:
+        return
+
+    for player in gs.players.values():
+        for ship_type, design in (player.ship_designs or {}).items():
+            try:
+                validate_design(player, ship_type, design)
+            except Exception:
+                raise
 
 # -----------------------------
 # Manual inputs
