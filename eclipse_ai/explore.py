@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from .map.hex import Hex, MapGraph, rotated_wormholes
 from .map.decks import ExplorationDecks, HexTile, DiscoveryTile, ResourcePool
-from .pathing import is_pinned
+from .pathing import compute_connectivity, is_pinned
 
 
 @dataclass
@@ -29,6 +29,7 @@ class ExploreState:
     decks: ExplorationDecks
     players: Dict[str, PlayerExploreState]
     feature_flags: Dict[str, bool] = field(default_factory=dict)
+    connectivity_metrics: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     def end_turn(self, player_id: str) -> None:
         self.players[player_id].turn_ended = True
@@ -107,6 +108,14 @@ def place_tile(state: ExploreState, player_id: str, tile: HexTile, orient: int) 
     state.map.add_hex(placed)
     _spawn_discovery_and_ancients(state, placed)
     state.map.clear_choice(player_id)
+    try:
+        reach = compute_connectivity(state, player_id)
+        state.connectivity_metrics[player_id] = {
+            "reachable": sorted(reach),
+            "count": len(reach),
+        }
+    except Exception:
+        pass
     return placed
 
 

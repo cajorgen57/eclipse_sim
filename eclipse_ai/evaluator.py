@@ -5,6 +5,7 @@ import math
 
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Planet, Pieces, ShipDesign
 from .simulators.combat import score_combat
+from .explore_eval import explore_ev
 from .simulators.exploration import exploration_ev
 
 # ===== Public API =====
@@ -37,6 +38,17 @@ def evaluate_action(state: GameState, action: Action) -> Score:
 # ===== Explore =====
 
 def _score_explore(state: GameState, pid: str, payload: Dict[str, Any]) -> Score:
+    tile_payload = payload.get("tile")
+    target_hex = payload.get("pos") or payload.get("position") or payload.get("hex")
+    if tile_payload and target_hex:
+        orient = int(payload.get("orient", payload.get("orientation", 0)))
+        try:
+            ev_value = explore_ev(state, pid, tile_payload, str(target_hex), orient)
+            risk = 0.25
+            return Score(expected_vp=float(ev_value), risk=risk, details={"heuristic": "tile_ev"})
+        except Exception:
+            pass
+
     ring = int(payload.get("ring", 2))
     bag = dict(state.bags.get(f"R{ring}", {}))
     if not bag:

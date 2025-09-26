@@ -270,6 +270,7 @@ class GameState:
     feature_flags: Dict[str, bool] = field(default_factory=dict)
     alliances: Dict[str, Alliance] = field(default_factory=dict)
     reactions_active: Dict[str, bool] = field(default_factory=dict)
+    connectivity_metrics: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     def to_json(self) -> str:
         def _normalize(value: Any) -> Any:
