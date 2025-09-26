@@ -118,11 +118,122 @@ _BASE_STATE: Dict[str, Any] = {
 }
 
 
+_ORION_OPENING: Dict[str, Any] = {
+    "round": 1,
+    "active_player": "P1",
+    "players": {
+        "P1": {
+            "player_id": "P1",
+            "color": "purple",
+            "known_techs": ["Gauss Shield"],  # Orion Hegemony starting tech (Rise of the Ancients)
+            "resources": {"money": 2, "science": 1, "materials": 2},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 1,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                },
+                "cruiser": {
+                    "computer": 1,
+                    "shield": 1,
+                    "initiative": 3,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                },
+            },
+        },
+        "P2": {
+            "player_id": "P2",
+            "color": "orange",
+            "known_techs": [],
+            "resources": {"money": 2, "science": 2, "materials": 2},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                },
+            },
+        },
+    },
+    "map": {
+        "hexes": {
+            "230": {
+                "id": "230",
+                "ring": 1,
+                "planets": [
+                    {"type": "yellow", "colonized_by": "P1"},
+                    {"type": "blue", "colonized_by": "P1"},
+                    {"type": "brown", "colonized_by": "P1"},
+                ],
+                "pieces": {
+                    "P1": {
+                        "ships": {"interceptor": 2, "cruiser": 1},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"yellow": 1, "blue": 1, "brown": 1},
+                    }
+                },
+            },
+            "Terran": {
+                "id": "Terran",
+                "ring": 1,
+                "planets": [
+                    {"type": "yellow", "colonized_by": "P2"},
+                    {"type": "blue", "colonized_by": "P2"},
+                    {"type": "brown", "colonized_by": "P2"},
+                ],
+                "pieces": {
+                    "P2": {
+                        "ships": {"interceptor": 2},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"yellow": 1, "blue": 1, "brown": 1},
+                    }
+                },
+            },
+            "Outer": {
+                "id": "Outer",
+                "ring": 2,
+                "planets": [
+                    {"type": "yellow", "colonized_by": None},
+                    {"type": "blue", "colonized_by": None},
+                ],
+                "pieces": {},
+            },
+        }
+    },
+    "tech_display": {
+        "available": ["Plasma Cannon I", "Fusion Drive I", "Advanced Mining"],
+        "tier_counts": {"I": 6, "II": 4, "III": 2},
+    },
+    "bags": {"R1": {"unknown": 4}, "R2": {"unknown": 3}},
+}
+
+
 @pytest.fixture(name="base_state")
 def fixture_base_state() -> GameState:
     """Return an independent copy of the representative base scenario."""
 
     payload = json.loads(json.dumps(_BASE_STATE))
+    return GameState.from_dict(payload)
+
+
+@pytest.fixture(name="orion_state")
+def fixture_orion_state() -> GameState:
+    """Return the Orion Hegemony opening from the Rise of the Ancients pack."""
+
+    payload = json.loads(json.dumps(_ORION_OPENING))
     return GameState.from_dict(payload)
 
 
@@ -194,3 +305,27 @@ def test_diplomacy_toggle_removes_offers(base_state: GameState) -> None:
     config = RulesConfig(enable_diplomacy=False)
     actions = legal_actions(base_state, "P1", config)
     assert ActionType.DIPLOMACY not in _action_types(actions)
+
+
+def test_orion_opening_recommendations(orion_state: GameState) -> None:
+    """On round one the Orion Hegemony gets explore, aggression, and influence suggestions."""
+
+    actions = legal_actions(orion_state, "P1")
+
+    # Explore should target both the current ring and the next ring (home sector 230 in Rise of the Ancients).
+    explore_payloads = [a.payload for a in actions if a.type is ActionType.EXPLORE]
+    assert {p["ring"] for p in explore_payloads} == {1, 2}
+
+    # Limited science (1) means no immediate research options are offered.
+    assert ActionType.RESEARCH not in _action_types(actions)
+
+    # Building another interceptor in the home hex is the affordable combat reinforcement.
+    build_payloads = [a.payload for a in actions if a.type is ActionType.BUILD]
+    assert {"hex": "230", "ships": {"interceptor": 1}} in build_payloads
+
+    # Aggressive move suggestion toward the Terran neighbour plus an influence target on the richest empty hex.
+    move_targets = {(a.payload["from"], a.payload["to"]) for a in actions if a.type is ActionType.MOVE}
+    assert ("230", "Terran") in move_targets
+
+    influence_targets = [a.payload.get("hex") for a in actions if a.type is ActionType.INFLUENCE]
+    assert influence_targets == ["Outer"]
