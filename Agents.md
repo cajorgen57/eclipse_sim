@@ -2,13 +2,36 @@
 
 # Agents.md
 
+## Canonical guidance for agents
+
+This document is the **authoritative reference** for every autonomous agent that interacts with
+this repository. When a workflow mentions any other `.md` file, interpret its instructions through
+the lens of this file.
+
+### How to use the supporting documents
+
+* `README.md` &mdash; project overview for humans. Agents should only consult it for repository
+  layout and command references after first checking this file for rule interpretations or
+  overrides.
+* `Agents_Testing.md` &mdash; expands on the testing philosophy defined here. Treat it as the
+  canonical checklist for verification steps once you have aligned on rules and behaviors from
+  `Agents.md`.
+* `Species_Starts.md` &mdash; declarative data to seed fixtures. Use it as a lookup table when
+  assembling player starts during simulations or tests; do not derive rules logic from it.
+
+If additional markdown references are added, link them back into this section so future agents know
+their scope. Unless another document explicitly supersedes these instructions, defer to
+`Agents.md`.
+
 ## Purpose
 
-Define Eclipse rules your AI must follow. Map rules to code paths for action generation, simulation, and evaluation.
+Define Eclipse rules your AI must follow. Map rules to code paths for action generation, simulation,
+and evaluation.
 
 ## Scope
 
-Base game round flow and actions, plus modular support for Rise of the Ancients and Shadows of the Rift. Core round structure and actions: Action → Combat → Upkeep → Cleanup【turn1file2†】【turn1file2†】.
+Base game round flow and actions, plus modular support for Rise of the Ancients and Shadows of the
+Rift. Core round structure and actions: Action → Combat → Upkeep → Cleanup【turn1file2†】【turn1file2†】.
 
 ---
 
