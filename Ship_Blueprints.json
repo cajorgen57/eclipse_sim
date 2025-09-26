@@ -1,0 +1,117 @@
+{
+  "$schema": "eclipse.blueprints.starting_loadouts.v1",
+  "edition": "First Edition",
+  "sources": [
+    "core rulebook",
+    "Rise of the Ancients",
+    "Shadows of the Rift"
+  ],
+  "species": {
+    "Terrans": {
+      "notes": "",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Source", "Electron Computer"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Ion Cannon", "Electron Computer", "Hull"]
+      }
+    },
+    "Eridani Empire": {
+      "notes": "Different blueprint; 2 fewer Influence Discs",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Electron Computer", "Hull"]
+      }
+    },
+    "Hydran Progress": {
+      "notes": "Starts with Starbase Tech",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source", "Electron Computer"],
+        "Cruiser": ["Ion Cannon", "Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Electron Computer", "Hull"]
+      }
+    },
+    "Planta": {
+      "notes": "Distributed intelligence; different blueprint",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Hull"]
+      }
+    },
+    "Descendants of Draco": {
+      "notes": "Can coexist with Ancients",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Electron Computer", "Hull"]
+      }
+    },
+    "Mechanema": {
+      "notes": "May upgrade 3 Ship Parts per action",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Ion Cannon", "Electron Computer", "Hull"]
+      }
+    },
+    "Orion Hegemony": {
+      "notes": "Aggressive; cheaper builds",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Electron Computer", "Hull"]
+      }
+    },
+    "Terran Directorate": { "inherits": "Terrans", "notes": "Rise of the Ancients Terran variant" },
+    "Terran Federation":  { "inherits": "Terrans", "notes": "Rise of the Ancients Terran variant" },
+    "Terran Union":       { "inherits": "Terrans", "notes": "Rise of the Ancients Terran variant" },
+    "Terran Republic":    { "inherits": "Terrans", "notes": "Rise of the Ancients Terran variant" },
+    "Terran Conglomerate":{ "inherits": "Terrans", "notes": "Rise of the Ancients Terran variant" },
+    "Terran Alliance":    { "inherits": "Terrans", "notes": "Rise of the Ancients Terran variant" },
+    "Octantis Autonomy": {
+      "notes": "Shadows of the Rift",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Hull"]
+      }
+    },
+    "Octantis Vanguard": {
+      "notes": "Shadows of the Rift",
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Starbase": ["Ion Cannon", "Hull"]
+      }
+    },
+    "Shapers of Dorado": {
+      "notes": "Starts with Soliton Cannon tech",
+      "hulls": {
+        "Interceptor": ["Soliton Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Soliton Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Soliton Cannon", "Soliton Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Source", "Hull"],
+        "Starbase": ["Soliton Cannon", "Hull"]
+      }
+    },
+    "Pyxis Unity": {
+      "notes": "Uses Transmatter; Starbases replaced by Deathmoons",
+      "replaces": { "Starbase": "Deathmoon" },
+      "hulls": {
+        "Interceptor": ["Ion Cannon", "Nuclear Drive", "Nuclear Source"],
+        "Cruiser": ["Ion Cannon", "Ion Cannon", "Electron Computer", "Nuclear Drive", "Nuclear Source"],
+        "Dreadnought": ["Ion Cannon", "Ion Cannon", "Nuclear Drive", "Nuclear Drive", "Nuclear Source", "Electron Computer", "Hull"],
+        "Deathmoon": ["Antimatter Accelerator", "Rift Cannon", "Electron Computer", "Multiple Hull"]
+      }
+    }
+  }
+}
