@@ -201,6 +201,10 @@ class PlayerState:
     ship_designs: Dict[str, ShipDesign] = field(default_factory=dict)  # interceptor, cruiser, dreadnought, starbase
     reputation: List[int] = field(default_factory=list)
     diplomacy: Dict[str, str] = field(default_factory=dict)
+    ambassadors: Dict[str, bool] = field(default_factory=dict)
+    has_traitor: bool = False
+    alliance_id: Optional[str] = None
+    alliance_tile: Optional[Literal["+2", "-3"]] = None
     known_techs: List[str] = field(default_factory=list)
     owned_tech_ids: Set[str] = field(default_factory=set)
     tech_count_by_category: Dict[str, int] = field(default_factory=dict)
@@ -230,6 +234,14 @@ class PlayerState:
 
 
 @dataclass
+class Alliance:
+    id: str
+    members: List[str] = field(default_factory=list)
+    founded: bool = False
+    betrayers: Set[str] = field(default_factory=set)
+
+
+@dataclass
 class MapState:
     hexes: Dict[str, Hex] = field(default_factory=dict)
     adjacency: Dict[str, List[str]] = field(default_factory=dict)
@@ -252,6 +264,8 @@ class GameState:
     pending_starting_player: Optional[str] = None
     turn_order: List[str] = field(default_factory=list)
     turn_index: int = 0
+    feature_flags: Dict[str, bool] = field(default_factory=dict)
+    alliances: Dict[str, Alliance] = field(default_factory=dict)
 
     def to_json(self) -> str:
         def _normalize(value: Any) -> Any:

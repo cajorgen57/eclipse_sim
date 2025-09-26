@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .game_models import GameState, PlayerState
+from ..game_models import GameState, PlayerState
 
 
 def unity_deathmoon_bonus(state: GameState, player: PlayerState) -> int:
