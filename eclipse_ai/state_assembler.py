@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Optional, Dict, Any, Set
 from copy import deepcopy
 
-from .types import GameState, PlayerState, Resources, MapState, TechDisplay, Pieces
+from .game_models import GameState, PlayerState, Resources, MapState, TechDisplay, Pieces
 
 # -----------------------------
 # Public API

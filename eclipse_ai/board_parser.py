@@ -10,7 +10,7 @@ except Exception:  # OpenCV optional
     cv2 = None  # type: ignore
     np = None   # type: ignore
 
-from .types import MapState, Hex, Planet, Pieces
+from .game_models import MapState, Hex, Planet, Pieces
 
 # ============================================================
 # Config

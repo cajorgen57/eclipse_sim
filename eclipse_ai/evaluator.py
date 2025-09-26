@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional, Tuple, List
 from dataclasses import dataclass
 import math
 
-from .types import GameState, Action, Score, ActionType, PlayerState, Hex, Planet, Pieces, ShipDesign
+from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Planet, Pieces, ShipDesign
 from .simulators.combat import score_combat
 from .simulators.exploration import exploration_ev
 
