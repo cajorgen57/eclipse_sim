@@ -100,7 +100,7 @@ _ORION_TURN1_ROUND1_4P: Dict[str, Any] = {
                 ],
                 "pieces": {
                     "P1": {
-                        "ships": {"interceptor": 2, "cruiser": 1},
+                        "ships": {"interceptor": 0, "cruiser": 1},
                         "starbase": 0,
                         "discs": 1,
                         "cubes": {"yellow": 1, "blue": 1, "brown": 1},
@@ -168,7 +168,20 @@ _ORION_TURN1_ROUND1_4P: Dict[str, Any] = {
         }
     },
     "tech_display": {
-        "available": ["Plasma Cannon I", "Fusion Drive I", "Advanced Mining"],
+        "available": [
+            "Plasma Cannon I",
+            "Fusion Drive I",
+            "Advanced Mining",
+            "Positron Computer",
+            "Gauss Shield",
+            "Neutron Absorber",
+            "Advanced Robotics",
+            "Quantum Grid",
+            "Wormhole Generator",
+            "Antimatter Cannon",
+            "Nanorobots",
+            "Improved Hull",
+        ],
         "tier_counts": {"I": 6, "II": 4, "III": 2},
     },
     "bags": {"R1": {"unknown": 4}, "R2": {"unknown": 3}},
