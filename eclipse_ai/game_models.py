@@ -84,15 +84,7 @@ class Resources:
     science: int = 0
     materials: int = 0
 
-@dataclass
-class ShipDesign:
-    computer: int = 0
-    shield: int = 0
-    initiative: int = 0
-    hull: int = 1
-    cannons: int = 0
-    missiles: int = 0
-    drive: int = 0
+from .types import ShipDesign
 
 @dataclass
 class Pieces:
@@ -116,6 +108,7 @@ class Hex:
     pieces: Dict[str, Pieces] = field(default_factory=dict)  # player_id -> Pieces
     ancients: int = 0
     monolith: bool = False
+    orbital: bool = False
     anomaly: bool = False
 
 @dataclass
@@ -132,6 +125,7 @@ class PlayerState:
     ship_designs: Dict[str, ShipDesign] = field(default_factory=dict)  # interceptor, cruiser, dreadnought, starbase
     reputation: List[int] = field(default_factory=list)
     diplomacy: Dict[str, str] = field(default_factory=dict)
+    available_components: Dict[str, int] = field(default_factory=dict)
 
 @dataclass
 class MapState:
