@@ -125,13 +125,13 @@ _ORION_OPENING: Dict[str, Any] = {
         "P1": {
             "player_id": "P1",
             "color": "purple",
-            "known_techs": ["Gauss Shield"],  # Orion Hegemony starting tech (Rise of the Ancients)
-            "resources": {"money": 2, "science": 1, "materials": 2},
+            "known_techs": ["Gauss Shield", "Neutron Bombs"],  # Orion Hegemony starting tech (Rise of the Ancients)
+            "resources": {"money": 3, "science": 3, "materials": 5},
             "ship_designs": {
                 "interceptor": {
                     "computer": 1,
                     "shield": 1,
-                    "initiative": 2,
+                    "initiative": 4,
                     "hull": 1,
                     "cannons": 1,
                     "missiles": 0,
@@ -141,7 +141,7 @@ _ORION_OPENING: Dict[str, Any] = {
                     "computer": 1,
                     "shield": 1,
                     "initiative": 3,
-                    "hull": 1,
+                    "hull": 2,
                     "cannons": 1,
                     "missiles": 0,
                     "drive": 1,
