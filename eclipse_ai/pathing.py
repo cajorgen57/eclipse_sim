@@ -1,10 +1,12 @@
 """Adjacency and pinning helpers shared across rules modules."""
 from __future__ import annotations
 
-from typing import Dict, Iterable, Optional, Sequence, Set
+from collections import deque
+from typing import Dict, Iterable, Optional, Sequence, Set, Tuple
 
 from .alliances import are_allied
 from .game_models import Hex, MapState
+from .movement import LEGAL_CONNECTION_TYPES, classify_connection
 
 
 def valid_edge(
@@ -50,6 +52,96 @@ def valid_edge(
     if player_has_wormhole_generator and (src_has or dst_has):
         return True
     return False
+
+
+def compute_connectivity(state: object, pid: str, *, include_jump: bool = True) -> Set[str]:
+    """Return the set of hex ids reachable for ``pid`` using MOVE legality."""
+
+    if not state or not pid:
+        return set()
+    map_state = getattr(state, "map", None)
+    if map_state is None or not getattr(map_state, "hexes", None):
+        return set()
+
+    player = None
+    players = getattr(state, "players", {}) or {}
+    try:
+        player = players.get(pid)
+    except AttributeError:
+        player = None
+
+    allow_jump = False
+    if include_jump and player is not None:
+        try:
+            designs = getattr(player, "ship_designs", {}) or {}
+            allow_jump = any(getattr(design, "has_jump_drive", False) for design in designs.values())
+        except AttributeError:
+            allow_jump = False
+
+    reachable: Set[str] = set()
+    visited: Set[Tuple[str, bool]] = set()
+    queue: deque[Tuple[str, bool]] = deque()
+
+    for hex_id, hx in map_state.hexes.items():
+        friendly, enemy = _presence_counts(state, hx, pid)
+        has_disc = bool(getattr(hx, "owner", None) == pid)
+        pieces_map = getattr(hx, "pieces", {}) or {}
+        player_pieces = pieces_map.get(pid) if isinstance(pieces_map, dict) else None
+        discs = int(getattr(player_pieces, "discs", 0) or 0)
+        if discs > 0:
+            has_disc = True
+        ships_available = friendly > 0
+        anchored = has_disc or ships_available
+        if not anchored:
+            continue
+        reachable.add(hex_id)
+        pinned = enemy > 0 and friendly <= enemy
+        if pinned:
+            continue
+        state_key = (hex_id, False)
+        if state_key not in visited:
+            visited.add(state_key)
+            queue.append(state_key)
+
+    while queue:
+        current_id, jump_used = queue.popleft()
+        current_hex = map_state.hexes.get(current_id)
+        if current_hex is None:
+            continue
+        if getattr(current_hex, "has_gcds", False):
+            # You may end in the Galactic Center but cannot continue through it when GCDS active.
+            continue
+        for neighbor_id in (getattr(current_hex, "neighbors", {}) or {}).values():
+            if not neighbor_id:
+                continue
+            neighbor_hex = map_state.hexes.get(neighbor_id)
+            if neighbor_hex is None:
+                continue
+            if not getattr(neighbor_hex, "explored", True):
+                continue
+            connection = classify_connection(state, player, current_id, neighbor_id)
+            if connection not in LEGAL_CONNECTION_TYPES:
+                continue
+            next_jump_used = jump_used
+            if connection == "jump":
+                if not allow_jump or jump_used:
+                    continue
+                next_jump_used = True
+
+            reachable.add(neighbor_id)
+
+            # Entering a contested hex ends movement for that activation.
+            friendly_dst, enemy_dst = _presence_counts(state, neighbor_hex, pid)
+            if enemy_dst > 0 and friendly_dst <= enemy_dst:
+                continue
+
+            state_key = (neighbor_id, next_jump_used)
+            if state_key in visited:
+                continue
+            visited.add(state_key)
+            queue.append(state_key)
+
+    return reachable
 
 
 def is_pinned(
@@ -104,6 +196,36 @@ def is_pinned(
     if enemy_strength <= 0:
         return False
     return enemy_strength >= friendly_strength
+
+
+def _presence_counts(state: object, hex_obj: Optional[Hex], pid: str) -> Tuple[int, int]:
+    if not hex_obj:
+        return (0, 0)
+    try:
+        from .alliances import ship_presence
+
+        return ship_presence(state, hex_obj, pid)
+    except Exception:
+        friendly = 0
+        enemy = int(getattr(hex_obj, "ancients", 0) or 0)
+        pieces_map = getattr(hex_obj, "pieces", None)
+        if isinstance(pieces_map, dict):
+            for owner, pieces in pieces_map.items():
+                strength = _pieces_ship_strength(pieces)
+                if owner == pid:
+                    friendly += strength
+                else:
+                    enemy += strength
+        else:
+            ships_map = getattr(hex_obj, "ships", None)
+            if isinstance(ships_map, dict):
+                for owner, count in ships_map.items():
+                    strength = int(count or 0)
+                    if owner == pid:
+                        friendly += strength
+                    else:
+                        enemy += strength
+        return (friendly, enemy)
 
 
 def is_warp_portal(hex_obj: Optional[Hex]) -> bool:
@@ -181,6 +303,7 @@ def _are_allied(state: Optional[object], a_id: str, b_id: str) -> bool:
 
 
 __all__ = [
+    "compute_connectivity",
     "is_deep_warp_portal",
     "is_pinned",
     "is_warp_nexus",

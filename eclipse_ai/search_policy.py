@@ -7,7 +7,7 @@ from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex,
 from .alliances import ship_presence
 from .rules_engine import legal_actions
 from .evaluator import evaluate_action
-from .movement import max_ship_activations_per_action
+from .movement import LEGAL_CONNECTION_TYPES, classify_connection, max_ship_activations_per_action
 from .technology import do_research, ResearchError, load_tech_definitions
 
 # =============================
@@ -397,14 +397,20 @@ def _apply_move_action(state: GameState, pid: str, payload: Dict[str, Any]) -> N
         raise ValueError("Too many ship activations for this action")
 
     for activation in activations:
-        _execute_activation(working, player, activation)
+        _execute_activation(working, player, activation, is_reaction=is_reaction)
 
     # Commit the simulated changes back to the real state only after validation succeeds.
     state.players = working.players
     state.map = working.map
 
 
-def _execute_activation(state: GameState, player: PlayerState, activation: Dict[str, Any]) -> None:
+def _execute_activation(
+    state: GameState,
+    player: PlayerState,
+    activation: Dict[str, Any],
+    *,
+    is_reaction: bool = False,
+) -> None:
     ship_class = str(activation.get("ship_class", ""))
     if not ship_class:
         raise ValueError("Activation missing ship class")
@@ -421,6 +427,8 @@ def _execute_activation(state: GameState, player: PlayerState, activation: Dict[
     count = int(activation.get("count", 1))
     if count <= 0:
         raise ValueError("Activation must move at least one ship")
+    if is_reaction and count != 1:
+        raise ValueError("Reaction MOVE may activate exactly one ship")
 
     for _ in range(count):
         _activate_single_ship(state, player, ship_class, path, activation)
@@ -432,6 +440,9 @@ def _activate_single_ship(state: GameState, player: PlayerState, ship_class: str
     pieces = current_hex.pieces.get(you)
     if pieces is None or pieces.ships.get(ship_class, 0) <= 0:
         raise ValueError("No ship of requested class in starting hex")
+
+    friendly_start, enemy_start = ship_presence(state, current_hex, you)
+    pinned_at_start = enemy_start > 0
 
     design = player.ship_designs.get(ship_class, ShipDesign())
     if ship_class == "starbase":
@@ -459,6 +470,8 @@ def _activate_single_ship(state: GameState, player: PlayerState, ship_class: str
             raise ValueError("Not enough interceptors to load into bay")
 
     # Enforce pinning when leaving the starting hex, including any interceptors we plan to carry.
+    if pinned_at_start:
+        activation.setdefault("pinned", True)
     _enforce_exit_pinning(state, current_hex, you, 1 + carried_interceptors)
 
     if carried_interceptors:
@@ -477,19 +490,18 @@ def _activate_single_ship(state: GameState, player: PlayerState, ship_class: str
         if src_hex.has_gcds:
             raise ValueError("GCDS blocks movement through the Galactic Center")
 
-        connection_type = _classify_connection(state, player, current_hex_id, next_hex_id)
+        connection_type = classify_connection(state, player, current_hex_id, next_hex_id)
+        if connection_type not in LEGAL_CONNECTION_TYPES:
+            raise ValueError("No legal connection between hexes")
 
         if connection_type == "jump":
             if not has_jump or jump_used:
                 raise ValueError("Jump Drive already used this activation")
             jump_used = True
         else:
-            # Wormhole / portal movement consumes a step.
             if steps_remaining <= 0:
                 raise ValueError("Movement exceeds drive allowance")
             steps_remaining -= 1
-            if connection_type is None:
-                raise ValueError("No legal connection between hexes")
 
         # Leaving current hex after validating movement points.
         _enforce_exit_pinning(state, src_hex, you, 1)
@@ -514,84 +526,11 @@ def _activate_single_ship(state: GameState, player: PlayerState, ship_class: str
         dest_pieces.ships["interceptor"] = dest_pieces.ships.get("interceptor", 0) + carried_interceptors
 
 
-def _classify_connection(state: GameState, player: PlayerState, src_id: str, dst_id: str) -> Optional[str]:
-    """Return connection type: 'wormhole', 'warp', 'wg', 'jump', or None."""
-    if src_id == dst_id:
-        return "wormhole"
-
-    src_hex = state.map.hexes.get(src_id)
-    dst_hex = state.map.hexes.get(dst_id)
-    if src_hex is None or dst_hex is None:
-        return None
-
-    if _is_warp_connection(src_hex, dst_hex):
-        return "warp"
-
-    if _has_full_wormhole(state, src_id, dst_id):
-        return "wormhole"
-
-    if player.has_wormhole_generator and _has_half_wormhole_for_wg(state, src_id, dst_id):
-        return "wg"
-
-    if _is_neighbor(state, src_id, dst_id):
-        return "jump"
-
-    return None
-
-
 def _require_hex(state: GameState, hex_id: str) -> Hex:
     hx = state.map.hexes.get(hex_id)
     if hx is None:
         raise ValueError(f"Hex {hex_id} is not on the map")
     return hx
-
-
-def _is_neighbor(state: GameState, a: str, b: str) -> bool:
-    hx_a = state.map.hexes.get(a)
-    hx_b = state.map.hexes.get(b)
-    if hx_a is None or hx_b is None:
-        return False
-    if b in hx_a.neighbors.values():
-        return True
-    if a in hx_b.neighbors.values():
-        return True
-    return False
-
-
-def _is_warp_connection(a: Hex, b: Hex) -> bool:
-    return bool(a.has_warp_portal and b.has_warp_portal)
-
-
-def _has_full_wormhole(state: GameState, src_id: str, dst_id: str) -> bool:
-    src = state.map.hexes.get(src_id)
-    dst = state.map.hexes.get(dst_id)
-    if src is None or dst is None:
-        return False
-    if not _is_neighbor(state, src_id, dst_id):
-        return False
-    edges = [edge for edge, neighbor in src.neighbors.items() if neighbor == dst_id]
-    if not edges:
-        return False
-    back_edges = [edge for edge, neighbor in dst.neighbors.items() if neighbor == src_id]
-    if not back_edges:
-        return False
-    if any(edge in src.wormholes for edge in edges) and any(edge in dst.wormholes for edge in back_edges):
-        return True
-    return False
-
-
-def _has_half_wormhole_for_wg(state: GameState, src_id: str, dst_id: str) -> bool:
-    src = state.map.hexes.get(src_id)
-    dst = state.map.hexes.get(dst_id)
-    if src is None or dst is None:
-        return False
-    if not _is_neighbor(state, src_id, dst_id):
-        return False
-    edges = [edge for edge, neighbor in src.neighbors.items() if neighbor == dst_id]
-    back_edges = [edge for edge, neighbor in dst.neighbors.items() if neighbor == src_id]
-    has_src_edge = any(edge in src.wormholes for edge in edges)
-    has_dst_edge = any(edge in dst.wormholes for edge in back_edges)
-    return has_src_edge or has_dst_edge
 
 
 def _move_ship_between_hexes(state: GameState, pid: str, ship_class: str, src_id: str, dst_id: str) -> None:
