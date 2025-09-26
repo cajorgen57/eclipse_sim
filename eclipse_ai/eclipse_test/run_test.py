@@ -1,10 +1,243 @@
-import sys, json, argparse
-sys.path.append("..")  # if running inside eclipse_test within repo root
+import os, sys, json, argparse
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 try:
     from eclipse_ai import recommend
+    from eclipse_ai.game_models import GameState
 except Exception:
     # fallback: try installed package
     from eclipse_ai import recommend
+    from eclipse_ai.game_models import GameState
+
+
+ORION_ROUND1_STATE = {
+    "round": 1,
+    "active_player": "orion",
+    "players": {
+        "orion": {
+            "player_id": "orion",
+            "color": "purple",
+            "known_techs": ["Gauss Shield"],
+            "resources": {"money": 2, "science": 1, "materials": 2},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 1,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                },
+                "cruiser": {
+                    "computer": 1,
+                    "shield": 1,
+                    "initiative": 3,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                },
+            },
+        },
+        "terran": {
+            "player_id": "terran",
+            "color": "orange",
+            "known_techs": ["Fusion Drive"],
+            "resources": {"money": 3, "science": 2, "materials": 2},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                }
+            },
+        },
+        "mechanema": {
+            "player_id": "mechanema",
+            "color": "teal",
+            "known_techs": ["Positron Computer"],
+            "resources": {"money": 1, "science": 3, "materials": 1},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                }
+            },
+        },
+        "magellan": {
+            "player_id": "magellan",
+            "color": "green",
+            "known_techs": ["Ion Thruster"],
+            "resources": {"money": 1, "science": 1, "materials": 3},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                }
+            },
+        },
+        "rho_indi": {
+            "player_id": "rho_indi",
+            "color": "yellow",
+            "known_techs": ["Gluon Computer"],
+            "resources": {"money": 4, "science": 0, "materials": 1},
+            "ship_designs": {
+                "interceptor": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 2,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                },
+                "cruiser": {
+                    "computer": 1,
+                    "shield": 0,
+                    "initiative": 3,
+                    "hull": 1,
+                    "cannons": 1,
+                    "missiles": 0,
+                    "drive": 1,
+                },
+            },
+        },
+    },
+    "map": {
+        "hexes": {
+            "230": {
+                "id": "230",
+                "ring": 1,
+                "wormholes": [0, 3, 5],
+                "planets": [
+                    {"type": "yellow", "colonized_by": "orion"},
+                    {"type": "blue", "colonized_by": "orion"},
+                    {"type": "brown", "colonized_by": "orion"},
+                ],
+                "pieces": {
+                    "orion": {
+                        "ships": {"interceptor": 2, "cruiser": 1},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"yellow": 1, "blue": 1, "brown": 1},
+                    }
+                },
+            },
+            "terran_home": {
+                "id": "terran_home",
+                "ring": 1,
+                "wormholes": [1, 4],
+                "planets": [
+                    {"type": "yellow", "colonized_by": "terran"},
+                    {"type": "blue", "colonized_by": "terran"},
+                    {"type": "brown", "colonized_by": "terran"},
+                ],
+                "pieces": {
+                    "terran": {
+                        "ships": {"interceptor": 2},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"yellow": 1, "blue": 1, "brown": 1},
+                    }
+                },
+            },
+            "mechanema_home": {
+                "id": "mechanema_home",
+                "ring": 1,
+                "wormholes": [0, 2, 5],
+                "planets": [
+                    {"type": "blue", "colonized_by": "mechanema"},
+                    {"type": "blue", "colonized_by": "mechanema"},
+                    {"type": "brown", "colonized_by": "mechanema"},
+                ],
+                "pieces": {
+                    "mechanema": {
+                        "ships": {"interceptor": 2},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"blue": 2, "brown": 1},
+                    }
+                },
+            },
+            "magellan_home": {
+                "id": "magellan_home",
+                "ring": 1,
+                "wormholes": [1, 3, 4],
+                "planets": [
+                    {"type": "brown", "colonized_by": "magellan"},
+                    {"type": "brown", "colonized_by": "magellan"},
+                    {"type": "yellow", "colonized_by": "magellan"},
+                ],
+                "pieces": {
+                    "magellan": {
+                        "ships": {"interceptor": 2},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"brown": 2, "yellow": 1},
+                    }
+                },
+            },
+            "rho_home": {
+                "id": "rho_home",
+                "ring": 1,
+                "wormholes": [0, 2, 4],
+                "planets": [
+                    {"type": "yellow", "colonized_by": "rho_indi"},
+                    {"type": "yellow", "colonized_by": "rho_indi"},
+                    {"type": "blue", "colonized_by": None},
+                ],
+                "pieces": {
+                    "rho_indi": {
+                        "ships": {"cruiser": 1},
+                        "starbase": 0,
+                        "discs": 1,
+                        "cubes": {"yellow": 2},
+                    }
+                },
+            },
+            "outer_frontier": {
+                "id": "outer_frontier",
+                "ring": 2,
+                "wormholes": [1, 4],
+                "planets": [
+                    {"type": "yellow", "colonized_by": None},
+                    {"type": "blue", "colonized_by": None},
+                    {"type": "brown", "colonized_by": None},
+                ],
+                "pieces": {},
+            },
+        }
+    },
+    "tech_display": {
+        "available": [
+            "Plasma Cannon I",
+            "Fusion Drive I",
+            "Advanced Mining",
+            "Positron Computer",
+            "Gauss Shield",
+            "Neutron Absorber",
+        ],
+        "tier_counts": {"I": 6, "II": 4, "III": 2},
+    },
+    "bags": {
+        "R1": {"unknown": 5},
+        "R2": {"unknown": 4},
+    },
+}
 
 p = argparse.ArgumentParser()
 p.add_argument("--board", default="board.jpg")
@@ -14,8 +247,9 @@ p.add_argument("--depth", type=int, default=2)
 p.add_argument("--topk",  type=int, default=5)
 args = p.parse_args()
 
-manual = {"_planner":{"simulations":args.sims,"depth":args.depth,"risk_aversion":0.25}}
-out = recommend(args.board, args.tech, manual_inputs=manual, top_k=args.topk)
+manual = {"_planner": {"simulations": args.sims, "depth": args.depth, "risk_aversion": 0.25}}
+state = GameState.from_dict(ORION_ROUND1_STATE)
+out = recommend(args.board, args.tech, prior_state=state, manual_inputs=manual, top_k=args.topk)
 print(json.dumps({
   "round": out.get("round"),
   "active_player": out.get("active_player"),
