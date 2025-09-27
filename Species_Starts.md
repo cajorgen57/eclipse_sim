@@ -65,23 +65,17 @@ Fields:
   "traits": ["Root Network: may place influence in adjacent hexes", "Own hexes count as adjacent for movement"]
 }
 ```
-
----
-
-## Rise of the Ancients
-
 ```json
 {
   "name": "Orion Hegemony",
   "starting_sector": 230,
-  "starting_resources": {"money": 2, "science": 1, "materials": 2},
+  "starting_resources": {"money": 3, "science": 3, "materials": 5},
   "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
   "starting_ships": {"interceptor": 2, "cruiser": 1, "dreadnought": 0, "starbase": 0},
   "starting_techs": ["Gauss Shield"],
   "traits": ["Cheaper builds", "Combat bonuses"]
 }
 ```
-
 ```json
 {
   "name": "Mechanema",
@@ -93,6 +87,10 @@ Fields:
   "traits": ["Upgrade up to 3 parts per action", "Research-focused"]
 }
 ```
+---
+
+## Rise of the Ancients
+
 
 ```json
 {
@@ -110,17 +108,13 @@ Fields:
 {
   "name": "Rho Indi Syndicate",
   "starting_sector": 237,
-  "starting_resources": {"money": 3, "science": 0, "materials": 0},
+  "starting_resources": {"money": 3, "science": 3, "materials": 3,
   "starting_colonies": {"home": {"money": 2}},
   "starting_ships": {"interceptor": 0, "cruiser": 1, "dreadnought": 0, "starbase": 0},
   "starting_techs": ["Gluon Computer"],
   "traits": ["Pillage: gain money when destroying ships", "Trade 3:2 for money"]
 }
 ```
-
----
-
-## Shadows of the Rift
 
 ```json
 {
@@ -138,14 +132,13 @@ Fields:
 {
   "name": "Exiles",
   "starting_sector": 243,
-  "starting_resources": {"money": 1, "science": 3, "materials": 0},
+  "starting_resources": {"money": 2, "science": 3, "materials": 0},
   "starting_colonies": {"home": {"science": 2}},
   "starting_ships": {"interceptor": 0, "cruiser": 1, "dreadnought": 0, "starbase": 0},
   "starting_techs": ["Wormhole Generator"],
   "traits": ["Free discovery on tech threshold", "Orbital focus"]
 }
 ```
-
 ```json
 {
   "name": "Enlightened of Lyra",
@@ -157,6 +150,13 @@ Fields:
   "traits": ["Diplomacy bonus", "Flexible research"]
 }
 ```
+
+---
+
+## Shadows of the Rift
+
+
+
 
 ---
 
