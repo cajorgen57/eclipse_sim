@@ -26,19 +26,23 @@ Fields:
   "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
   "starting_ships": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0},
   "starting_techs": [],
+  "trade_rate": "3:1",
   "traits": []
 }
 ```
 
+Other species list only the fields that differ from the Terran baseline.
+
 ```json
 {
-  "name": "Eridani",
+  "name": "Eridani Empire",
   "starting_sector": 224,
   "starting_resources": {"money": 0, "science": 0, "materials": 0},
-  "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
-  "starting_ships": {"interceptor": 0, "cruiser": 2, "dreadnought": 0, "starbase": 0},
-  "starting_techs": ["Plasma Cannon"],
-  "traits": ["Starts with fewer discs", "Weaker economy, stronger fleet"]
+  "starting_ships": {"interceptor": 0, "cruiser": 2},
+  "starting_techs": ["Gauss Shield", "Fusion Drive", "Plasma Cannon"],
+  "influence_discs_delta": -2,
+  "starting_reputation_draws": 2,
+  "traits": ["Leave two rightmost influence circles empty"]
 }
 ```
 
@@ -70,10 +74,17 @@ Fields:
   "name": "Orion Hegemony",
   "starting_sector": 230,
   "starting_resources": {"money": 3, "science": 3, "materials": 5},
-  "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
-  "starting_ships": {"interceptor": 2, "cruiser": 1, "dreadnought": 0, "starbase": 0},
-  "starting_techs": ["Gauss Shield"],
+  "starting_ships": {"interceptor": 0, "cruiser": 1},
+  "starting_techs": ["Neutron Bombs", "Gauss Shield"],
+  "trade_rate": "4:1",
   "traits": ["Cheaper builds", "Combat bonuses"]
+}
+```
+```json
+{
+  "name": "Descendants of Draco",
+  "ancients_rule": "May have ships and place discs in Ancient hexes; cannot battle Ancients; cannot take Discovery tiles from those hexes.",
+  "endgame_bonus": "+1 VP per Ancient ship left on board."
 }
 ```
 ```json
@@ -82,9 +93,11 @@ Fields:
   "starting_sector": 232,
   "starting_resources": {"money": 0, "science": 3, "materials": 0},
   "starting_colonies": {"home": {"science": 2, "materials": 1}},
-  "starting_ships": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0},
+  "starting_ships": {"interceptor": 2},
   "starting_techs": ["Positron Computer"],
-  "traits": ["Upgrade up to 3 parts per action", "Research-focused"]
+  "upgrade_override": "May take up to 3 ship parts.",
+  "build_override": "May build up to 3 ships or structures per action.",
+  "traits": ["Research-focused"]
 }
 ```
 ---
