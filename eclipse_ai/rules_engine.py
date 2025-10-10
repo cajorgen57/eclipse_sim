@@ -217,25 +217,7 @@ def _enum_moves(state: GameState, you: PlayerState) -> List[Action]:
             ships = _movable_ships(pieces, single_ship=is_reaction)
             if ships:
                 out.append(Action(ActionType.MOVE, {"from": hx.id, "to": hx.id, "ships": ships}))
-    # 2) Move toward valuable or enemy-held hexes (range-agnostic placeholder)
-    enemy_hexes = [
-        hx
-        for hx in state.map.hexes.values()
-        if state.map.is_revealed(hx.id)
-        and _is_explored_hex(hx)
-        and _enemy_presence_in_hex(state, you.player_id, hx) > 0
-    ]
-    valuable_empty = sorted(
-        [
-            hx
-            for hx in state.map.hexes.values()
-            if state.map.is_revealed(hx.id)
-            and _is_explored_hex(hx)
-            and _enemy_presence_in_hex(state, you.player_id, hx) == 0
-        ],
-        key=_hex_value_key,
-        reverse=True
-    )[:3]
+    # 2) Move toward neighbouring hexes with legal wormhole connections.
     for src in your_hexes:
         pieces = src.pieces.get(you.player_id)
         if not pieces:
@@ -245,18 +227,31 @@ def _enum_moves(state: GameState, you: PlayerState) -> List[Action]:
         ships = _movable_ships(pieces, single_ship=is_reaction)
         if not ships:
             continue
-        # aim at top 2 enemy hexes
-        for dst in enemy_hexes[:2]:
+        neighbor_ids = list(state.map.revealed_connected_neighbors(src.id)) if hasattr(state.map, "revealed_connected_neighbors") else []
+        enemy_neighbors: List[Hex] = []
+        empty_neighbors: List[Hex] = []
+        for neighbor_id in neighbor_ids:
+            dst = state.map.hexes.get(neighbor_id)
+            if dst is None:
+                continue
+            if not _is_explored_hex(dst):
+                continue
+            if _enemy_presence_in_hex(state, you.player_id, dst) > 0:
+                enemy_neighbors.append(dst)
+            else:
+                empty_neighbors.append(dst)
+
+        enemy_neighbors.sort(key=_hex_value_key, reverse=True)
+        empty_neighbors.sort(key=_hex_value_key, reverse=True)
+
+        for dst in enemy_neighbors[:2]:
             if dst.id == src.id:
                 continue
-            if state.map.is_revealed(dst.id):
-                out.append(Action(ActionType.MOVE, {"from": src.id, "to": dst.id, "ships": ships}))
-        # aim at one valuable empty hex
-        for dst in valuable_empty[:1]:
+            out.append(Action(ActionType.MOVE, {"from": src.id, "to": dst.id, "ships": ships}))
+        for dst in empty_neighbors[:1]:
             if dst.id == src.id:
                 continue
-            if state.map.is_revealed(dst.id):
-                out.append(Action(ActionType.MOVE, {"from": src.id, "to": dst.id, "ships": ships}))
+            out.append(Action(ActionType.MOVE, {"from": src.id, "to": dst.id, "ships": ships}))
     return out
 
 def _enum_upgrades(state: GameState, you: PlayerState) -> List[Action]:
