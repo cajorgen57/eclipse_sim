@@ -221,13 +221,16 @@ def _enum_moves(state: GameState, you: PlayerState) -> List[Action]:
     enemy_hexes = [
         hx
         for hx in state.map.hexes.values()
-        if _is_explored_hex(hx) and _enemy_presence_in_hex(state, you.player_id, hx) > 0
+        if state.map.is_revealed(hx.id)
+        and _is_explored_hex(hx)
+        and _enemy_presence_in_hex(state, you.player_id, hx) > 0
     ]
     valuable_empty = sorted(
         [
             hx
             for hx in state.map.hexes.values()
-            if _is_explored_hex(hx)
+            if state.map.is_revealed(hx.id)
+            and _is_explored_hex(hx)
             and _enemy_presence_in_hex(state, you.player_id, hx) == 0
         ],
         key=_hex_value_key,
@@ -246,12 +249,14 @@ def _enum_moves(state: GameState, you: PlayerState) -> List[Action]:
         for dst in enemy_hexes[:2]:
             if dst.id == src.id:
                 continue
-            out.append(Action(ActionType.MOVE, {"from": src.id, "to": dst.id, "ships": ships}))
+            if state.map.is_revealed(dst.id):
+                out.append(Action(ActionType.MOVE, {"from": src.id, "to": dst.id, "ships": ships}))
         # aim at one valuable empty hex
         for dst in valuable_empty[:1]:
             if dst.id == src.id:
                 continue
-            out.append(Action(ActionType.MOVE, {"from": src.id, "to": dst.id, "ships": ships}))
+            if state.map.is_revealed(dst.id):
+                out.append(Action(ActionType.MOVE, {"from": src.id, "to": dst.id, "ships": ships}))
     return out
 
 def _enum_upgrades(state: GameState, you: PlayerState) -> List[Action]:
@@ -646,6 +651,9 @@ def _player_hexes(state: GameState, pid: str) -> List[Hex]:
 def _is_explored_hex(hx: Optional[Hex]) -> bool:
     if not hx:
         return False
+    revealed = getattr(hx, "revealed", None)
+    if revealed is not None:
+        return bool(revealed)
     explored = getattr(hx, "explored", None)
     if explored is None:
         # Treat missing data as explored only if the tile appears to be numbered.

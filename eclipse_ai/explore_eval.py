@@ -88,6 +88,7 @@ def _coerce_hex(tile: Any, pos: str, orient: int, state: GameState) -> GameHex:
         orbital=any(str(sym).lower() == "orbital" for sym in symbols),
         anomaly=any(str(sym).lower() == "anomaly" for sym in symbols),
         explored=True,
+        revealed=True,
         has_warp_portal=bool(getattr(tile, "warp_portal", False)),
         has_deep_warp_portal=bool(getattr(tile, "has_deep_warp_portal", False)),
         is_warp_nexus=bool(getattr(tile, "is_warp_nexus", False)),
@@ -97,7 +98,7 @@ def _coerce_hex(tile: Any, pos: str, orient: int, state: GameState) -> GameHex:
 
 
 def _inject_virtual_hex(state: GameState, hex_obj: GameHex) -> None:
-    state.map.hexes[hex_obj.id] = hex_obj
+    state.map.place_hex(hex_obj)
     for edge, neighbor_id in (hex_obj.neighbors or {}).items():
         if neighbor_id not in state.map.hexes:
             continue

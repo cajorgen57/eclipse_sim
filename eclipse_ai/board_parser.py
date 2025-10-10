@@ -121,12 +121,12 @@ def parse_board(cal_img, config: Optional[BoardParseConfig]=None) -> MapState:
             pass
 
     # 3) Fallback demo
-    hexes: Dict[str, Hex] = {}
+    fallback_map = MapState()
     h = Hex(id="H-010", ring=2, wormholes=[0,2,4], planets=[Planet("yellow","you"), Planet("blue", None)])
     h.pieces["you"] = Pieces(ships={"interceptor":2}, discs=1, cubes={"y":1})
     h.pieces["blue"] = Pieces(ships={"cruiser":2}, discs=1)
-    hexes[h.id] = h
-    return MapState(hexes=hexes)
+    fallback_map.place_hex(h)
+    return fallback_map
 
 # ============================================================
 # Sidecar annotations
