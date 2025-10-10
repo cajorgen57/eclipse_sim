@@ -1,200 +1,35 @@
-"""Legality fixtures for the Orion Hegemony opening."""
+"""Legality fixtures derived from the Orion opening state."""
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any, Dict, List
 
 
-_ORION_TURN1_ROUND1_4P: Dict[str, Any] = {
-    "round": 1,
-    "active_player": "P1",
-    "phase": "ACTION",
-    "turn_order": ["P1", "P2", "P3", "P4"],
-    "players": {
-        "P1": {
-            "player_id": "P1",
-            "color": "purple",
-            "known_techs": ["Gauss Shield", "Neutron Bombs"],
-            "resources": {"money": 3, "science": 3, "materials": 5},
-            "ship_designs": {
-                "interceptor": {
-                    "computer": 1,
-                    "shield": 1,
-                    "initiative": 4,
-                    "hull": 1,
-                    "cannons": 1,
-                    "missiles": 0,
-                    "drive": 1,
-                },
-                "cruiser": {
-                    "computer": 1,
-                    "shield": 1,
-                    "initiative": 3,
-                    "hull": 2,
-                    "cannons": 1,
-                    "missiles": 0,
-                    "drive": 1,
-                },
-            },
-        },
-        "P2": {
-            "player_id": "P2",
-            "color": "orange",
-            "known_techs": [],
-            "resources": {"money": 2, "science": 2, "materials": 2},
-            "ship_designs": {
-                "interceptor": {
-                    "computer": 1,
-                    "shield": 0,
-                    "initiative": 2,
-                    "hull": 1,
-                    "cannons": 1,
-                    "missiles": 0,
-                    "drive": 1,
-                },
-            },
-        },
-        "P3": {
-            "player_id": "P3",
-            "color": "green",
-            "known_techs": [],
-            "resources": {"money": 3, "science": 1, "materials": 3},
-            "ship_designs": {
-                "interceptor": {
-                    "computer": 1,
-                    "shield": 0,
-                    "initiative": 2,
-                    "hull": 1,
-                    "cannons": 1,
-                    "missiles": 0,
-                    "drive": 1,
-                },
-            },
-        },
-        "P4": {
-            "player_id": "P4",
-            "color": "white",
-            "known_techs": [],
-            "resources": {"money": 2, "science": 2, "materials": 2},
-            "ship_designs": {
-                "interceptor": {
-                    "computer": 0,
-                    "shield": 0,
-                    "initiative": 2,
-                    "hull": 1,
-                    "cannons": 1,
-                    "missiles": 0,
-                    "drive": 1,
-                },
-            },
-        },
-    },
-    "map": {
-        "hexes": {
-            "230": {
-                "id": "230",
-                "ring": 1,
-                "planets": [
-                    {"type": "pink", "colonized_by": "P1"},
-                    {"type": "brown", "colonized_by": "P1"},
-                ],
-                "pieces": {
-                    "P1": {
-                        "ships": {"interceptor": 0, "cruiser": 1},
-                        "starbase": 0,
-                        "discs": 1,
-                        "cubes": {"pink": 1, "brown": 1},
-                    }
-                },
-            },
-            "Terran": {
-                "id": "Terran",
-                "ring": 1,
-                "planets": [
-                    {"type": "yellow", "colonized_by": "P2"},
-                    {"type": "pink", "colonized_by": "P2"},
-                    {"type": "brown", "colonized_by": "P2"},
-                ],
-                "pieces": {
-                    "P2": {
-                        "ships": {"interceptor": 1},
-                        "starbase": 0,
-                        "discs": 1,
-                        "cubes": {"yellow": 1, "pink": 1, "brown": 1},
-                    }
-                },
-            },
-            "Outer": {
-                "id": "Outer",
-                "ring": 2,
-                "planets": [
-                    {"type": "yellow", "colonized_by": None},
-                    {"type": "blue", "colonized_by": None},
-                ],
-                "pieces": {},
-            },
-            "Sigma": {
-                "id": "Sigma",
-                "ring": 1,
-                "planets": [
-                    {"type": "yellow", "colonized_by": "P3"},
-                    {"type": "blue", "colonized_by": "P3"},
-                ],
-                "pieces": {
-                    "P3": {
-                        "ships": {"interceptor": 2},
-                        "starbase": 0,
-                        "discs": 1,
-                        "cubes": {"yellow": 1, "blue": 1},
-                    }
-                },
-            },
-            "Hydra": {
-                "id": "Hydra",
-                "ring": 1,
-                "planets": [
-                    {"type": "yellow", "colonized_by": "P4"},
-                    {"type": "blue", "colonized_by": "P4"},
-                ],
-                "pieces": {
-                    "P4": {
-                        "ships": {"interceptor": 2},
-                        "starbase": 0,
-                        "discs": 1,
-                        "cubes": {"yellow": 1, "blue": 1},
-                    }
-                },
-            },
-        }
-    },
-    "tech_display": {
-        "available": [
-            "Plasma Cannon I",
-            "Fusion Drive I",
-            "Advanced Mining",
-            "Positron Computer",
-            "Gauss Shield",
-            "Neutron Absorber",
-            "Advanced Robotics",
-            "Quantum Grid",
-            "Wormhole Generator",
-            "Antimatter Cannon",
-            "Nanorobots",
-            "Improved Hull",
-        ],
-        "tier_counts": {"I": 6, "II": 4, "III": 2},
-    },
-    "bags": {"R1": {"unknown": 4}, "R2": {"unknown": 3}},
-}
+_FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "orion_round1_start.json"
+
+
+def _load_fixture(path: Path) -> Dict[str, Any]:
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+_ORION_NO_MOVE_STATE: Dict[str, Any] = _load_fixture(_FIXTURE_PATH)
+
 
 ORION_TURN1_TEST_CASES: List[Dict[str, Any]] = [
     {
-        "state": _ORION_TURN1_ROUND1_4P,
-        "player_id": "P1",
+        "state": _ORION_NO_MOVE_STATE,
+        "player_id": "orion",
         "proposed_action": {
-            "action": "Influence",
-            "payload": {"hex": "Outer", "income_delta": {"yellow": 1, "blue": 0, "brown": 0}},
+            "action": "Explore",
+            "payload": {"ring": 1, "draws": 1, "direction": "adjacent from ring 1"},
         },
-        "provenance": "manual/orion_hegemony/round1/action1",
-        "expectations": {"should_be_legal": True, "notes": "Influence the richest adjacent neutral hex."},
+        "provenance": "manual/orion_hegemony/round1/no_move_fixture",
+        "expectations": {
+            "should_be_legal": True,
+            "notes": "Opening explore from the no-move fixture should be legal.",
+        },
     }
 ]
+
