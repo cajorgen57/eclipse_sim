@@ -1,7 +1,7 @@
 from __future__ import annotations
 import sys
 from dataclasses import dataclass, field, asdict, is_dataclass, fields
-from typing import Dict, List, Optional, Tuple, Any, Set, Literal, get_args, get_origin, get_type_hints
+from typing import Dict, Iterable, List, Optional, Tuple, Any, Set, Literal, get_args, get_origin, get_type_hints
 from enum import Enum
 import json
 from .types import ShipDesign
@@ -279,6 +279,56 @@ class MapState:
             return bool(getattr(hex_obj, "revealed", False))
         return bool(getattr(hex_obj, "explored", False))
 
+    def neighbors(self, hex_id: str) -> Dict[int, Optional[str]]:
+        """Return a mapping of edges to neighbouring hex ids (or ``None``)."""
+
+        hx = self.hexes.get(hex_id)
+        if hx is None:
+            return {}
+        raw = (getattr(hx, "neighbors", {}) or {}).items()
+        neighbors: Dict[int, Optional[str]] = {}
+        for edge, nbr in raw:
+            try:
+                edge_idx = int(edge)
+            except (TypeError, ValueError):
+                # Ignore malformed edge identifiers to keep callers safe.
+                continue
+            neighbors[edge_idx] = nbr
+        return neighbors
+
+    def _wormhole_edges(self, hex_obj: Hex) -> Set[int]:
+        edges: Set[int] = set()
+        wormholes: Iterable[Any] = getattr(hex_obj, "wormholes", ()) or ()
+        for edge in wormholes:
+            try:
+                edges.add(int(edge))
+            except (TypeError, ValueError):
+                continue
+        return edges
+
+    @staticmethod
+    def _opposite_edge(edge: int) -> int:
+        return (edge + 3) % 6
+
+    def wormholes_match(self, src_id: str, dst_id: str, edge: int) -> bool:
+        """Return ``True`` when the wormholes align between neighbouring hexes."""
+
+        src = self.hexes.get(src_id)
+        dst = self.hexes.get(dst_id)
+        if src is None or dst is None:
+            return False
+        try:
+            edge_idx = int(edge)
+        except (TypeError, ValueError):
+            return False
+
+        src_edges = self._wormhole_edges(src)
+        dst_edges = self._wormhole_edges(dst)
+        if edge_idx not in src_edges:
+            return False
+        opp_edge = self._opposite_edge(edge_idx)
+        return opp_edge in dst_edges
+
     def place_hex(self, hex_obj: Hex) -> None:
         self.hexes[hex_obj.id] = hex_obj
         if hasattr(hex_obj, "revealed"):
@@ -289,6 +339,18 @@ class MapState:
             hex_obj.explored = True
         else:
             setattr(hex_obj, "explored", True)
+
+    def revealed_connected_neighbors(self, src_id: str) -> Iterable[str]:
+        """Yield ids of neighbouring hexes that are both revealed and connected."""
+
+        for edge, neighbor_id in self.neighbors(src_id).items():
+            if neighbor_id is None:
+                continue
+            neighbor_str = str(neighbor_id)
+            if not self.is_revealed(neighbor_str):
+                continue
+            if self.wormholes_match(src_id, neighbor_str, edge):
+                yield neighbor_str
 
 
 @dataclass
