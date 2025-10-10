@@ -158,7 +158,7 @@ def test_build_caps():
         ring=1,
         pieces={player.player_id: Pieces(ships={"interceptor": 4}, discs=1)},
     )
-    state.map.hexes["H2"] = hx2
+    state.map.place_hex(hx2)
     hx.pieces[player.player_id].ships["interceptor"] = 4
 
     with pytest.raises(RulesViolation):

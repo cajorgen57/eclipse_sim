@@ -426,7 +426,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
         if hx is None:
             # create a placeholder hex if needed
             hx = Hex(id=str(hex_id), ring=2, wormholes=[], planets=[], pieces={})
-            s.map.hexes[hx.id] = hx
+            s.map.place_hex(hx)
         if pid not in hx.pieces:
             hx.pieces[pid] = Pieces(ships={}, starbase=0, discs=hx.pieces.get(pid, Pieces()).discs if pid in hx.pieces else 0, cubes={})
 

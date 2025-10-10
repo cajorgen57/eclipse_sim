@@ -173,6 +173,15 @@ class Hex:
     has_deep_warp_portal: bool = False
     is_warp_nexus: bool = False
     has_gcds: bool = False
+    revealed: bool = False
+
+    def __post_init__(self) -> None:
+        # Maintain backwards compatibility with historical ``explored`` flags while
+        # adding an explicit ``revealed`` attribute for visibility checks.
+        explored = bool(getattr(self, "explored", False))
+        revealed = bool(getattr(self, "revealed", False))
+        if explored and not revealed:
+            self.revealed = True
 
 @dataclass
 class TechDisplay:
@@ -248,6 +257,38 @@ class Alliance:
 class MapState:
     hexes: Dict[str, Hex] = field(default_factory=dict)
     adjacency: Dict[str, List[str]] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        # Ensure existing hex entries are treated as revealed.
+        for hex_obj in self.hexes.values():
+            if hasattr(hex_obj, "revealed"):
+                hex_obj.revealed = bool(getattr(hex_obj, "revealed", False) or getattr(hex_obj, "explored", False))
+            else:
+                setattr(hex_obj, "revealed", bool(getattr(hex_obj, "explored", False)))
+            if not hasattr(hex_obj, "explored"):
+                setattr(hex_obj, "explored", bool(getattr(hex_obj, "revealed", False)))
+
+    def hex_exists(self, hex_id: str) -> bool:
+        return hex_id in self.hexes
+
+    def is_revealed(self, hex_id: str) -> bool:
+        hex_obj = self.hexes.get(hex_id)
+        if hex_obj is None:
+            return False
+        if hasattr(hex_obj, "revealed"):
+            return bool(getattr(hex_obj, "revealed", False))
+        return bool(getattr(hex_obj, "explored", False))
+
+    def place_hex(self, hex_obj: Hex) -> None:
+        self.hexes[hex_obj.id] = hex_obj
+        if hasattr(hex_obj, "revealed"):
+            hex_obj.revealed = True
+        else:
+            setattr(hex_obj, "revealed", True)
+        if hasattr(hex_obj, "explored"):
+            hex_obj.explored = True
+        else:
+            setattr(hex_obj, "explored", True)
 
 
 @dataclass
