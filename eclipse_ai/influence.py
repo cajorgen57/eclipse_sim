@@ -40,10 +40,3 @@ def connection_allows_diplomacy(map_state: MapGraph, a: str, b: str, *, feature_
     flags = _flags(feature_flags)
     return valid_edge(map_state, a, b, feature_flags=flags)
 
-
-def _both_have_portals(map_state: MapGraph, a: str, b: str) -> bool:
-    hex_a = map_state.hexes.get(a)
-    hex_b = map_state.hexes.get(b)
-    if not hex_a or not hex_b:
-        return False
-    return bool(getattr(hex_a, "warp_portal", False) and getattr(hex_b, "warp_portal", False))

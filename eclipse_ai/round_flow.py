@@ -11,6 +11,7 @@ from .game_models import (
     Pieces,
     PlayerState,
 )
+from .research import produce_mutagen
 
 
 ACTION_SPACE_KEYS: Tuple[str, ...] = (
@@ -161,10 +162,12 @@ def run_upkeep(state: GameState) -> None:
             player.resources.money = 0
             player.resources.science += int(getattr(player.income, "science", 0))
             player.resources.materials += int(getattr(player.income, "materials", 0))
+            produce_mutagen(player)
             continue
         player.resources.money = money_available - cost
         player.resources.science += int(getattr(player.income, "science", 0))
         player.resources.materials += int(getattr(player.income, "materials", 0))
+        produce_mutagen(player)
     state.phase = "CLEANUP"
 
 
@@ -448,14 +451,6 @@ def _validate_single_move(payload: Dict[str, object]) -> None:
     total = sum(int(v) for v in ships.values())
     if total != 1:
         raise ValueError("Reaction move may activate only one ship")
-
-
-def _remove_disc_from_hex_for_testing(
-    state: GameState, player: PlayerState, hex_id: str
-) -> Disc:
-    """Testing hook to enforce removal restrictions."""
-
-    return _remove_disc_from_hex(state, player, hex_id, reason="influence")
 
 
 def _flip_colony_ships_up(player: PlayerState) -> None:
