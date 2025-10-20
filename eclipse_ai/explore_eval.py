@@ -5,6 +5,7 @@ import copy
 from typing import Any, Iterable, Optional, Sequence, Set, Tuple
 
 from .game_models import GameState, Hex as GameHex, Planet
+from .resource_colors import RESOURCE_COLOR_ORDER, normalize_resource_color
 from .pathing import compute_connectivity
 
 
@@ -128,10 +129,12 @@ def _resource_value(hex_obj: GameHex, pid: str) -> float:
     total = 0.0
     if not getattr(hex_obj, "planets", None):
         return total
-    weights = {"yellow": 0.45, "blue": 0.5, "brown": 0.55, "wild": 0.65}
+    weights = {color: 0.45 + idx * 0.05 for idx, color in enumerate(RESOURCE_COLOR_ORDER)}
+    weights["wild"] = 0.65
     for planet in hex_obj.planets:
         planet_type = getattr(planet, "type", "wild")
-        total += weights.get(str(planet_type).lower(), 0.4)
+        color = normalize_resource_color(str(planet_type))
+        total += weights.get(color, weights.get(str(planet_type).lower(), 0.4))
     return total
 
 

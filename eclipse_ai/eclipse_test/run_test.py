@@ -124,8 +124,8 @@ ORION_ROUND1_STATE = {
                 "ring": 1,
                 "wormholes": [0, 3, 5],
                 "planets": [
-                    {"type": "yellow", "colonized_by": "orion"},
-                    {"type": "blue", "colonized_by": "orion"},
+                    {"type": "orange", "colonized_by": "orion"},
+                    {"type": "pink", "colonized_by": "orion"},
                     {"type": "brown", "colonized_by": "orion"},
                 ],
                 "pieces": {
@@ -133,7 +133,7 @@ ORION_ROUND1_STATE = {
                         "ships": {"interceptor": 0, "cruiser": 1},
                         "starbase": 0,
                         "discs": 1,
-                        "cubes": {"yellow": 1, "blue": 1, "brown": 1},
+                        "cubes": {"orange": 1, "pink": 1, "brown": 1},
                     }
                 },
             },
@@ -142,8 +142,8 @@ ORION_ROUND1_STATE = {
                 "ring": 1,
                 "wormholes": [1, 4],
                 "planets": [
-                    {"type": "yellow", "colonized_by": "terran"},
-                    {"type": "blue", "colonized_by": "terran"},
+                    {"type": "orange", "colonized_by": "terran"},
+                    {"type": "pink", "colonized_by": "terran"},
                     {"type": "brown", "colonized_by": "terran"},
                 ],
                 "pieces": {
@@ -151,7 +151,7 @@ ORION_ROUND1_STATE = {
                         "ships": {"interceptor": 2},
                         "starbase": 0,
                         "discs": 1,
-                        "cubes": {"yellow": 1, "blue": 1, "brown": 1},
+                        "cubes": {"orange": 1, "pink": 1, "brown": 1},
                     }
                 },
             },
@@ -160,8 +160,8 @@ ORION_ROUND1_STATE = {
                 "ring": 1,
                 "wormholes": [0, 2, 5],
                 "planets": [
-                    {"type": "blue", "colonized_by": "mechanema"},
-                    {"type": "blue", "colonized_by": "mechanema"},
+                    {"type": "pink", "colonized_by": "mechanema"},
+                    {"type": "pink", "colonized_by": "mechanema"},
                     {"type": "brown", "colonized_by": "mechanema"},
                 ],
                 "pieces": {
@@ -169,7 +169,7 @@ ORION_ROUND1_STATE = {
                         "ships": {"interceptor": 2},
                         "starbase": 0,
                         "discs": 1,
-                        "cubes": {"blue": 2, "brown": 1},
+                        "cubes": {"pink": 2, "brown": 1},
                     }
                 },
             },
@@ -180,14 +180,14 @@ ORION_ROUND1_STATE = {
                 "planets": [
                     {"type": "brown", "colonized_by": "magellan"},
                     {"type": "brown", "colonized_by": "magellan"},
-                    {"type": "yellow", "colonized_by": "magellan"},
+                    {"type": "orange", "colonized_by": "magellan"},
                 ],
                 "pieces": {
                     "magellan": {
                         "ships": {"interceptor": 2},
                         "starbase": 0,
                         "discs": 1,
-                        "cubes": {"brown": 2, "yellow": 1},
+                        "cubes": {"brown": 2, "orange": 1},
                     }
                 },
             },
@@ -196,16 +196,16 @@ ORION_ROUND1_STATE = {
                 "ring": 1,
                 "wormholes": [0, 2, 4],
                 "planets": [
-                    {"type": "yellow", "colonized_by": "rho_indi"},
-                    {"type": "yellow", "colonized_by": "rho_indi"},
-                    {"type": "blue", "colonized_by": None},
+                    {"type": "orange", "colonized_by": "rho_indi"},
+                    {"type": "orange", "colonized_by": "rho_indi"},
+                    {"type": "pink", "colonized_by": None},
                 ],
                 "pieces": {
                     "rho_indi": {
                         "ships": {"cruiser": 1},
                         "starbase": 0,
                         "discs": 1,
-                        "cubes": {"yellow": 2},
+                        "cubes": {"orange": 2},
                     }
                 },
             },
@@ -215,8 +215,8 @@ ORION_ROUND1_STATE = {
                 "wormholes": [1, 4],
                 "explored": False,
                 "planets": [
-                    {"type": "yellow", "colonized_by": None},
-                    {"type": "blue", "colonized_by": None},
+                    {"type": "orange", "colonized_by": None},
+                    {"type": "pink", "colonized_by": None},
                     {"type": "brown", "colonized_by": None},
                 ],
                 "pieces": {},

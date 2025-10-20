@@ -20,7 +20,7 @@ class PlayerExploreState:
     ancient_cruisers: int = 0
     ancient_parts: int = 0
     turn_ended: bool = False
-    colony_ships: Dict[str, int] = field(default_factory=lambda: {"yellow": 0, "blue": 0, "brown": 0, "wild": 0})
+    colony_ships: Dict[str, int] = field(default_factory=lambda: {"orange": 0, "pink": 0, "brown": 0, "wild": 0})
 
 
 @dataclass

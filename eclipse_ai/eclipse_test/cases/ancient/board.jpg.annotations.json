@@ -4,7 +4,7 @@
       "id": "H-101",
       "ring": 2,
       "wormholes": [1,3,5],
-      "planets": [{"type":"brown","colonized_by":null},{"type":"yellow","colonized_by":null}],
+      "planets": [{"type":"brown","colonized_by":null},{"type":"orange","colonized_by":null}],
       "ancients": 1,
       "pieces": [
         {"owner":"you","ships":{"interceptor":2,"cruiser":1},"discs":1},

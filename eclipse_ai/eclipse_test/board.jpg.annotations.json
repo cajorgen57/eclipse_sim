@@ -5,11 +5,11 @@
       "ring": 2,
       "wormholes": [0,2,4],
       "planets": [
-        {"type":"yellow","colonized_by":"you"},
-        {"type":"blue","colonized_by":null}
+        {"type":"orange","colonized_by":"you"},
+        {"type":"pink","colonized_by":null}
       ],
       "pieces": [
-        {"owner":"you","ships":{"interceptor":2},"starbase":0,"discs":1,"cubes":{"y":1}},
+        {"owner":"you","ships":{"interceptor":2},"starbase":0,"discs":1,"cubes":{"orange":1}},
         {"owner":"blue","ships":{"cruiser":2},"starbase":0,"discs":1}
       ]
     }

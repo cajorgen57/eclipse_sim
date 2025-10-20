@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Optional, Dict, Any, Set
+from typing import Optional, Dict, Any, Set, Mapping
 from collections import Counter
 from dataclasses import dataclass
 from copy import deepcopy
 
-from .game_models import GameState, PlayerState, Resources, MapState, TechDisplay, Pieces
+from .game_models import GameState, PlayerState, Resources, MapState, TechDisplay, Pieces, ColonyShips
 from .technology import load_tech_definitions
 from .data.exploration_tiles import tile_counts_by_ring, tile_numbers_by_ring
+from .resource_colors import canonical_resource_counts, normalize_resource_color, RESOURCE_COLOR_ORDER
 
 _ROUND_EXPLORED_FRACTION = 0.33
 
@@ -34,6 +35,26 @@ def _load_tile_catalog() -> _TileCatalog:
 
 
 _TILE_CATALOG = _load_tile_catalog()
+
+
+def _canonicalise_resource_dict(data: Mapping[str, Any] | None, *, include_zero: bool) -> Dict[str, int]:
+    canonical = canonical_resource_counts(data, include_zero=include_zero)
+    extras: Dict[str, int] = {}
+    if data:
+        for key, value in data.items():
+            if normalize_resource_color(key) in RESOURCE_COLOR_ORDER:
+                continue
+            try:
+                ivalue = int(value)
+            except Exception:
+                continue
+            if ivalue != 0 or include_zero:
+                extras[key] = ivalue
+    if include_zero:
+        return {**canonical, **extras}
+    result = {k: v for k, v in canonical.items() if v}
+    result.update({k: v for k, v in extras.items() if v})
+    return result
 
 # -----------------------------
 # Public API
@@ -123,6 +144,10 @@ def _reconcile_players_from_map(gs: GameState) -> None:
     # Discover player ids present in map pieces
     present: Set[str] = set(gs.players.keys())
     for hx in gs.map.hexes.values():
+        for planet in hx.planets or []:
+            new_type = normalize_resource_color(getattr(planet, "type", ""))
+            if new_type in RESOURCE_COLOR_ORDER:
+                planet.type = new_type
         for pid in hx.pieces.keys():
             if pid not in present:
                 present.add(pid)
@@ -134,6 +159,8 @@ def _reconcile_players_from_map(gs: GameState) -> None:
             p = hx.pieces[pid]
             if p.cubes is None:
                 p.cubes = {}
+            else:
+                p.cubes = _canonicalise_resource_dict(p.cubes, include_zero=False)
             if p.ships is None:
                 p.ships = {}
 
@@ -218,6 +245,26 @@ def _initialise_player_state(player: PlayerState, definitions: Optional[Dict[str
     player.vp_bonuses = dict(player.vp_bonuses or {})
     player.species_pools = dict(player.species_pools or {})
     player.special_resources = dict(player.special_resources or {})
+
+    player.population = _canonicalise_resource_dict(getattr(player, "population", {}), include_zero=True)
+
+    colonies: Dict[str, Dict[str, int]] = {}
+    for hex_id, cubes in (player.colonies or {}).items():
+        canonical = _canonicalise_resource_dict(cubes, include_zero=False)
+        if canonical:
+            colonies[hex_id] = canonical
+    player.colonies = colonies
+
+    if not isinstance(player.colony_ships, ColonyShips):
+        try:
+            player.colony_ships = ColonyShips(**(player.colony_ships or {}))  # type: ignore[arg-type]
+        except Exception:
+            player.colony_ships = ColonyShips()
+
+    player.colony_ships.face_up = _canonicalise_resource_dict(player.colony_ships.face_up, include_zero=True)
+    player.colony_ships.face_down = _canonicalise_resource_dict(player.colony_ships.face_down, include_zero=True)
+    player.colony_ships.face_up.setdefault("wild", 0)
+    player.colony_ships.face_down.setdefault("wild", 0)
 
     name_to_id = {t.name.lower(): tid for tid, t in tech_defs.items()}
     for entry in list(player.known_techs or []):

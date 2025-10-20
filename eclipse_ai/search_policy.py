@@ -8,6 +8,7 @@ from .alliances import ship_presence
 from .rules_engine import legal_actions
 from .evaluator import evaluate_action
 from .movement import LEGAL_CONNECTION_TYPES, classify_connection, max_ship_activations_per_action
+from .resource_colors import canonical_resource_counts
 from .technology import do_research, ResearchError, load_tech_definitions
 from .pathing import compute_connectivity
 
@@ -471,15 +472,14 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
     if t == ActionType.INFLUENCE:
         # Adjust income proxy via cubes; not modeling discs inventory
         hex_id = p.get("hex")
-        inc = p.get("income_delta", {})
+        inc = canonical_resource_counts(p.get("income_delta", {}), include_zero=False)
         # store a marker by adding cubes to the hex
         hx = s.map.hexes.get(hex_id)
         if hx:
             if pid not in hx.pieces:
                 hx.pieces[pid] = Pieces(ships={}, starbase=0, discs=1, cubes={})
             for color, dv in inc.items():
-                key = {"yellow":"y","blue":"b","brown":"p"}.get(color, "y")
-                hx.pieces[pid].cubes[key] = hx.pieces[pid].cubes.get(key, 0) + max(0, int(dv))
+                hx.pieces[pid].cubes[color] = hx.pieces[pid].cubes.get(color, 0) + max(0, int(dv))
         _refresh_connectivity(s, pid)
         return s
 

@@ -7,6 +7,7 @@ from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex,
 from .simulators.combat import score_combat
 from .explore_eval import explore_ev
 from .simulators.exploration import exploration_ev
+from .resource_colors import RESOURCE_COLOR_ORDER, normalize_resource_color, canonical_resource_counts
 
 # ===== Public API =====
 
@@ -59,7 +60,12 @@ def _score_explore(state: GameState, pid: str, payload: Dict[str, Any]) -> Score
     owned = you.owned_tech_ids if you and you.owned_tech_ids else set()
     wormhole_gen = ("wormhole_generator" in owned) or bool(payload.get("wormhole_generator", False))
     discs_available = int(payload.get("discs_available", 1))
-    colony_ships = dict(payload.get("colony_ships", {"yellow":1,"blue":1,"brown":1,"wild":0}))
+    raw_colony_ships = payload.get("colony_ships", {"orange": 1, "pink": 1, "brown": 1, "wild": 0})
+    colony_ships = canonical_resource_counts(raw_colony_ships, include_zero=True)
+    try:
+        colony_ships["wild"] = int((raw_colony_ships or {}).get("wild", 0))
+    except Exception:
+        colony_ships["wild"] = 0
     p_connect_default = float(payload.get("p_connect_default", 0.70))
 
     q = {
@@ -208,22 +214,19 @@ def _territory_value_of_hex(hx: Optional[Hex]) -> float:
     if not hx:
         return 0.0
     # Convert planets and monoliths to VP-equivalent present value
-    counts = {"yellow":0, "blue":0, "brown":0, "wild":0}
+    counts = {color: 0 for color in RESOURCE_COLOR_ORDER}
+    counts["wild"] = 0
     for pl in hx.planets:
         if pl.colonized_by is None:  # available potential
-            if pl.type in counts:
-                counts[pl.type] += 1
-            elif pl.type.lower().startswith("y"):
-                counts["yellow"] += 1
-            elif pl.type.lower().startswith("b"):
-                counts["blue"] += 1
-            elif pl.type.lower().startswith("p") or pl.type.lower().startswith("m"):
-                counts["brown"] += 1
-            elif pl.type.lower().startswith("w"):
+            ptype = str(getattr(pl, "type", ""))
+            color = normalize_resource_color(ptype)
+            if color in counts:
+                counts[color] += 1
+            elif ptype.lower().startswith("w"):
                 counts["wild"] += 1
     # Basic PV weights similar to exploration module
     pv = _present_value_factor(3, 0.90)
-    ev = (counts["yellow"] + counts["blue"] + counts["brown"]) * 0.20 * pv
+    ev = sum(counts[color] for color in RESOURCE_COLOR_ORDER) * 0.20 * pv
     if hx.monolith:
         ev += 3.0 * 0.5
     return ev
@@ -350,14 +353,20 @@ def _fleet_power(state: GameState, pid: str, designs: Dict[str,ShipDesign]) -> f
 
 def _score_influence(state: GameState, pid: str, payload: Dict[str, Any]) -> Score:
     # If income deltas provided, compute PV. Else modest default.
-    income = payload.get("income_delta", {})  # {"yellow": +1, "blue": 0, "brown": -1}
+    income = canonical_resource_counts(payload.get("income_delta", {}), include_zero=False)
     pv = _present_value_factor(int(payload.get("horizon_rounds", 3)), float(payload.get("discount", 0.90)))
-    rates = {"yellow":0.20, "blue":0.20, "brown":0.20}
-    rates.update(payload.get("vp_per_income", {}))
+    rates = {color: 0.20 for color in RESOURCE_COLOR_ORDER}
+    for key, value in (payload.get("vp_per_income", {}) or {}).items():
+        color = normalize_resource_color(key)
+        if color in rates:
+            try:
+                rates[color] = float(value)
+            except Exception:
+                continue
     ev = 0.0
-    for k, dv in income.items():
-        if k in ("yellow","blue","brown"):
-            ev += float(dv) * float(rates[k]) * pv
+    for color, delta in income.items():
+        if color in rates:
+            ev += float(delta) * float(rates[color]) * pv
     if ev == 0.0:
         ev = 0.25  # typical influence has some tempo value
     return Score(expected_vp=ev, risk=0.08, details={"pv": round(pv,3), "income_delta": income})

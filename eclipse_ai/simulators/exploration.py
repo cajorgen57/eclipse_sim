@@ -6,6 +6,8 @@ import random
 import re
 import math
 
+from ..resource_colors import RESOURCE_COLOR_ORDER, normalize_resource_color, canonical_resource_counts
+
 try:
     # Optional: use combat EV for clearing Ancients if provided
     from .combat import score_combat
@@ -39,9 +41,9 @@ def exploration_ev(query: Dict[str, Any]) -> ExplorationEV:
         "discs_available": 1,           # if 0 and require_disc_to_claim=True, no immediate colonization EV
         "require_disc_to_claim": True,
         # Colonization capability
-        "colony_ships": {"yellow": 1, "blue": 1, "brown": 1, "wild": 0},
+        "colony_ships": {"orange": 1, "pink": 1, "brown": 1, "wild": 0},
         # Economy valuation (VP per round per colonized planet of each color)
-        "vp_per_income": {"yellow": 0.20, "blue": 0.20, "brown": 0.20},
+        "vp_per_income": {"orange": 0.20, "pink": 0.20, "brown": 0.20},
         "horizon_rounds": 3,            # project income this many rounds
         "discount": 0.90,               # per-round discount
         # Endgame / one-time values
@@ -151,9 +153,27 @@ class _Config:
         whg = bool(q.get("wormhole_generator", False))
         discs = int(q.get("discs_available", 1))
         req_disc = bool(q.get("require_disc_to_claim", True))
-        colony = {k:int(v) for k,v in q.get("colony_ships", {"yellow":1,"blue":1,"brown":1,"wild":0}).items()}
-        vpincome = {"yellow":0.20,"blue":0.20,"brown":0.20}
-        vpincome.update({k: float(v) for k, v in q.get("vp_per_income", {}).items()})
+        raw_colony = q.get("colony_ships", None)
+        if not isinstance(raw_colony, dict):
+            try:
+                raw_colony = dict(raw_colony or {})
+            except Exception:
+                raw_colony = {}
+        if not raw_colony:
+            raw_colony = {"orange": 1, "pink": 1, "brown": 1, "wild": 0}
+        colony = canonical_resource_counts(raw_colony, include_zero=True)
+        try:
+            colony["wild"] = int(raw_colony.get("wild", 0))
+        except Exception:
+            colony["wild"] = 0
+        vpincome = {color: 0.20 for color in RESOURCE_COLOR_ORDER}
+        for key, value in (q.get("vp_per_income", {}) or {}).items():
+            color = normalize_resource_color(key)
+            if color in vpincome:
+                try:
+                    vpincome[color] = float(value)
+                except Exception:
+                    continue
         horizon = int(q.get("horizon_rounds", 3))
         disc = float(q.get("discount", 0.90))
         mono = float(q.get("monolith_vp", 3.0))
@@ -179,8 +199,8 @@ class _Config:
 @dataclass
 class _TileDesc:
     category: str
-    money: int = 0       # yellow planets
-    science: int = 0     # blue planets
+    money: int = 0       # orange planets
+    science: int = 0     # pink planets
     materials: int = 0   # brown planets
     wild: int = 0        # wild planets
     ancient: bool = False
@@ -230,10 +250,23 @@ def _weighted_sample_without_replacement(weights: Dict[str, float], k: int, rng:
 # =============================
 
 _RES_ALIASES = {
-    "money":"money", "credit":"money", "yellow":"money", "y":"money",
-    "science":"science", "blue":"science", "b":"science",
-    "materials":"materials", "brown":"materials", "m":"materials", "r":"materials",
-    "wild":"wild", "w":"wild"
+    "money": "money",
+    "credit": "money",
+    "orange": "money",
+    "yellow": "money",
+    "y": "money",
+    "o": "money",
+    "science": "science",
+    "pink": "science",
+    "blue": "science",
+    "b": "science",
+    "materials": "materials",
+    "brown": "materials",
+    "m": "materials",
+    "r": "materials",
+    "p": "materials",
+    "wild": "wild",
+    "w": "wild",
 }
 
 def _tile_from_category(cat: str, overrides: Dict[str, Dict[str, Any]]) -> _TileDesc:
@@ -302,8 +335,8 @@ def _score_tile(td: _TileDesc, cfg: _Config, pv: float, rng: random.Random) -> f
         colonize_now = _allocate_colony_ships(money, science, materials, wild, dict(cfg.colony_ships))
 
     income_ev = (
-        colonize_now["money"]     * cfg.vp_per_income["yellow"] * pv
-      + colonize_now["science"]   * cfg.vp_per_income["blue"]   * pv
+        colonize_now["money"]     * cfg.vp_per_income["orange"] * pv
+      + colonize_now["science"]   * cfg.vp_per_income["pink"]   * pv
       + colonize_now["materials"] * cfg.vp_per_income["brown"]  * pv
     )
 
@@ -344,31 +377,31 @@ def _allocate_colony_ships(money: int, science: int, materials: int, wild: int, 
     Greedy allocation: use color-specific ships first, then wild ships to fill remaining.
     Returns colonized counts per resource color (money/science/materials). Wild planets can be claimed by any.
     """
-    m = min(money, max(0, ships.get("yellow", 0)))
-    b = min(science, max(0, ships.get("blue", 0)))
+    m = min(money, max(0, ships.get("orange", 0)))
+    b = min(science, max(0, ships.get("pink", 0)))
     r = min(materials, max(0, ships.get("brown", 0)))
-    rem_y = money - m
-    rem_b = science - b
+    rem_o = money - m
+    rem_p = science - b
     rem_r = materials - r
-    # allocate wild planets using whichever color ships remain (yellow->blue->brown priority)
+    # allocate wild planets using whichever color ships remain (orange->pink->brown priority)
     wild_left = max(0, wild)
-    for color_key, need in [("yellow", rem_y), ("blue", rem_b), ("brown", rem_r)]:
+    for color_key, need in [("orange", rem_o), ("pink", rem_p), ("brown", rem_r)]:
         if wild_left <= 0:
             break
-        have = max(0, ships.get(color_key, 0) - (m if color_key=="yellow" else b if color_key=="blue" else r))
+        have = max(0, ships.get(color_key, 0) - (m if color_key=="orange" else b if color_key=="pink" else r))
         take = min(need, have, wild_left)
-        if color_key=="yellow": m += take
-        elif color_key=="blue": b += take
+        if color_key=="orange": m += take
+        elif color_key=="pink": b += take
         else: r += take
         wild_left -= take
     # Use wild colony ships to fill remaining across any planet types
     wships = max(0, ships.get("wild", 0))
-    for need_key, need in [("yellow", money - m), ("blue", science - b), ("brown", materials - r)]:
+    for need_key, need in [("orange", money - m), ("pink", science - b), ("brown", materials - r)]:
         if wships <= 0:
             break
         take = min(need, wships)
-        if need_key=="yellow": m += take
-        elif need_key=="blue": b += take
+        if need_key=="orange": m += take
+        elif need_key=="pink": b += take
         else: r += take
         wships -= take
     return {"money": m, "science": b, "materials": r}

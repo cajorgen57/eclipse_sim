@@ -5,6 +5,7 @@ from typing import Dict, Iterable, List, Optional, Tuple, Any, Set, Literal, get
 from enum import Enum
 import json
 from .types import ShipDesign
+from .resource_colors import RESOURCE_COLOR_ORDER
 
 def _build_dataclass(cls, data: Dict[str, Any]):
     """Recursively coerce nested dicts/lists into a dataclass instance."""
@@ -94,7 +95,7 @@ class Disc:
 
 
 def _default_population() -> Dict[str, int]:
-    return {"yellow": 0, "blue": 0, "brown": 0}
+    return {color: 0 for color in RESOURCE_COLOR_ORDER}
 
 
 def _default_action_spaces() -> Dict[str, List[Disc]]:
@@ -112,10 +113,10 @@ def _default_action_spaces() -> Dict[str, List[Disc]]:
 @dataclass
 class ColonyShips:
     face_up: Dict[str, int] = field(
-        default_factory=lambda: {"yellow": 0, "blue": 0, "brown": 0, "wild": 0}
+        default_factory=lambda: {color: 0 for color in RESOURCE_COLOR_ORDER} | {"wild": 0}
     )
     face_down: Dict[str, int] = field(
-        default_factory=lambda: {"yellow": 0, "blue": 0, "brown": 0, "wild": 0}
+        default_factory=lambda: {color: 0 for color in RESOURCE_COLOR_ORDER} | {"wild": 0}
     )
 
 @dataclass
@@ -148,12 +149,12 @@ class Pieces:
     ships: Dict[str, int] = field(default_factory=dict)  # class -> count
     starbase: int = 0
     discs: int = 0
-    cubes: Dict[str, int] = field(default_factory=dict)  # y/b/p -> ints
+    cubes: Dict[str, int] = field(default_factory=dict)  # keyed by canonical resource colors
     discovery: int = 0
 
 @dataclass
 class Planet:
-    type: str  # "yellow" money, "blue" science, "brown" materials, "wild", etc.
+    type: str  # "orange" money, "pink" science, "brown" materials, "wild", etc.
     colonized_by: Optional[str] = None
 
 @dataclass
