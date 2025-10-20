@@ -130,7 +130,7 @@ ORION_ROUND1_STATE = {
                 ],
                 "pieces": {
                     "orion": {
-                        "ships": {"interceptor": 2, "cruiser": 1},
+                        "ships": {"interceptor": 0, "cruiser": 1},
                         "starbase": 0,
                         "discs": 1,
                         "cubes": {"yellow": 1, "blue": 1, "brown": 1},
