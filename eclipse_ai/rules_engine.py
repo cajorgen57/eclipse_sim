@@ -10,6 +10,7 @@ from .research import enumerate_research_actions
 from .alliances import allies_for_player
 from .pathing import is_pinned
 from . import diplomacy
+from .resource_colors import RESOURCE_COLOR_ORDER, normalize_resource_color
 
 # =============================
 # Config
@@ -620,7 +621,7 @@ def _enum_influence(state: GameState, you: PlayerState) -> List[Action]:
         # approximate one income increase of the dominant color
         color, inc = _dominant_planet_color(target)
         if color:
-            income_delta = {"yellow":0, "blue":0, "brown":0}
+            income_delta = {c: 0 for c in RESOURCE_COLOR_ORDER}
             income_delta[color] = 1
             out.append(Action(ActionType.INFLUENCE, {"hex": target.id, "income_delta": income_delta}))
     return out
@@ -684,13 +685,12 @@ def _hex_value_key(hx: Hex) -> float:
     return planets + (1.5 if hx.monolith else 0.0)
 
 def _dominant_planet_color(hx: Hex) -> Tuple[Optional[str], int]:
-    counts = {"yellow":0, "blue":0, "brown":0}
+    counts = {color: 0 for color in RESOURCE_COLOR_ORDER}
     for pl in hx.planets:
         if pl.colonized_by is None:
-            t = pl.type.lower()
-            if t.startswith("y"): counts["yellow"] += 1
-            elif t.startswith("b"): counts["blue"] += 1
-            elif t.startswith("p") or t.startswith("m"): counts["brown"] += 1
+            color = normalize_resource_color(getattr(pl, "type", ""))
+            if color in counts:
+                counts[color] += 1
     color = max(counts, key=lambda k: counts[k]) if any(counts.values()) else None
     return (color, counts[color]) if color else (None, 0)
 

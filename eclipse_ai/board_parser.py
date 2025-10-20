@@ -64,9 +64,9 @@ def parse_board(cal_img, config: Optional[BoardParseConfig]=None) -> MapState:
           "id": "H-010",
           "ring": 2,
           "wormholes": [0,2,4],
-          "planets": [{"type":"yellow","colonized_by":"you"},{"type":"blue","colonized_by":null}],
+          "planets": [{"type":"orange","colonized_by":"you"},{"type":"pink","colonized_by":null}],
           "pieces": [
-            {"owner":"you","ships":{"interceptor":2},"starbase":0,"discs":1,"cubes":{"y":1,"b":0,"p":0}},
+            {"owner":"you","ships":{"interceptor":2},"starbase":0,"discs":1,"cubes":{"orange":1,"pink":0,"brown":0}},
             {"owner":"blue","ships":{"cruiser":2},"discs":1}
           ]
         }
@@ -122,8 +122,8 @@ def parse_board(cal_img, config: Optional[BoardParseConfig]=None) -> MapState:
 
     # 3) Fallback demo
     fallback_map = MapState()
-    h = Hex(id="H-010", ring=2, wormholes=[0,2,4], planets=[Planet("yellow","you"), Planet("blue", None)])
-    h.pieces["you"] = Pieces(ships={"interceptor":2}, discs=1, cubes={"y":1})
+    h = Hex(id="H-010", ring=2, wormholes=[0,2,4], planets=[Planet("orange","you"), Planet("pink", None)])
+    h.pieces["you"] = Pieces(ships={"interceptor":2}, discs=1, cubes={"orange":1})
     h.pieces["blue"] = Pieces(ships={"cruiser":2}, discs=1)
     fallback_map.place_hex(h)
     return fallback_map
@@ -156,7 +156,7 @@ def _mapstate_from_annotations(data: Dict[str, Any]) -> MapState:
             id=str(hx.get("id","H-000")),
             ring=int(hx.get("ring", 0)),
             wormholes=list(hx.get("wormholes", [])),
-            planets=[Planet(p.get("type","yellow"), p.get("colonized_by")) for p in hx.get("planets", [])],
+            planets=[Planet(p.get("type","orange"), p.get("colonized_by")) for p in hx.get("planets", [])],
             pieces={}
         )
         for p in hx.get("pieces", []):
