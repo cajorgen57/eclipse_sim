@@ -71,15 +71,27 @@ tests/                           ← pytest suite covering rules, combat, econom
 
 ## Running tests
 
-Install dependencies (see `requirements.txt` if present in your environment) and execute the
-pytest suite from the repository root:
+Install development dependencies (see `pyproject.toml`) and execute the pytest suite from the
+repository root:
 
 ```bash
-pytest
+pytest -q
 ```
 
-The suite covers legality gates, combat solvers, research costs, scoring heuristics, and state
-assembly invariants. 【F:tests/test_rules_engine.py†L1-L33】【F:tests/test_scoring.py†L1-L33】【F:tests/test_state_assembler.py†L1-L52】
+Pytest discovers scenarios under `tests/`, which is organized around reusable fixtures, golden plan
+outputs, and focused modules for rules legality, combat math, exploration EV checks, planner
+reproducibility, species traits, and performance guards. 【F:Agents_Testing.md†L19-L110】
+
+Common focused runs include:
+
+```bash
+pytest -q --maxfail=1 -m "golden"
+pytest -q -k combat --durations=10
+pytest -q -m "not slow"
+```
+
+These targets keep heavy simulations behind opt-in markers while preserving fast feedback loops for
+the default CI configuration. 【F:Agents_Testing.md†L216-L224】
 
 ## Extending the toolkit
 
