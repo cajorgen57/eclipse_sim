@@ -717,15 +717,6 @@ def _tech_priority_key(name: str) -> float:
     if "advanced" in s or "labs" in s or "mining" in s or "nanorobot" in s: score += 1.0
     return score
 
-def _approx_tech_cost(name: str, known_count: int) -> int:
-    s = name.lower()
-    base = 3
-    if "iii" in s: base = 7
-    elif "ii" in s or "advanced" in s: base = 5
-    elif "i" in s: base = 3
-    # very rough scaling by known techs simulating track cost increases
-    return max(2, base + min(2, known_count//4))
-
 def _dedup_actions(actions: List[Action]) -> List[Action]:
     seen = set()
     out = []
