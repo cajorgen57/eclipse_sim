@@ -4,12 +4,12 @@ from dataclasses import dataclass, field, asdict, is_dataclass
 from typing import List, Dict, Any, Optional, Tuple, Set
 from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources, ShipDesign
 from .technology import discounted_cost, can_research, load_tech_definitions
-from .game_models import GameState, Action, ActionType, PlayerState, Hex, Planet, Pieces, Resources
 from .ship_parts import SHIP_PARTS, SHIP_BLUEPRINT_SLOTS, MOBILE_SHIPS
 from .types import ShipDesign
 from .research import enumerate_research_actions
 from .alliances import allies_for_player
 from .pathing import is_pinned
+from . import diplomacy
 
 # =============================
 # Config
@@ -629,6 +629,10 @@ def _enum_diplomacy(state: GameState, you: PlayerState) -> List[Action]:
     out: List[Action] = []
     for pid in (state.players or {}):
         if pid == you.player_id:
+            continue
+        if diplomacy.has_diplomatic_relation(state, you.player_id, pid):
+            continue
+        if not diplomacy.can_form_diplomacy(state, you.player_id, pid):
             continue
         out.append(Action(ActionType.DIPLOMACY, {"with": pid}))
         if len(out) >= 2:
