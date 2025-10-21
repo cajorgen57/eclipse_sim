@@ -17,7 +17,7 @@ ORION_ROUND1_STATE = {
             "player_id": "orion",
             "color": "purple",
             "known_techs": ["Gauss Shield"],
-            "resources": {"money": 2, "science": 1, "materials": 2},
+            "resources": {"money": 2, "science": 1, "materials": 5},
             "ship_designs": {
                 "interceptor": {
                     "computer": 1,

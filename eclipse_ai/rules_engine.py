@@ -607,20 +607,42 @@ def _count_player_ships_on_board(state: GameState, player_id: str) -> Dict[str, 
 
 def _enum_influence(state: GameState, you: PlayerState) -> List[Action]:
     out: List[Action] = []
-    # Simple heuristic: if a nearby hex has uncolonized planets, consider placing a disc (income +1)
-    # We do not track disc supply; caller should filter later if needed.
-    target = None
-    best_score = 0.0
-    for hx in state.map.hexes.values():
-        if you.player_id in hx.pieces:
-            continue
-        score = _hex_value_key(hx)
-        if score > best_score:
-            best_score, target = score, hx
+
+    # Require a spare influence disc; if the state omits the count fall back to zero.
+    if getattr(you, "influence_discs", 0) <= 0:
+        return out
+
+    your_hexes = _player_hexes(state, you.player_id)
+    if not your_hexes:
+        return out
+
+    controlled_ids = {hx.id for hx in your_hexes}
+    frontier: Dict[str, Hex] = {}
+
+    for src in your_hexes:
+        for neighbor_id in state.map.revealed_connected_neighbors(src.id):
+            if not neighbor_id or neighbor_id in controlled_ids:
+                continue
+            nbr_hex = state.map.hexes.get(neighbor_id)
+            if nbr_hex is None:
+                continue
+            if not _is_explored_hex(nbr_hex):
+                continue
+            if _enemy_presence_in_hex(state, you.player_id, nbr_hex) > 0:
+                continue
+            # Only consider hexes that are currently uncontrolled (no discs/ships of other players).
+            if any(pid != you.player_id and pieces.discs > 0 for pid, pieces in nbr_hex.pieces.items()):
+                continue
+            frontier[neighbor_id] = nbr_hex
+
+    if not frontier:
+        return out
+
+    target = max(frontier.values(), key=_hex_value_key, default=None)
     if target:
         # approximate one income increase of the dominant color
         color, inc = _dominant_planet_color(target)
-        if color:
+        if color and inc > 0:
             income_delta = {c: 0 for c in RESOURCE_COLOR_ORDER}
             income_delta[color] = 1
             out.append(Action(ActionType.INFLUENCE, {"hex": target.id, "income_delta": income_delta}))
