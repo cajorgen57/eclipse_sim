@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional, Tuple, Sequence
+from typing import Dict, Any, List, Optional, Tuple, Sequence, Set
 import math, random, copy
 
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
@@ -109,9 +109,14 @@ class MCTSPlanner:
             if len(validated) >= top_k:
                 break
 
-        if not validated:
+        if len(validated) < top_k:
             # Fallback: single-ply ranking using the already-computed legal actions.
-            validated = self._fallback_plans(state, player_id, base_actions, top_k)
+            extras = self._fallback_plans(state, player_id, base_actions, top_k)
+            for plan in extras:
+                if len(validated) >= top_k:
+                    break
+                if plan not in validated:
+                    validated.append(plan)
 
         return validated[:top_k]
 
@@ -220,6 +225,11 @@ class MCTSPlanner:
         total = 0.0
         disc = 1.0
         risks: List[float] = []
+        sequence_meta: Dict[str, Any] = {
+            "activated_hexes": set(),
+            "applied_upgrades": set(),
+            "passed": False,
+        }
 
         allowed = legal_actions(working, player_id)
         meta_before = self._gather_metadata(working, player_id, allowed_actions=allowed)
@@ -229,8 +239,18 @@ class MCTSPlanner:
             return Plan(steps=[], total_score=0.0, risk=0.0, state_summary=summary, result_state=working)
 
         for action in actions:
-            if enforce_legality and action not in allowed:
-                return None
+            if sequence_meta.get("passed"):
+                break
+            illegal = False
+            if enforce_legality:
+                if not self._sequence_action_allowed(action, sequence_meta):
+                    illegal = True
+                elif action not in allowed:
+                    illegal = True
+            if illegal:
+                if not steps:
+                    return None
+                break
 
             score = evaluate_action(working, action)
             steps.append(PlanStep(action, score))
@@ -238,6 +258,7 @@ class MCTSPlanner:
             risks.append(float(score.risk))
 
             working = _forward_model(working, player_id, action)
+            self._sequence_apply(action, sequence_meta)
             allowed = legal_actions(working, player_id)
             meta_after = self._gather_metadata(working, player_id, allowed_actions=allowed)
 
@@ -250,6 +271,88 @@ class MCTSPlanner:
         summary = self._extract_state_summary(working, player_id)
         avg_risk = sum(risks) / len(risks) if risks else 0.0
         return Plan(steps=steps, total_score=total, risk=avg_risk, state_summary=summary, result_state=working)
+
+    def _sequence_action_allowed(self, action: Action, meta: Dict[str, Any]) -> bool:
+        if meta.get("passed"):
+            return False
+
+        payload = action.payload or {}
+        t = action.type
+
+        if t == ActionType.BUILD:
+            hex_id = payload.get("hex")
+            if hex_id is not None and str(hex_id) in meta.get("activated_hexes", set()):
+                return False
+
+        if t == ActionType.MOVE:
+            for activation in payload.get("activations", []):
+                start_hex = activation.get("from")
+                if start_hex is not None and str(start_hex) in meta.get("activated_hexes", set()):
+                    return False
+
+        if t == ActionType.INFLUENCE:
+            hex_id = payload.get("hex")
+            if hex_id is not None and str(hex_id) in meta.get("activated_hexes", set()):
+                return False
+
+        if t == ActionType.EXPLORE:
+            base_hex = payload.get("from") or payload.get("hex")
+            if base_hex is not None and str(base_hex) in meta.get("activated_hexes", set()):
+                return False
+
+        if t == ActionType.UPGRADE:
+            sig = self._upgrade_signature(payload.get("apply"))
+            if sig and sig in meta.get("applied_upgrades", set()):
+                return False
+
+        return True
+
+    def _sequence_apply(self, action: Action, meta: Dict[str, Any]) -> None:
+        payload = action.payload or {}
+        t = action.type
+
+        if t in {ActionType.PASS, ActionType.REACTION}:
+            meta["passed"] = True
+
+        targets: Set[str] = set()
+
+        if t in {ActionType.BUILD, ActionType.INFLUENCE}:
+            hex_id = payload.get("hex")
+            if hex_id is not None:
+                targets.add(str(hex_id))
+
+        if t == ActionType.MOVE:
+            for activation in payload.get("activations", []):
+                start_hex = activation.get("from")
+                if start_hex is not None:
+                    targets.add(str(start_hex))
+
+        if t == ActionType.EXPLORE:
+            base_hex = payload.get("from") or payload.get("hex")
+            if base_hex is not None:
+                targets.add(str(base_hex))
+
+        if targets:
+            meta.setdefault("activated_hexes", set()).update(targets)
+
+        if t == ActionType.UPGRADE:
+            sig = self._upgrade_signature(payload.get("apply"))
+            if sig:
+                meta.setdefault("applied_upgrades", set()).add(sig)
+
+    def _upgrade_signature(self, apply_payload: Any) -> Optional[Tuple[Tuple[str, Tuple[Tuple[str, int], ...]], ...]]:
+        if not isinstance(apply_payload, dict):
+            return None
+        parts: List[Tuple[str, Tuple[Tuple[str, int], ...]]] = []
+        for ship_class, mods in apply_payload.items():
+            if not isinstance(mods, dict):
+                continue
+            normalized = tuple(sorted((str(k), int(v)) for k, v in mods.items()))
+            parts.append((str(ship_class), normalized))
+        if not parts:
+            return None
+        parts.sort(key=lambda item: item[0])
+        return tuple(parts)
 
     def _fallback_plans(
         self,
@@ -404,6 +507,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
 
     if t == ActionType.PASS:
         # Terminal in our single-player horizon; no change
+        you.passed = True
         _refresh_connectivity(s, pid)
         return s
 

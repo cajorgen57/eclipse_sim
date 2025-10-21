@@ -70,6 +70,12 @@ def legal_actions(state: GameState, player_id: str, config: Optional[RulesConfig
         state.can_move_ships = False
         return [Action(ActionType.PASS, {})]
 
+    if you.passed:
+        state.possible_actions = {ActionType.PASS}
+        state.can_explore = False
+        state.can_move_ships = False
+        return [Action(ActionType.PASS, {})]
+
     # Explore
     explore_actions = _enum_explore(state, you)
     if explore_actions:
