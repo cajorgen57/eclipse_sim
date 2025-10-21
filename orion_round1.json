@@ -1,0 +1,394 @@
+{
+  "round": 1,
+  "active_player": "orion",
+  "plans": [
+    {
+      "score": 0.23399999999999999,
+      "risk": 0.12,
+      "steps": [
+        {
+          "action": "Build",
+          "payload": {
+            "hex": "230",
+            "ships": {
+              "interceptor": 1
+            }
+          },
+          "score": 0.15,
+          "risk": 0.12,
+          "details": {
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0,
+            "contested": false
+          }
+        }
+      ],
+      "state_summary": {
+        "possible_actions": [
+          "Build",
+          "Explore",
+          "Pass",
+          "Upgrade"
+        ],
+        "can_explore": true,
+        "can_move_ships": false,
+        "connectivity": {
+          "count": 1,
+          "reachable": [
+            "230"
+          ]
+        }
+      },
+      "overlays": [
+        {
+          "type": "icon",
+          "hex": "230",
+          "icon": "build",
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 1,
+            "ev": 0.15,
+            "risk": 0.12,
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0
+          }
+        },
+        {
+          "type": "label",
+          "text": "Build int\u00d71  \u0394VP +0.15 | risk 0.12",
+          "anchor": {
+            "type": "hex",
+            "id": "230"
+          },
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 1
+          }
+        }
+      ]
+    },
+    {
+      "score": 0.8882350000000002,
+      "risk": 0.12,
+      "steps": [
+        {
+          "action": "Upgrade",
+          "payload": {
+            "apply": {
+              "cruiser": {
+                "shield": 1
+              }
+            }
+          },
+          "score": 0.09999999999999998,
+          "risk": 0.12,
+          "details": {
+            "delta_power": 0.4
+          }
+        },
+        {
+          "action": "Build",
+          "payload": {
+            "hex": "230",
+            "ships": {
+              "interceptor": 1
+            }
+          },
+          "score": 0.15,
+          "risk": 0.12,
+          "details": {
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0,
+            "contested": false
+          }
+        },
+        {
+          "action": "Upgrade",
+          "payload": {
+            "apply": {
+              "interceptor": {
+                "cannons": 1,
+                "computer": 1
+              }
+            }
+          },
+          "score": 0.4500000000000002,
+          "risk": 0.12,
+          "details": {
+            "delta_power": 1.8
+          }
+        }
+      ],
+      "state_summary": {
+        "possible_actions": [
+          "Build",
+          "Explore",
+          "Pass",
+          "Upgrade"
+        ],
+        "can_explore": true,
+        "can_move_ships": false,
+        "connectivity": {
+          "count": 1,
+          "reachable": [
+            "230"
+          ]
+        }
+      },
+      "overlays": [
+        {
+          "type": "label",
+          "text": "Upgrade  \u0394VP +0.10 | risk 0.12",
+          "anchor": {
+            "type": "screen",
+            "pos": "auto"
+          },
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 1
+          }
+        },
+        {
+          "type": "icon",
+          "hex": "230",
+          "icon": "build",
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 2,
+            "ev": 0.15,
+            "risk": 0.12,
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0
+          }
+        },
+        {
+          "type": "label",
+          "text": "Build int\u00d71  \u0394VP +0.15 | risk 0.12",
+          "anchor": {
+            "type": "hex",
+            "id": "230"
+          },
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 2
+          }
+        },
+        {
+          "type": "label",
+          "text": "Upgrade  \u0394VP +0.45 | risk 0.12",
+          "anchor": {
+            "type": "screen",
+            "pos": "auto"
+          },
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 3
+          }
+        }
+      ]
+    },
+    {
+      "score": 0.9305099999999992,
+      "risk": 0.16666666666666666,
+      "steps": [
+        {
+          "action": "Explore",
+          "payload": {
+            "ring": 2,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "score": 0.14227499999999918,
+          "risk": 0.26,
+          "details": {
+            "explore_notes": "{\"ring\":2,\"avg_ev\":0.142,\"draws\":1,\"connect_default\":0.7,\"wormhole_generator\":false,\"pv_factor\":2.71,\"top_picks\":[{\"category\":\"unknown\",\"pick_rate\":1.0,\"avg_score\":0.142}],\"bag_size\":4.0}"
+          }
+        },
+        {
+          "action": "Build",
+          "payload": {
+            "hex": "230",
+            "ships": {
+              "interceptor": 1
+            }
+          },
+          "score": 0.15,
+          "risk": 0.12,
+          "details": {
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0,
+            "contested": false
+          }
+        },
+        {
+          "action": "Upgrade",
+          "payload": {
+            "apply": {
+              "interceptor": {
+                "cannons": 1,
+                "computer": 1
+              }
+            }
+          },
+          "score": 0.44999999999999996,
+          "risk": 0.12,
+          "details": {
+            "delta_power": 1.8
+          }
+        }
+      ],
+      "state_summary": {
+        "possible_actions": [
+          "Build",
+          "Explore",
+          "Pass",
+          "Upgrade"
+        ],
+        "can_explore": true,
+        "can_move_ships": false,
+        "connectivity": {
+          "count": 1,
+          "reachable": [
+            "230"
+          ]
+        }
+      },
+      "overlays": [
+        {
+          "type": "circle",
+          "hex": "adjacent from ring 1",
+          "style": {
+            "color": "yellow",
+            "dash": true
+          },
+          "meta": {
+            "plan": 1,
+            "step": 1,
+            "ev": 0.14227499999999918,
+            "risk": 0.26,
+            "ring": 2
+          }
+        },
+        {
+          "type": "label",
+          "text": "Explore R2  \u0394VP +0.14 | risk 0.26  Top:unknown",
+          "anchor": {
+            "type": "hex",
+            "id": "adjacent from ring 1"
+          },
+          "style": {
+            "color": "yellow"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 1
+          }
+        },
+        {
+          "type": "icon",
+          "hex": "230",
+          "icon": "build",
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 2,
+            "ev": 0.15,
+            "risk": 0.12,
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0
+          }
+        },
+        {
+          "type": "label",
+          "text": "Build int\u00d71  \u0394VP +0.15 | risk 0.12",
+          "anchor": {
+            "type": "hex",
+            "id": "230"
+          },
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 2
+          }
+        },
+        {
+          "type": "label",
+          "text": "Upgrade  \u0394VP +0.45 | risk 0.12",
+          "anchor": {
+            "type": "screen",
+            "pos": "auto"
+          },
+          "style": {
+            "color": "green"
+          },
+          "meta": {
+            "plan": 1,
+            "step": 3
+          }
+        }
+      ]
+    }
+  ],
+  "enemy_posteriors": {
+    "orion": {
+      "brawler": 0.18007401079719335,
+      "turtle": 0.4313595178141249,
+      "missile_alpha": 0.18166663920886195,
+      "evasion": 0.20689983217981986
+    },
+    "mechanema": {
+      "brawler": 0.360624625097106,
+      "turtle": 0.20607121434120343,
+      "missile_alpha": 0.20729057063908035,
+      "evasion": 0.2260135899226102
+    },
+    "terran": {
+      "brawler": 0.20303447206774275,
+      "turtle": 0.20303447206774275,
+      "missile_alpha": 0.2042358594764276,
+      "evasion": 0.38969519638808686
+    }
+  },
+  "expected_bags": {
+    "R1": {
+      "unknown": 5.0
+    },
+    "R2": {
+      "unknown": 4.0
+    }
+  }
+}
