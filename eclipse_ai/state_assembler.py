@@ -8,6 +8,7 @@ from .game_models import GameState, PlayerState, Resources, MapState, TechDispla
 from .technology import load_tech_definitions
 from .data.exploration_tiles import tile_counts_by_ring, tile_numbers_by_ring
 from .resource_colors import canonical_resource_counts, normalize_resource_color, RESOURCE_COLOR_ORDER
+from .models.economy import Economy, count_action_discs, count_influence_discs
 
 _ROUND_EXPLORED_FRACTION = 0.33
 
@@ -100,6 +101,7 @@ def assemble_state(
             _initialise_player_state(p, gs.tech_definitions)
 
     _validate_existing_designs(gs)
+    _refresh_player_economies(gs)
 
     return gs
 
@@ -125,6 +127,7 @@ def apply_overrides(state: GameState, manual_inputs: Dict[str, Any]) -> GameStat
             state.belief = belief if not hasattr(state.belief, "apply_overrides") else state.belief.apply_overrides(belief)
         except Exception:
             state.belief = belief
+    _refresh_player_economies(state)
     return state
 
 def _default_state() -> GameState:
@@ -138,6 +141,7 @@ def _default_state() -> GameState:
     gs.tech_definitions = load_tech_definitions()
     # Provide a minimal example bag so exploration math runs. Caller should replace with real counts.
     gs.bags = {"R2": {"ancient":3, "monolith":1, "money2":4, "science2":4, "materials2":4}}
+    _refresh_player_economies(gs)
     return gs
 
 def _reconcile_players_from_map(gs: GameState) -> None:
@@ -285,6 +289,33 @@ def _initialise_player_state(player: PlayerState, definitions: Optional[Dict[str
         player.unlocked_structures.update(tech.grants_structures)
         if tech.name not in player.known_techs:
             player.known_techs.append(tech.name)
+
+
+def _refresh_player_economies(gs: GameState) -> None:
+    for player in gs.players.values():
+        _refresh_single_player_economy(gs, player)
+
+
+def _refresh_single_player_economy(state: GameState, player: PlayerState) -> None:
+    econ = getattr(player, "economy", None)
+    if isinstance(econ, Economy):
+        econ_obj = econ
+    else:
+        econ_obj = Economy()
+        if isinstance(econ, Mapping):
+            try:
+                econ_obj = Economy(**econ)
+            except Exception:
+                econ_obj = Economy()
+    action_slots = count_action_discs(player)
+    upkeep_fixed = count_influence_discs(state, player.player_id)
+    econ_obj.refresh(
+        bank=int(getattr(player.resources, "money", 0) or 0),
+        income=int(getattr(player.income, "money", 0) or 0),
+        upkeep_fixed=upkeep_fixed,
+        action_slots_filled=action_slots,
+    )
+    player.economy = econ_obj
             
 def _validate_existing_designs(gs: GameState) -> None:
     try:

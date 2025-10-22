@@ -6,6 +6,7 @@ from enum import Enum
 import json
 from .types import ShipDesign
 from .resource_colors import RESOURCE_COLOR_ORDER
+from .models.economy import Economy
 
 def _build_dataclass(cls, data: Dict[str, Any]):
     """Recursively coerce nested dicts/lists into a dataclass instance."""
@@ -236,6 +237,7 @@ class PlayerState:
     vp_bonuses: Dict[str, Any] = field(default_factory=dict)
     species_pools: Dict[str, Any] = field(default_factory=dict)
     special_resources: Dict[str, int] = field(default_factory=dict)
+    economy: Economy = field(default_factory=Economy)
     influence_track: List[Disc] = field(default_factory=list)
     action_spaces: Dict[str, List[Disc]] = field(default_factory=_default_action_spaces)
     colonies: Dict[str, Dict[str, int]] = field(default_factory=dict)

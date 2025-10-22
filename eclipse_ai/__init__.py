@@ -18,6 +18,7 @@ from .game_models import (
     Disc,
     ColonyShips,
 )
+from .models.economy import Economy
 from .main import recommend
 from .search_policy import MCTSPlanner, Plan, PlanStep
 from .overlay import plan_overlays
@@ -40,6 +41,7 @@ __all__ = [
     "Score",
     "Disc",
     "ColonyShips",
+    "Economy",
     "MCTSPlanner",
     "Plan",
     "PlanStep",

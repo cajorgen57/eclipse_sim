@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Literal, Optional
 
+from .economy import Economy
+
 
 @dataclass(slots=True)
 class ReputationTile:
@@ -43,3 +45,4 @@ class PlayerState:
     evolution_tiles: List[EvolutionTile] = field(default_factory=list)
     artifacts_controlled: int = 0
     controls_galactic_center: bool = False
+    economy: Economy = field(default_factory=Economy)
