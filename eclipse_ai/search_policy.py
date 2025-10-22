@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, Any, List, Optional, Tuple, Sequence, Set
+from typing import Dict, Any, List, Optional, Tuple, Sequence, Set, Mapping
 import math, random, copy
 
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
@@ -11,6 +11,7 @@ from .movement import LEGAL_CONNECTION_TYPES, classify_connection, max_ship_acti
 from .resource_colors import canonical_resource_counts
 from .technology import do_research, ResearchError, load_tech_definitions
 from .pathing import compute_connectivity
+from .models.economy import Economy, count_action_discs, count_influence_discs
 
 # =============================
 # Public data structures
@@ -212,6 +213,30 @@ class MCTSPlanner:
             curr = max(curr.children, key=lambda c: c.Q)
         return actions
 
+    def _cap_by_orange(self, actions: Sequence[Action], player: PlayerState) -> List[Action]:
+        econ = getattr(player, "economy", None)
+        if not isinstance(econ, Economy):
+            return list(actions)
+        limit = max(0, econ.max_additional_actions())
+        trimmed: List[Action] = []
+        taken = 0
+        for idx, action in enumerate(actions):
+            if action.type == ActionType.PASS:
+                trimmed.append(action)
+                break
+            next_count = taken + 1
+            if taken >= limit or not econ.prefix_affordable(next_count):
+                for follow in actions[idx:]:
+                    if follow.type == ActionType.PASS:
+                        trimmed.append(follow)
+                        break
+                break
+            trimmed.append(action)
+            taken = next_count
+        else:
+            return list(actions)
+        return trimmed
+
     def _simulate_plan(
         self,
         base_state: GameState,
@@ -231,6 +256,15 @@ class MCTSPlanner:
             "passed": False,
         }
 
+        action_list = list(actions)
+        player = working.players.get(player_id)
+        if player is not None:
+            capped = self._cap_by_orange(action_list, player)
+            if not capped and action_list:
+                return None
+            action_list = capped
+        actions = action_list
+
         allowed = legal_actions(working, player_id)
         meta_before = self._gather_metadata(working, player_id, allowed_actions=allowed)
 
@@ -241,6 +275,12 @@ class MCTSPlanner:
         for action in actions:
             if sequence_meta.get("passed"):
                 break
+            econ = None
+            if player_id in working.players:
+                econ = getattr(working.players[player_id], "economy", None)
+            if action.type != ActionType.PASS and isinstance(econ, Economy):
+                if not econ.prefix_affordable(1):
+                    break
             illegal = False
             if enforce_legality:
                 if not self._sequence_action_allowed(action, sequence_meta):
@@ -491,6 +531,42 @@ def _refresh_connectivity(state: GameState, pid: str) -> None:
     except Exception:
         pass
 
+
+def _ensure_player_economy(player: PlayerState) -> Economy:
+    econ = getattr(player, "economy", None)
+    if isinstance(econ, Economy):
+        return econ
+    econ_obj = Economy()
+    if isinstance(econ, Mapping):
+        try:
+            econ_obj = Economy(**econ)  # type: ignore[arg-type]
+        except Exception:
+            econ_obj = Economy()
+    player.economy = econ_obj
+    return econ_obj
+
+
+def _update_economy_snapshot(state: GameState, player: PlayerState) -> None:
+    econ = _ensure_player_economy(player)
+    board_slots = count_action_discs(player)
+    if board_slots > econ.action_slots_filled:
+        econ.action_slots_filled = board_slots
+    econ.refresh(
+        bank=int(getattr(player.resources, "money", 0) or 0),
+        income=int(getattr(player.income, "money", 0) or 0),
+        upkeep_fixed=count_influence_discs(state, player.player_id),
+        action_slots_filled=econ.action_slots_filled,
+    )
+
+
+def _finalise_forward_state(state: GameState, player: PlayerState, *, increment_slot: bool) -> GameState:
+    econ = _ensure_player_economy(player)
+    if increment_slot:
+        econ.action_slots_filled = max(0, econ.action_slots_filled + 1)
+    _update_economy_snapshot(state, player)
+    _refresh_connectivity(state, player.player_id)
+    return state
+
 def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
     """Very small deterministic forward model sufficient for short planning.
     Applies optimistic but resource-aware state changes. Non-destructive via deepcopy.
@@ -508,8 +584,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
     if t == ActionType.PASS:
         # Terminal in our single-player horizon; no change
         you.passed = True
-        _refresh_connectivity(s, pid)
-        return s
+        return _finalise_forward_state(s, you, increment_slot=False)
 
     if t == ActionType.RESEARCH:
         tech = str(p.get("tech", ""))
@@ -520,8 +595,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
                 do_research(s, you, tech)
             except ResearchError:
                 pass
-        _refresh_connectivity(s, pid)
-        return s
+        return _finalise_forward_state(s, you, increment_slot=True)
 
     if t == ActionType.BUILD:
         hex_id = p.get("hex")
@@ -547,8 +621,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
             mats -= _STARBASE_COST
             hx.pieces[pid].starbase += 1
         you.resources.materials = mats
-        _refresh_connectivity(s, pid)
-        return s
+        return _finalise_forward_state(s, you, increment_slot=True)
 
     if t == ActionType.MOVE:
         try:
@@ -556,8 +629,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
         except ValueError:
             _refresh_connectivity(state, pid)
             return state  # illegal move payloads are ignored in the forward model
-        _refresh_connectivity(s, pid)
-        return s
+        return _finalise_forward_state(s, you, increment_slot=True)
 
     if t == ActionType.EXPLORE:
         # Optimistic: reduce bag mass slightly to reflect drawing; do not place new hex
@@ -570,8 +642,7 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
                 key = max(bag, key=lambda k: bag[k])
                 if bag[key] > 0:
                     bag[key] -= 1
-        _refresh_connectivity(s, pid)
-        return s
+        return _finalise_forward_state(s, you, increment_slot=True)
 
     if t == ActionType.INFLUENCE:
         # Adjust income proxy via cubes; not modeling discs inventory
@@ -584,16 +655,14 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
                 hx.pieces[pid] = Pieces(ships={}, starbase=0, discs=1, cubes={})
             for color, dv in inc.items():
                 hx.pieces[pid].cubes[color] = hx.pieces[pid].cubes.get(color, 0) + max(0, int(dv))
-        _refresh_connectivity(s, pid)
-        return s
+        return _finalise_forward_state(s, you, increment_slot=True)
 
     if t == ActionType.DIPLOMACY:
         # Store alliance in player state
         target = p.get("with")
         if target:
             you.diplomacy[target] = "ally"
-        _refresh_connectivity(s, pid)
-        return s
+        return _finalise_forward_state(s, you, increment_slot=True)
 
     if t == ActionType.UPGRADE:
         # Apply incremental design changes
@@ -604,12 +673,13 @@ def _forward_model(state: GameState, pid: str, action: Action) -> GameState:
                 if hasattr(sd, k):
                     setattr(sd, k, max(0, getattr(sd, k) + int(dv)))
             you.ship_designs[cls] = sd
-        _refresh_connectivity(s, pid)
-        return s
+        return _finalise_forward_state(s, you, increment_slot=True)
 
-    # Unknown action -> no-op
-    _refresh_connectivity(s, pid)
-    return s
+    if t == ActionType.REACTION:
+        return _finalise_forward_state(s, you, increment_slot=True)
+
+    # Unknown action -> treat as consuming an action slot with no other changes
+    return _finalise_forward_state(s, you, increment_slot=True)
 
 # =============================
 # Utilities
