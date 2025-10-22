@@ -476,8 +476,8 @@ class _Node:
 # =============================
 
 # Local cost table to keep forward model self-contained
-_SHIP_COSTS = {"interceptor":2, "cruiser":3, "dreadnought":5}
-_STARBASE_COST = 4
+_SHIP_COSTS = {"interceptor": 3, "cruiser": 5, "dreadnought": 8}
+_STARBASE_COST = 3
 _SCIENCE_COST_BASE = 3  # rough
 
 
