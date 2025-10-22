@@ -59,7 +59,15 @@ def _score_explore(state: GameState, pid: str, payload: Dict[str, Any]) -> Score
     draws = int(payload.get("draws", 1))
     owned = you.owned_tech_ids if you and you.owned_tech_ids else set()
     wormhole_gen = ("wormhole_generator" in owned) or bool(payload.get("wormhole_generator", False))
-    discs_available = int(payload.get("discs_available", 1))
+    discs_payload = payload.get("discs_available")
+    if discs_payload is None:
+        discs_available = int(getattr(you, "influence_discs", 0) or 0)
+    else:
+        try:
+            discs_available = int(discs_payload)
+        except (TypeError, ValueError):
+            discs_available = 0
+    discs_available = max(0, discs_available)
     raw_colony_ships = payload.get("colony_ships", {"orange": 1, "pink": 1, "brown": 1, "wild": 0})
     colony_ships = canonical_resource_counts(raw_colony_ships, include_zero=True)
     try:
@@ -67,6 +75,7 @@ def _score_explore(state: GameState, pid: str, payload: Dict[str, Any]) -> Score
     except Exception:
         colony_ships["wild"] = 0
     p_connect_default = float(payload.get("p_connect_default", 0.70))
+    require_disc_to_claim = bool(payload.get("require_disc_to_claim", True))
 
     q = {
         "ring": ring,
@@ -74,6 +83,7 @@ def _score_explore(state: GameState, pid: str, payload: Dict[str, Any]) -> Score
         "draws": draws,
         "wormhole_generator": wormhole_gen,
         "discs_available": discs_available,
+        "require_disc_to_claim": require_disc_to_claim,
         "colony_ships": colony_ships,
         "p_connect_default": p_connect_default,
         "n_sims": int(payload.get("n_sims", 4000)),
@@ -90,7 +100,14 @@ def _score_explore(state: GameState, pid: str, payload: Dict[str, Any]) -> Score
     base_risk = 0.2 + 0.5 * p_anc + 0.2 * (1.0 - (1.0 if wormhole_gen else p_connect_default))
     base_risk = max(0.05, min(0.95, base_risk))
 
-    return Score(expected_vp=float(ev.expected_value_vp), risk=base_risk, details={"explore_notes": ev.notes})
+    can_immediate_influence = (discs_available > 0) or not require_disc_to_claim
+    details = {
+        "explore_notes": ev.notes,
+        "immediate_influence_if_no_ancients": can_immediate_influence,
+    }
+    if discs_available <= 0 and require_disc_to_claim:
+        details["immediate_influence_note"] = "Needs a spare influence disc to claim immediately"
+    return Score(expected_vp=float(ev.expected_value_vp), risk=base_risk, details=details)
 
 # ===== Move (with optional combat) =====
 
