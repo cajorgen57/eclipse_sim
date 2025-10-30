@@ -50,7 +50,10 @@ def _payload(a: Any) -> Mapping[str, Any]:
 
 def generate(state) -> List[MacroAction]:
     macros: List[MacroAction] = []
-    for a in rules_engine.legal_actions(state):
+    player_id = getattr(state, "active_player", None)
+    if player_id is None:
+        return macros
+    for a in rules_engine.legal_actions(state, player_id):
         t = _typename(a)
         p = dict(_payload(a))
         p["__raw__"] = a
