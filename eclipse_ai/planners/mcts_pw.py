@@ -11,6 +11,7 @@ from typing import Any, Iterator, List, Optional
 from .. import evaluator, round_flow
 from ..action_gen import generate_all
 from ..action_gen.schema import MacroAction
+from ..hashing import hash_state
 
 
 @dataclass
@@ -23,6 +24,7 @@ class Node:
     prior: float = 0.0
     visits: int = 0
     value: float = 0.0
+    zkey: int = 0
     children: List["Node"] | None = None
     _action_iter: Iterator[MacroAction] | None = None
     _k_open: int = 0
@@ -33,6 +35,7 @@ class Node:
             self.children = []
         if self._action_iter is None:
             self._action_iter = iter(generate_all(self.state))
+        self.zkey = hash_state(self.state)
 
     def can_expand(self, c: float, alpha: float) -> bool:
         if self.fully_expanded:
@@ -61,6 +64,7 @@ class PW_MCTSPlanner:
         self.sims = sims
         self.depth = depth
         random.seed(seed)
+        self.tt: dict[int, tuple[int, float]] = {}
 
     def ucb(self, child: Node, parent_visits: int, c: float = 1.414) -> float:
         q = (child.value / child.visits) if child.visits else 0.0
@@ -119,6 +123,8 @@ class PW_MCTSPlanner:
             while node is not None:
                 node.visits += 1
                 node.value += value
+                v_vis, v_val = self.tt.get(node.zkey, (0, 0.0))
+                self.tt[node.zkey] = (v_vis + 1, v_val + value)
                 node = node.parent
         if not root.children:
             return []
