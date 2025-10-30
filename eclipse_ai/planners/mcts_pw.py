@@ -12,6 +12,7 @@ from .. import evaluator, round_flow
 from ..action_gen import generate_all
 from ..action_gen.schema import MacroAction
 from ..hashing import hash_state
+from ..hidden_info import determinize
 
 
 @dataclass
@@ -104,7 +105,8 @@ class PW_MCTSPlanner:
     def plan(self, root_state: Any) -> List[Optional[MacroAction]]:
         """Run PW-MCTS simulations and return actions sorted by value."""
 
-        root = Node(root_state, None, None, prior=0.0)
+        det = determinize(root_state)
+        root = Node(det, None, None, prior=0.0)
         for _ in range(self.sims):
             node = root
             while node.children and not node.can_expand(self.pw_c, self.pw_alpha):
