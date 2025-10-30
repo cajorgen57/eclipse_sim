@@ -1,15 +1,18 @@
 from __future__ import annotations
-from typing import Optional, Dict, Any, List, Union
+import argparse
 import json
+from pathlib import Path
+from typing import Optional, Dict, Any, List, Union
+
 from . import state_assembler, board_parser, tech_parser, image_ingestion, rules_engine, evaluator  # keep existing imports; note: image_injestion file name
-from .image_ingestion import load_and_calibrate
 from .board_parser import parse_board
-from .tech_parser import parse_tech
-from .state_assembler import assemble_state
-from .search_policy import MCTSPlanner, Plan, PlanStep
 from .game_models import GameState
-from .uncertainty import BeliefState
+from .image_ingestion import load_and_calibrate
 from .overlay import plan_overlays
+from .search_policy import MCTSPlanner, Plan, PlanStep
+from .state_assembler import assemble_state
+from .tech_parser import parse_tech
+from .uncertainty import BeliefState
 
 # -----------------------------
 # Helpers
@@ -41,7 +44,12 @@ def recommend(
     tech_image_path: Optional[str],
     prior_state: Optional[Union[GameState, Dict[str, Any]]] = None,
     manual_inputs: Optional[Dict[str, Any]] = None,
-    top_k: int = 5
+    top_k: int = 5,
+    planner: str = "legacy",
+    pw_alpha: float = 0.6,
+    pw_c: float = 1.5,
+    prior_scale: float = 0.5,
+    seed: int = 0,
 ) -> Dict[str, Any]:
     """Main orchestration. Returns top plans, overlays, and belief summaries."""
     # 1) Build/assemble state
@@ -81,34 +89,80 @@ def recommend(
                 belief.observe_enemy_signal("blue", sig)
 
     # 4) Plan
-    planner_args = (manual_inputs or {}).get("_planner", {})
+    planner_args_in = (manual_inputs or {}).get("_planner", {})
+    planner_args = dict(planner_args_in) if isinstance(planner_args_in, dict) else {}
     simulations = int(planner_args.get("simulations", 400))
     depth = int(planner_args.get("depth", 2))
     risk_aversion = float(planner_args.get("risk_aversion", 0.25))
+    planner_choice = str(
+        planner_args.get("type")
+        or planner_args.get("planner")
+        or planner
+    ).lower()
 
-    planner = MCTSPlanner(simulations=simulations, risk_aversion=risk_aversion)
-    plans = planner.plan(state, state.active_player, depth=depth, top_k=top_k)
-
-    # 5) Package results
     out_plans: List[Dict[str, Any]] = []
-    for p in plans:
-        steps = [
-            {
-                "action": s.action.type.value,
-                "payload": s.action.payload,
-                "score": float(s.score.expected_vp),
-                "risk": float(s.score.risk),
-                "details": dict(s.score.details),
+    if planner_choice == "pw_mcts":
+        from .planners.mcts_pw import PW_MCTSPlanner
+
+        pw_alpha_val = float(planner_args.get("pw_alpha", pw_alpha))
+        pw_c_val = float(planner_args.get("pw_c", pw_c))
+        prior_scale_val = float(planner_args.get("prior_scale", prior_scale))
+        seed_val = int(planner_args.get("seed", seed))
+
+        planner_impl = PW_MCTSPlanner(
+            pw_alpha=pw_alpha_val,
+            pw_c=pw_c_val,
+            prior_scale=prior_scale_val,
+            sims=simulations,
+            depth=depth,
+            seed=seed_val,
+        )
+        macro_actions = planner_impl.plan(state)
+        for idx, macro in enumerate(macro_actions[: max(0, top_k)]):
+            if macro is None:
+                continue
+            details = {
+                "planner": "pw_mcts",
+                "prior": float(getattr(macro, "prior", 0.0)),
+                "rank": idx + 1,
             }
-            for s in p.steps
-        ]
-        out_plans.append({
-            "score": float(p.total_score),
-            "risk": float(p.risk),
-            "steps": steps,
-            "state_summary": dict(p.state_summary),
-            "overlays": plan_overlays(p)
-        })
+            out_plans.append({
+                "score": None,
+                "risk": None,
+                "steps": [
+                    {
+                        "action": getattr(macro, "type", None),
+                        "payload": dict(getattr(macro, "payload", {})),
+                        "score": None,
+                        "risk": None,
+                        "details": details,
+                    }
+                ],
+                "state_summary": {},
+                "overlays": [],
+            })
+    else:
+        planner_impl = MCTSPlanner(simulations=simulations, risk_aversion=risk_aversion)
+        plans = planner_impl.plan(state, state.active_player, depth=depth, top_k=top_k)
+
+        for p in plans:
+            steps = [
+                {
+                    "action": s.action.type.value,
+                    "payload": s.action.payload,
+                    "score": float(s.score.expected_vp),
+                    "risk": float(s.score.risk),
+                    "details": dict(s.score.details),
+                }
+                for s in p.steps
+            ]
+            out_plans.append({
+                "score": float(p.total_score),
+                "risk": float(p.risk),
+                "steps": steps,
+                "state_summary": dict(p.state_summary),
+                "overlays": plan_overlays(p),
+            })
 
     enemy_posts = _enemy_posteriors_all(belief, rho=float((manual_inputs or {}).get("belief_rho", 0.9)))
 
@@ -122,3 +176,104 @@ def recommend(
         "board_meta": getattr(board_img, "metadata", None),
         "tech_meta": getattr(tech_img, "metadata", None),
     }
+
+
+def _load_json_resource(resource: Optional[str]) -> Optional[Any]:
+    """Load JSON content from a path or inline string."""
+
+    if not resource:
+        return None
+
+    candidate = Path(resource)
+    try:
+        text = candidate.read_text(encoding="utf-8") if candidate.exists() else resource
+    except OSError as exc:  # pragma: no cover - passthrough for filesystem errors
+        raise RuntimeError(f"Failed to read resource {resource!r}: {exc}") from exc
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON payload for {resource!r}") from exc
+
+
+def main() -> None:
+    """CLI entry point for running planners against a reconstructed state."""
+
+    parser = argparse.ArgumentParser(description="Run Eclipse AI planner recommendations")
+    parser.add_argument("--board", dest="board", default=None, help="Path to a calibrated board image")
+    parser.add_argument("--tech", dest="tech", default=None, help="Path to a calibrated tech display image")
+    parser.add_argument("--state", dest="state", default=None, help="Path to a JSON state file or inline JSON string")
+    parser.add_argument("--manual", dest="manual", default=None, help="Manual override payload (path or JSON string)")
+    parser.add_argument("--topk", dest="topk", type=int, default=5, help="Number of top plans to return")
+    parser.add_argument("--sims", dest="sims", type=int, default=400, help="Simulation count for the planner")
+    parser.add_argument("--depth", dest="depth", type=int, default=2, help="Depth limit for planner rollouts")
+    parser.add_argument(
+        "--risk-aversion",
+        dest="risk_aversion",
+        type=float,
+        default=0.25,
+        help="Risk aversion coefficient for the legacy planner",
+    )
+    parser.add_argument(
+        "--planner",
+        choices=["legacy", "pw_mcts"],
+        default="legacy",
+        help="Planner backend to use",
+    )
+    parser.add_argument("--pw-alpha", dest="pw_alpha", type=float, default=0.6, help="Progressive widening alpha")
+    parser.add_argument("--pw-c", dest="pw_c", type=float, default=1.5, help="Progressive widening constant")
+    parser.add_argument("--prior-scale", dest="prior_scale", type=float, default=0.5, help="Prior scale factor")
+    parser.add_argument("--seed", dest="seed", type=int, default=0, help="Random seed for PW-MCTS")
+    parser.add_argument(
+        "--belief-rho",
+        dest="belief_rho",
+        type=float,
+        default=0.9,
+        help="Belief smoothing coefficient",
+    )
+    parser.add_argument("--output", dest="output", default=None, help="Optional path to write JSON output")
+
+    args = parser.parse_args()
+
+    prior_state_payload = _load_json_resource(args.state)
+    manual_inputs_payload = _load_json_resource(args.manual)
+    manual_inputs_dict: Dict[str, Any] = dict(manual_inputs_payload or {})
+
+    planner_cfg: Dict[str, Any] = dict(manual_inputs_dict.get("_planner", {}))
+    planner_cfg.update(
+        {
+            "simulations": args.sims,
+            "depth": args.depth,
+            "risk_aversion": args.risk_aversion,
+            "type": args.planner,
+            "pw_alpha": args.pw_alpha,
+            "pw_c": args.pw_c,
+            "prior_scale": args.prior_scale,
+            "seed": args.seed,
+        }
+    )
+    manual_inputs_dict["_planner"] = planner_cfg
+    manual_inputs_dict["belief_rho"] = args.belief_rho
+
+    result = recommend(
+        args.board,
+        args.tech,
+        prior_state=prior_state_payload,
+        manual_inputs=manual_inputs_dict,
+        top_k=args.topk,
+        planner=args.planner,
+        pw_alpha=args.pw_alpha,
+        pw_c=args.pw_c,
+        prior_scale=args.prior_scale,
+        seed=args.seed,
+    )
+
+    output_text = json.dumps(result, indent=2)
+    if args.output:
+        Path(args.output).write_text(output_text + "\n", encoding="utf-8")
+    else:
+        print(output_text)
+
+
+if __name__ == "__main__":
+    main()
