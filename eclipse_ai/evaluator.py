@@ -2,12 +2,33 @@ from __future__ import annotations
 from typing import Dict, Any, Optional, Tuple, List
 from dataclasses import dataclass
 import math
+import os
+
+import yaml
 
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Planet, Pieces, ShipDesign
 from .simulators.combat import score_combat
 from .explore_eval import explore_ev
 from .simulators.exploration import exploration_ev
 from .resource_colors import RESOURCE_COLOR_ORDER, normalize_resource_color, canonical_resource_counts
+from .value.features import extract_features
+
+_WEIGHTS = None
+
+
+def _load_weights(path: str | None = None):
+    global _WEIGHTS
+    if _WEIGHTS is None:
+        p = path or os.path.join(os.path.dirname(__file__), "value", "weights.yaml")
+        with open(p, "r", encoding="utf-8") as f:
+            _WEIGHTS = yaml.safe_load(f) or {}
+    return _WEIGHTS
+
+
+def evaluate_state(state, context=None) -> float:
+    w = _load_weights(None)
+    feats = extract_features(state, context)
+    return sum(float(w.get(k, 0.0)) * float(v) for k, v in feats.items())
 
 # ===== Public API =====
 
