@@ -11,8 +11,10 @@ from typing import Any, Iterator, List, Optional
 from .. import evaluator, round_flow
 from ..action_gen import generate_all
 from ..action_gen.schema import MacroAction
+from ..context import Context
 from ..hashing import hash_state
 from ..hidden_info import determinize
+from ..opponents import analyze_state
 
 
 @dataclass
@@ -30,12 +32,13 @@ class Node:
     _action_iter: Iterator[MacroAction] | None = None
     _k_open: int = 0
     fully_expanded: bool = False
+    context: Context | None = None
 
     def __post_init__(self) -> None:
         if self.children is None:
             self.children = []
         if self._action_iter is None:
-            self._action_iter = iter(generate_all(self.state))
+            self._action_iter = iter(generate_all(self.state, getattr(self, "context", None)))
         self.zkey = hash_state(self.state)
 
     def can_expand(self, c: float, alpha: float) -> bool:
@@ -58,6 +61,7 @@ class PW_MCTSPlanner:
         sims: int = 200,
         depth: int = 2,
         seed: int = 0,
+        opponent_awareness: bool = True,
     ) -> None:
         self.pw_c = pw_c
         self.pw_alpha = pw_alpha
@@ -66,6 +70,7 @@ class PW_MCTSPlanner:
         self.depth = depth
         random.seed(seed)
         self.tt: dict[int, tuple[int, float]] = {}
+        self.opponent_awareness = opponent_awareness
 
     def ucb(self, child: Node, parent_visits: int, c: float = 1.414) -> float:
         q = (child.value / child.visits) if child.visits else 0.0
@@ -88,9 +93,10 @@ class PW_MCTSPlanner:
 
         state_copy = copy.deepcopy(leaf.state)
         remaining_depth = self.depth
+        ctx = getattr(leaf, "context", None)
         while remaining_depth > 0:
             try:
-                mac = next(iter(generate_all(state_copy)))
+                mac = next(iter(generate_all(state_copy, context=ctx)))
             except StopIteration:
                 break
             if mac.type == "PASS":
@@ -98,7 +104,7 @@ class PW_MCTSPlanner:
             state_copy = self.apply(state_copy, mac)
             remaining_depth -= 1
         try:
-            return float(evaluator.evaluate_state(state_copy))
+            return float(evaluator.evaluate_state(state_copy, context=ctx))
         except Exception:  # pragma: no cover - evaluator may not be wired in tests
             return 0.0
 
@@ -106,7 +112,14 @@ class PW_MCTSPlanner:
         """Run PW-MCTS simulations and return actions sorted by value."""
 
         det = determinize(root_state)
-        root = Node(det, None, None, prior=0.0)
+        rd = getattr(root_state, "round_index", getattr(det, "round_index", 0))
+        me_id = getattr(root_state, "active_player_id", getattr(det, "active_player_id", 0))
+        if self.opponent_awareness:
+            models, tmap = analyze_state(det, my_id=me_id, round_idx=rd)
+            context = Context(opponent_models=models, threat_map=tmap, round_index=rd)
+        else:
+            context = Context(round_index=rd)
+        root = Node(det, None, None, prior=0.0, context=context)
         for _ in range(self.sims):
             node = root
             while node.children and not node.can_expand(self.pw_c, self.pw_alpha):
@@ -115,7 +128,8 @@ class PW_MCTSPlanner:
                 try:
                     mac = next(node._action_iter)
                     child_state = self.apply(node.state, mac) if mac.type != "PASS" else node.state
-                    child = Node(child_state, node, mac, prior=mac.prior)
+                    child_context = getattr(node, "context", None)
+                    child = Node(child_state, node, mac, prior=mac.prior, context=child_context)
                     node.children.append(child)
                     node = child
                 except StopIteration:
