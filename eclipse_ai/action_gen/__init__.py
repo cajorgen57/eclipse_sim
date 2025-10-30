@@ -1,12 +1,12 @@
 from typing import Iterable, List
 
-from . import prior, explore, research, build, upgrade, move_fight, diplomacy, pass_action
+from . import legacy, prior, explore, research, build, upgrade, move_fight, diplomacy, pass_action
 from .schema import MacroAction
 
 
 def _collect(state) -> List[MacroAction]:
     macros: List[MacroAction] = []
-    for gen in (explore, research, build, upgrade, move_fight, diplomacy, pass_action):
+    for gen in (legacy, explore, research, build, upgrade, move_fight, diplomacy, pass_action):
         macros.extend(gen.generate(state))
     return macros
 
