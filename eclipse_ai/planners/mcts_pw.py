@@ -26,6 +26,7 @@ class Node:
     children: List["Node"] | None = None
     _action_iter: Iterator[MacroAction] | None = None
     _k_open: int = 0
+    fully_expanded: bool = False
 
     def __post_init__(self) -> None:
         if self.children is None:
@@ -34,6 +35,8 @@ class Node:
             self._action_iter = iter(generate_all(self.state))
 
     def can_expand(self, c: float, alpha: float) -> bool:
+        if self.fully_expanded:
+            return False
         allowed = int(c * (self.visits ** alpha))
         if allowed > self._k_open:
             self._k_open = allowed
@@ -110,7 +113,8 @@ class PW_MCTSPlanner:
                     node.children.append(child)
                     node = child
                 except StopIteration:
-                    pass
+                    node.fully_expanded = True
+                    node._action_iter = None
             value = self.rollout(node)
             while node is not None:
                 node.visits += 1
