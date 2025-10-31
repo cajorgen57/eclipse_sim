@@ -1,6 +1,9 @@
-from typing import Dict, Any, List, Tuple
+from __future__ import annotations
 
-from .rules_engine import legal_actions
+from typing import Dict, Any, List, Tuple
+from copy import deepcopy
+
+from eclipse_ai.rules import api as rules_api
 
 
 class LegalityError(AssertionError):
@@ -14,7 +17,9 @@ def _fmt_action(a: Dict[str, Any]) -> str:
 
 
 def _extract_action_shape(candidate: Any) -> Tuple[Any, Dict[str, Any]]:
-    """Return an action identifier and payload for dicts or dataclass actions."""
+    """
+    Normalize actions coming from old code (dicts, dataclass-like, objects with .type/.payload).
+    """
     if isinstance(candidate, dict):
         return (
             candidate.get("action") or candidate.get("type"),
@@ -27,19 +32,12 @@ def _extract_action_shape(candidate: Any) -> Tuple[Any, Dict[str, Any]]:
     return act_type, payload
 
 
-def _is_action_legal(state: Dict[str, Any], player_id: int, action: Dict[str, Any]) -> bool:
-    allowed = legal_actions(state, player_id)
-    # Normalize comparison: match on action type/name and required payload keys
-    atype, payload = _extract_action_shape(action)
-    have = set((payload or {}).keys())
-    for candidate in allowed:
-        cand_type, cand_payload = _extract_action_shape(candidate)
-        if cand_type == atype:
-            # Optional: shallow payload key subset check
-            needed = set((cand_payload or {}).keys())
-            if needed.issubset(have) or not needed:
-                return True
-    return False
+def _is_action_legal(state: Dict[str, Any], player_id: int | str, action: Dict[str, Any]) -> bool:
+    """
+    Strict legality: action must be in the centralized rules API.
+    We do not do "subset of payload keys" anymore because that is how drift happens.
+    """
+    return rules_api.is_action_legal(state, player_id, action)
 
 
 def assert_test_case_legal(test: Dict[str, Any]) -> None:
@@ -56,7 +54,7 @@ def assert_test_case_legal(test: Dict[str, Any]) -> None:
     action = test["proposed_action"]
 
     if not _is_action_legal(state, pid, action):
-        allowed = legal_actions(state, pid)
+        allowed = rules_api.enumerate_actions(state, pid)
         allowed_str = ", ".join(_fmt_action(a) for a in allowed[:20])
         raise LegalityError(
             f"Illegal proposed_action for player {pid}: {_fmt_action(action)}. "
@@ -64,33 +62,44 @@ def assert_test_case_legal(test: Dict[str, Any]) -> None:
         )
 
 
-def assert_plans_legal(output: Dict[str, Any], state: Dict[str, Any], player_id: int) -> None:
+def assert_plans_legal(output: Dict[str, Any], state: Dict[str, Any], player_id: int | str) -> None:
     """
     Enforce legality on engine output shaped like:
-      output = {"plans":[{"steps":[{"action": str, "payload": {...}}, ...], "score":..., "risk":...}, ...]}
-    Validates each step against current state, stepping state forward if your engine exposes a stepper.
-    If no stepper, validate per-step against the original state (strict gate at least).
+      output = {
+        "plans": [
+          {
+            "steps": [
+              {"type": str, "payload": {...}},
+              ...
+            ],
+            "score": ...,
+            "risk": ...
+          },
+          ...
+        ]
+      }
 
-    Returns None or raises LegalityError.
+    We now validate each step against the CURRENT state and step the state forward
+    using the same centralized rules transition. That removes plan-vs-single-step drift.
     """
     plans: List[Dict[str, Any]] = output.get("plans", [])
     if not plans:
         return
 
-    # Optional: if you have a state stepper, plug it here:
-    # from .rules_engine import apply_action
-    # cur_state = deepcopy(state)
-
     for p_idx, plan in enumerate(plans):
         steps = plan.get("steps", [])
-        # cur_state = deepcopy(state)
+        cur_state = deepcopy(state)
+        cur_player = player_id
         for s_idx, step in enumerate(steps):
-            if not _is_action_legal(state, player_id, step):
-                allowed = legal_actions(state, player_id)
+            if not _is_action_legal(cur_state, cur_player, step):
+                allowed = rules_api.enumerate_actions(cur_state, cur_player)
                 allowed_str = ", ".join(_fmt_action(a) for a in allowed[:20])
                 raise LegalityError(
                     f"Plan {p_idx} step {s_idx} illegal: {_fmt_action(step)}. "
                     f"Allowed at check: [{allowed_str}]"
                 )
-            # If you have a true simulator, uncomment:
-            # cur_state = apply_action(cur_state, player_id, step)
+            # step forward using centralized transition
+            cur_state = rules_api.apply_action(cur_state, cur_player, step)
+            # if your state advances active player each step, refresh it
+            cur_player = getattr(cur_state, "active_player", None) or cur_state.get("active_player", cur_player)
+

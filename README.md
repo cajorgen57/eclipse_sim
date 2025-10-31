@@ -21,7 +21,7 @@ imported or driven from notebooks and CLI harnesses.
    presentation or archival. 【F:eclipse_ai/eclipse_test/render_report.py†L1-L94】
 
    ```bash
-   python -m eclipse_ai.eclipse_test.render_report orion_round1.json \
+   python -m eclipse_ai.render_report orion_round1.json \
        --output orion_round1.svg \
        --title "Orion Opening"
    ```

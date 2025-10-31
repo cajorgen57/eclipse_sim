@@ -1,7 +1,7 @@
-from typing import List, Any, Mapping
+from typing import List, Any, Mapping, Dict
 from dataclasses import is_dataclass, asdict
 
-from .. import rules_engine
+from eclipse_ai.rules import api as rules_api  # new import
 from .schema import MacroAction, ActionType
 
 _MAP = {
@@ -17,17 +17,23 @@ _MAP = {
 }
 
 
+def _typename_from_str(v: str) -> ActionType:
+    key = v.upper()
+    return _MAP.get(key, "LEGACY")
+
+
 def _typename(a: Any) -> ActionType:
+    # kept for backward compatibility in case something still calls this
     for attr in ("type", "kind", "action_type", "name"):
         v = getattr(a, attr, None)
         if isinstance(v, str):
-            key = v.upper()
-            return _MAP.get(key, "LEGACY")
+            return _typename_from_str(v)
     key = a.__class__.__name__.upper()
     return _MAP.get(key, "LEGACY")
 
 
 def _payload(a: Any) -> Mapping[str, Any]:
+    # kept for backward compatibility
     if is_dataclass(a):
         try:
             return asdict(a)
@@ -41,21 +47,43 @@ def _payload(a: Any) -> Mapping[str, Any]:
     if isinstance(a, dict):
         return a
     if hasattr(a, "__dict__"):
-        out = {}
+        out: Dict[str, Any] = {}
         for k, v in vars(a).items():
-            out[k] = v if isinstance(v, (str, int, float, bool, type(None), list, tuple, dict)) else repr(v)
+            if isinstance(v, (str, int, float, bool, type(None), list, tuple, dict)):
+                out[k] = v
+            else:
+                out[k] = repr(v)
         return out
     return {"repr": repr(a)}
 
 
 def generate(state) -> List[MacroAction]:
+    """
+    Legacy entrypoint.
+
+    Before: called rules_engine.legal_actions(...) directly, then tried to guess
+    action type and stuffed __raw__ in the payload.
+
+    Now: call centralized rules API so every caller uses the same rules.
+    We still output MacroAction so upstream code does not break.
+    """
     macros: List[MacroAction] = []
     player_id = getattr(state, "active_player", None)
+    if player_id is None and isinstance(state, dict):
+        player_id = state.get("active_player")
     if player_id is None:
         return macros
-    for a in rules_engine.legal_actions(state, player_id):
-        t = _typename(a)
-        p = dict(_payload(a))
-        p["__raw__"] = a
-        macros.append(MacroAction(t, p, prior=0.0))
+
+    # single source of truth
+    actions = rules_api.enumerate_actions(state, player_id)
+
+    for a in actions:
+        # a is already a dict because rules.api normalized it
+        atype = a.get("type") or a.get("action") or "LEGACY"
+        mapped_type: ActionType = _typename_from_str(atype)
+        payload: Dict[str, Any] = dict(a.get("payload", {}))
+        # preserve raw for old report code
+        payload["__raw__"] = a
+        macros.append(MacroAction(mapped_type, payload, prior=0.0))
+
     return macros
