@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="718" viewBox="0 0 900 718">
+<style>text { font-family: "DejaVu Sans", "Helvetica", "Arial", sans-serif; fill: #1a1a1a; }</style>
+<text x="30" y="40" font-size="24" font-weight="bold">Orion Opening — Round 1 • Active: orion</text>
+<rect x="30" y="70" width="840" height="176" rx="16" ry="16" fill="#d0f0c0" stroke="#cccccc" stroke-width="1" />
+<text x="44" y="110" font-size="18" font-weight="bold">Plan</text>
+<text x="44" y="124" font-size="14">Score: 0.22    Risk: N/A</text>
+<text x="44" y="144" font-size="14"></text>
+<text x="44" y="164" font-size="14">1. Build at 230 — 1 interceptor</text>
+<text x="44" y="184" font-size="14">   Resource cost: Materials 3</text>
+<text x="44" y="204" font-size="14">   Potential gain: ΔVP +0.15</text>
+<text x="44" y="224" font-size="14">   New assets improve fleet mix: 1 interceptor</text>
+<rect x="30" y="266" width="840" height="196" rx="16" ry="16" fill="#fff4b3" stroke="#cccccc" stroke-width="1" />
+<text x="44" y="306" font-size="18" font-weight="bold">Plan</text>
+<text x="44" y="320" font-size="14">Score: 0.23    Risk: 26.0%</text>
+<text x="44" y="340" font-size="14"></text>
+<text x="44" y="360" font-size="14">1. Explore (1 draw)</text>
+<text x="44" y="380" font-size="14">   Resource cost: None noted</text>
+<text x="44" y="400" font-size="14">   Potential gain: ΔVP +0.14</text>
+<text x="44" y="420" font-size="14">   Likely gains: unknown (100% @ +0.14 VP)</text>
+<text x="44" y="440" font-size="14">   Risk: 26.0% outcome variance</text>
+<rect x="30" y="482" width="840" height="196" rx="16" ry="16" fill="#fff4b3" stroke="#cccccc" stroke-width="1" />
+<text x="44" y="522" font-size="18" font-weight="bold">Plan</text>
+<text x="44" y="536" font-size="14">Score: 0.23    Risk: 26.0%</text>
+<text x="44" y="556" font-size="14"></text>
+<text x="44" y="576" font-size="14">1. Explore (1 draw)</text>
+<text x="44" y="596" font-size="14">   Resource cost: None noted</text>
+<text x="44" y="616" font-size="14">   Potential gain: ΔVP +0.14</text>
+<text x="44" y="636" font-size="14">   Likely gains: unknown (100% @ +0.14 VP)</text>
+<text x="44" y="656" font-size="14">   Risk: 26.0% outcome variance</text>
+</svg>

@@ -3,8 +3,9 @@ import argparse
 import json
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Union
+from types import SimpleNamespace
 
-from . import state_assembler, board_parser, tech_parser, image_ingestion, rules_engine, evaluator  # keep existing imports; note: image_injestion file name
+from . import state_assembler, board_parser, tech_parser, image_ingestion, rules_engine, evaluator  # keep existing imports
 from .board_parser import parse_board
 from .game_models import GameState
 from .image_ingestion import load_and_calibrate
@@ -36,7 +37,84 @@ def _enemy_posteriors_all(belief: BeliefState, rho: float = 0.9) -> Dict[str, Di
     return out
 
 # -----------------------------
-# Public API
+# Public API for other modules (used by eclipse_ai.cli)
+# -----------------------------
+
+def build_state_from_args(args) -> GameState:
+    """
+    Build and return a GameState from --state or --board/--tech.
+    If nothing is provided, try round_flow.new_game(); otherwise error clearly.
+    """
+    # 1) Prior state via --state (path or inline JSON)
+    state_arg = getattr(args, "state", None)
+    if state_arg:
+        p = Path(state_arg)
+        text = p.read_text(encoding="utf-8") if p.exists() else state_arg
+        prior_state_payload = json.loads(text)
+        return state_assembler.from_dict(prior_state_payload)
+
+    # 2) Board/tech images
+    board_path = getattr(args, "board", None)
+    tech_path  = getattr(args, "tech", None)
+
+    if not board_path and not tech_path:
+        # 3) Fallback: brand-new game if your engine supports it
+        try:
+            from . import round_flow  # optional
+            num_players = int(getattr(args, "num_players", 4))
+            seed = int(getattr(args, "seed", 0))
+            return round_flow.new_game(num_players=num_players, seed=seed)  # type: ignore
+        except Exception:
+            raise RuntimeError(
+                "No --state and no --board/--tech provided. "
+                "Either pass --state <json|path>, or provide at least --board, "
+                "or implement round_flow.new_game for a fallback."
+            )
+
+    board_img = load_and_calibrate(board_path) if board_path else None
+    tech_img  = load_and_calibrate(tech_path)  if tech_path  else None
+
+    map_state = parse_board(board_img) if board_img is not None else None
+    tech_disp = parse_tech(tech_img)   if tech_img  is not None else None
+
+    if map_state is None:
+        raise RuntimeError(
+            "Board image missing or failed to parse. "
+            "Provide a valid --board path (calibrated image) or use --state."
+        )
+
+    # tech_disp can be None; assembler should handle ‘no tech display’ scenarios
+    return assemble_state(map_state, tech_disp, None, None)
+
+
+
+def run_legacy_planner(args, state: GameState) -> List[SimpleNamespace]:
+    """
+    Run the existing (legacy) MCTSPlanner and return a 'ranked actions' list
+    compatible with eclipse_ai.cli's simple printing (type/payload).
+    We represent each recommended first-step as an object with .type and .payload.
+    """
+    sims  = int(getattr(args, "sims", 400))
+    depth = int(getattr(args, "depth", 2))
+    risk  = float(getattr(args, "risk_aversion", 0.25))
+    top_k = int(getattr(args, "topk", 5))
+
+    legacy = MCTSPlanner(simulations=sims, risk_aversion=risk)
+    plans: List[Plan] = legacy.plan(state, state.active_player, depth=depth, top_k=top_k)
+
+    ranked: List[SimpleNamespace] = []
+    for p in plans:
+        if not p.steps:
+            continue
+        s: PlanStep = p.steps[0]
+        ranked.append(SimpleNamespace(
+            type=s.action.type.value,
+            payload=dict(s.action.payload)
+        ))
+    return ranked
+
+# -----------------------------
+# Main recommendable API (existing)
 # -----------------------------
 
 def recommend(
@@ -180,16 +258,13 @@ def recommend(
 
 def _load_json_resource(resource: Optional[str]) -> Optional[Any]:
     """Load JSON content from a path or inline string."""
-
     if not resource:
         return None
-
     candidate = Path(resource)
     try:
         text = candidate.read_text(encoding="utf-8") if candidate.exists() else resource
     except OSError as exc:  # pragma: no cover - passthrough for filesystem errors
         raise RuntimeError(f"Failed to read resource {resource!r}: {exc}") from exc
-
     try:
         return json.loads(text)
     except json.JSONDecodeError as exc:
@@ -198,7 +273,6 @@ def _load_json_resource(resource: Optional[str]) -> Optional[Any]:
 
 def main() -> None:
     """CLI entry point for running planners against a reconstructed state."""
-
     parser = argparse.ArgumentParser(description="Run Eclipse AI planner recommendations")
     parser.add_argument("--board", dest="board", default=None, help="Path to a calibrated board image")
     parser.add_argument("--tech", dest="tech", default=None, help="Path to a calibrated tech display image")
@@ -277,3 +351,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
+

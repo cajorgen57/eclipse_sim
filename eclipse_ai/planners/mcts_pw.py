@@ -71,6 +71,7 @@ class PW_MCTSPlanner:
         random.seed(seed)
         self.tt: dict[int, tuple[int, float]] = {}
         self.opponent_awareness = opponent_awareness
+        self._seed = seed
 
     def ucb(self, child: Node, parent_visits: int, c: float = 1.414) -> float:
         q = (child.value / child.visits) if child.visits else 0.0
@@ -146,3 +147,57 @@ class PW_MCTSPlanner:
             return []
         root.children.sort(key=lambda child: (child.value / max(1, child.visits)), reverse=True)
         return [child.action_from_parent for child in root.children]
+
+
+    def _root_child_stats(self, root):
+        stats = []
+        for ch in root.children:
+            mac = ch.action_from_parent
+            stats.append({
+                "type": getattr(mac, "type", "?"),
+                "prior": float(getattr(ch, "prior", 0.0)),
+                "visits": int(getattr(ch, "visits", 0)),
+                "mean_value": float(ch.value / max(1, ch.visits)),
+                "payload": dict(getattr(mac, "payload", {})),
+            })
+        # sort to match return order
+        stats.sort(key=lambda x: x["mean_value"], reverse=True)
+        return stats
+
+    def plan_with_diagnostics(self, root_state):
+        # identical to plan(), but returns diagnostics too
+        root = Node(root_state, None, None, prior=0.0)
+        for _ in range(self.sims):
+            node = root
+            while node.children and not node.can_expand(self.pw_c, self.pw_alpha):
+                node = max(node.children, key=lambda ch: self.ucb(ch, node.visits))
+            if node.can_expand(self.pw_c, self.pw_alpha):
+                try:
+                    mac = next(node._action_iter)
+                    child_state = self.apply(node.state, mac) if mac.type != "PASS" else node.state
+                    child = Node(child_state, node, mac, prior=mac.prior)
+                    # propagate context if present
+                    if hasattr(node, "context"):
+                        child.context = node.context
+                    node.children.append(child)
+                    node = child
+                except StopIteration:
+                    pass
+            v = self.rollout(node)
+            while node is not None:
+                node.visits += 1
+                node.value += v
+                node = node.parent
+
+        if not root.children:
+            return [], {"children": [], "sims": self.sims, "depth": self.depth, "seed": getattr(self, "_seed", 0), "params": {
+                "pw_alpha": self.pw_alpha, "pw_c": self.pw_c, "prior_scale": self.prior_scale
+            }}
+        root.children.sort(key=lambda ch: (ch.value / max(1, ch.visits)), reverse=True)
+        di = {
+            "children": self._root_child_stats(root),
+            "sims": self.sims, "depth": self.depth, "seed": getattr(self, "_seed", 0),
+            "params": {"pw_alpha": self.pw_alpha, "pw_c": self.pw_c, "prior_scale": self.prior_scale}
+        }
+        return [ch.action_from_parent for ch in root.children], di
+
