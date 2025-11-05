@@ -24,6 +24,16 @@ from typing import Any, Dict, List, Iterable, Union
 # We centralize access here first, then we can thin rules_engine later.
 from eclipse_ai import rules_engine
 
+def _norm_type(t):
+    if isinstance(t, str):
+        return t.upper()
+    name = getattr(t, "name", None)
+    if isinstance(name, str):
+        return name.upper()
+    value = getattr(t, "value", None)
+    if isinstance(value, str):
+        return value.upper()
+    return str(t).split(".")[-1].upper()
 
 ActionDict = Dict[str, Any]
 State = Any
@@ -31,34 +41,33 @@ PlayerId = Union[str, int]
 
 
 def _to_dict_action(a: Any) -> ActionDict:
-    """
-    Normalize whatever rules_engine returns into a plain dict.
-    We have to support:
-    - dataclass-like objects with .to_dict()
-    - simple dicts
-    - objects with .action and .payload attributes
-    """
     if isinstance(a, dict):
-        # already a dict
-        return a
+        d = dict(a)
+        if "type" in d or "action" in d:
+            at = d.get("type", d.get("action"))
+            d["type"] = _norm_type(at)
+            d.pop("action", None)
+        if "payload" not in d:
+            d["payload"] = {}
+        return d
 
-    # has a serializer
     to_dict = getattr(a, "to_dict", None)
     if callable(to_dict):
-        return to_dict()
+        d = to_dict()
+        at = d.get("type", d.get("action"))
+        d["type"] = _norm_type(at)
+        d.pop("action", None)
+        if "payload" not in d:
+            d["payload"] = {}
+        return d
 
-    # fall back to common fields
     action_type = getattr(a, "action", getattr(a, "type", None))
     payload = getattr(a, "payload", None)
-
-    if action_type is None:
-        # last resort: dump __dict__
-        return dict(a.__dict__)
-
     return {
-        "type": action_type,
+        "type": _norm_type(action_type),
         "payload": payload if payload is not None else {},
     }
+
 
 
 def enumerate_actions(state: State, player_id: PlayerId) -> List[ActionDict]:
@@ -74,25 +83,10 @@ def enumerate_actions(state: State, player_id: PlayerId) -> List[ActionDict]:
 
 
 def is_action_legal(state: State, player_id: PlayerId, action: ActionDict) -> bool:
-    """
-    Check legality by structural membership in the enumerated set.
-    This guarantees that validators and planners see the same truth.
-    """
     legal = enumerate_actions(state, player_id)
-    # cheap path
-    if action in legal:
-        return True
-
-    # sometimes order of keys or payload formatting may differ slightly
-    # try a relaxed match
-    atype = action.get("type")
-    apayload = action.get("payload", {})
-    for la in legal:
-        if la.get("type") != atype:
-            continue
-        if la.get("payload", {}) == apayload:
-            return True
-    return False
+    legal_set = {(_norm_type(a.get("type")), tuple(sorted((a.get("payload") or {}).items()))) for a in legal}
+    key = (_norm_type(action.get("type", action.get("action"))), tuple(sorted((action.get("payload") or {}).items())))
+    return key in legal_set
 
 
 def apply_action(state: State, player_id: PlayerId, action: ActionDict) -> State:

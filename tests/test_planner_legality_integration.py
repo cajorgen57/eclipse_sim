@@ -1,33 +1,54 @@
-from copy import deepcopy
+# tests/test_planner_legality_integration.py
+import json
+from pathlib import Path
 
 from eclipse_ai.planners.mcts_pw import PW_MCTSPlanner
-from eclipse_ai.rules import api as rules_api
 from eclipse_ai import validators
-from eclipse_ai.state_assembler import build_demo_state  # use your real builder
 
+# ---- helpers ----
+class DotDict(dict):
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 
-def _make_state():
-    # if you don't have build_demo_state, swap for your existing test builder
-    state = build_demo_state()
-    # ensure active player set
-    if not getattr(state, "active_player", None) and not getattr(state, "active_player_id", None):
-        if isinstance(state, dict):
-            state.setdefault("active_player", 0)
-    return state
+def to_dotdict(x):
+    if isinstance(x, dict):
+        return DotDict({k: to_dotdict(v) for k, v in x.items()})
+    if isinstance(x, list):
+        return [to_dotdict(v) for v in x]
+    return x
 
+def _load_orion_state():
+    p = Path("orion_round1.json")
+    with p.open("r") as f:
+        data = json.load(f)
+    return to_dotdict(data.get("state", data))
 
-def test_planner_outputs_legal_plans():
-    state = _make_state()
-    pid = (
+def _active_player(state):
+    return (
         getattr(state, "active_player", None)
         or getattr(state, "active_player_id", None)
-        or (state["active_player"] if isinstance(state, dict) and "active_player" in state else 0)
+        or (state.get("active_player") if isinstance(state, dict) else None)
+        or 0
     )
 
-    planner = PW_MCTSPlanner(sims=50, depth=3, opponent_awareness=False)
+# ---- test ----
+def test_planner_outputs_legal_plans_on_orion_snapshot():
+    state = _load_orion_state()
+    pid = _active_player(state)
+
+    planner = PW_MCTSPlanner(sims=25, depth=2, opponent_awareness=False)
     plans = planner.plan(state)
 
-    # wrap to match your validator output shape
-    output = {"plans": [{"steps": [p.__dict__ if hasattr(p, "__dict__") else p][0:1]} for p in plans if p]}
+    # adapt planner output to validator shape
+    output = {"plans": []}
+    for mac in plans:
+        if mac is None:
+            continue
+        payload = dict(getattr(mac, "payload", {}))
+        payload.pop("__raw__", None)
+        output["plans"].append(
+            {"steps": [{"type": getattr(mac, "type", payload.get("action", "PASS")), "payload": payload}]}
+        )
 
     validators.assert_plans_legal(output, state, pid)

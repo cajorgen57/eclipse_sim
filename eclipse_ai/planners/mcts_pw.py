@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Iterator, List, Optional
 
 from .. import evaluator, round_flow
-from ..action_gen import generate as generate_legacy  # renamed old entrypoint
+from ..action_gen.legacy import generate as generate_legacy  # renamed old entrypoint
 from ..action_gen.schema import MacroAction
 from ..context import Context
 from ..hashing import hash_state

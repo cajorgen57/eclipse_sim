@@ -59,13 +59,14 @@ def _payload(a: Any) -> Mapping[str, Any]:
 
 def generate(state) -> List[MacroAction]:
     """
-    Legacy entrypoint.
-
-    Before: called rules_engine.legal_actions(...) directly, then tried to guess
-    action type and stuffed __raw__ in the payload.
-
-    Now: call centralized rules API so every caller uses the same rules.
-    We still output MacroAction so upstream code does not break.
+    Compatibility bridge for action generation.
+    
+    This function provides a MacroAction-compatible interface to the centralized
+    rules API. It wraps rules.api.enumerate_actions() to maintain compatibility
+    with code that expects MacroAction objects.
+    
+    Note: Despite the module name "legacy", this is actively used as a bridge
+    to the new rules API and should not be removed.
     """
     macros: List[MacroAction] = []
     player_id = getattr(state, "active_player", None)
@@ -82,7 +83,8 @@ def generate(state) -> List[MacroAction]:
         atype = a.get("type") or a.get("action") or "LEGACY"
         mapped_type: ActionType = _typename_from_str(atype)
         payload: Dict[str, Any] = dict(a.get("payload", {}))
-        # preserve raw for old report code
+        # Preserve raw action dict for backward compatibility with report code
+        # This can be removed once all report code is updated
         payload["__raw__"] = a
         macros.append(MacroAction(mapped_type, payload, prior=0.0))
 

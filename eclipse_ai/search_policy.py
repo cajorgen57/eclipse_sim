@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Tuple, Sequence, Set, Mapping
 import math, random, copy
+import warnings
 
 from .game_models import GameState, Action, Score, ActionType, PlayerState, Hex, Pieces, Planet, ShipDesign
 from .alliances import ship_presence
@@ -35,6 +36,19 @@ class Plan:
 # =============================
 
 class MCTSPlanner:
+    """
+    DEPRECATED: This planner is deprecated and will be removed in a future version.
+    
+    Use `eclipse_ai.planners.mcts_pw.PW_MCTSPlanner` instead, which provides:
+    - Progressive widening for better exploration
+    - Opponent awareness capabilities
+    - More sophisticated evaluation
+    
+    Migration:
+        Old: planner = MCTSPlanner(simulations=400, risk_aversion=0.25)
+        New: from eclipse_ai.planners.mcts_pw import PW_MCTSPlanner
+             planner = PW_MCTSPlanner(sims=400, depth=2, seed=0)
+    """
     def __init__(
         self,
         simulations: int = 400,
@@ -46,6 +60,12 @@ class MCTSPlanner:
         dirichlet_epsilon: float = 0.25,
         seed: Optional[int] = None,
     ):
+        warnings.warn(
+            "MCTSPlanner is deprecated. Use PW_MCTSPlanner from eclipse_ai.planners.mcts_pw instead. "
+            "See class docstring for migration guide.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.simulations = simulations
         self.c = c_puct
         self.discount = discount

@@ -137,24 +137,27 @@ Implement per rules:
 
 ### Entry point
 
+**Note**: The legacy `MCTSPlanner` is deprecated. Use `PW_MCTSPlanner` via `planner="pw_mcts"` (the default). See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for details.
+
 ```python
 from eclipse_ai import recommend
 
 plans = recommend(
   board_image_path, tech_image_path,
   prior_state=None,
-  manual_inputs={"_planner":{"simulations":400,"depth":2,"risk_aversion":0.25}},
-  top_k=5
+  manual_inputs={"_planner":{"simulations":400,"depth":2}},
+  top_k=5,
+  planner="pw_mcts"  # Default, use PW_MCTSPlanner
 )
 ```
 
 ### Internal flow
 
 1. `state_assembler.build(board, tech, overrides)` → `GameState`
-2. `rules_engine.legal_actions(state, player)`
-3. `search_policy.rollout(state, action)`
+2. `rules_engine.legal_actions(state, player)` (or `rules.api.enumerate_actions`)
+3. `PW_MCTSPlanner.plan(state)` → ranked actions (or legacy `MCTSPlanner.plan` - deprecated)
 4. `combat.resolve()` and `exploration.sample()` during rollouts
-5. `evaluator.score(plan)`
+5. `evaluator.evaluate_state()` or `evaluator.evaluate_action()` for scoring
 6. Return `plans` with `score`, `risk`, `steps` and `overlays`, plus `belief` and `expected_bags`.
 
 ### Pseudocode

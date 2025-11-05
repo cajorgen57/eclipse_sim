@@ -21,7 +21,7 @@ __all__ = [
     "Disc",
     "ColonyShips",
     "Economy",
-    "MCTSPlanner",
+    "MCTSPlanner",  # DEPRECATED: Use PW_MCTSPlanner from planners.mcts_pw instead
     "Plan",
     "PlanStep",
     "plan_overlays",
@@ -53,7 +53,7 @@ _EXPORTS = {
     "ColonyShips": ("game_models", "ColonyShips"),
     "Economy": ("models.economy", "Economy"),
     "recommend": ("main", "recommend"),
-    "MCTSPlanner": ("search_policy", "MCTSPlanner"),
+    "MCTSPlanner": ("search_policy", "MCTSPlanner"),  # DEPRECATED: Use planners.mcts_pw.PW_MCTSPlanner
     "Plan": ("search_policy", "Plan"),
     "PlanStep": ("search_policy", "PlanStep"),
     "plan_overlays": ("overlay", "plan_overlays"),

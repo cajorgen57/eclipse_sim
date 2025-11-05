@@ -43,7 +43,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def _add_common_args(ap: argparse.ArgumentParser) -> None:
-    ap.add_argument("--planner", choices=["legacy", "pw_mcts"], default="legacy")
+    ap.add_argument("--planner", choices=["legacy", "pw_mcts"], default="pw_mcts",
+                    help="Planner backend (legacy is deprecated, use pw_mcts)")
     ap.add_argument("--sims", type=int, default=200)
     ap.add_argument("--depth", type=int, default=2)
     ap.add_argument("--pw-alpha", dest="pw_alpha", type=float, default=0.6)
@@ -86,7 +87,8 @@ def _apply_cfg_env(args: argparse.Namespace) -> None:
     #     attr = key.replace("-", "_")
     #     if hasattr(args, attr):
     #         setattr(args, attr, val)
-    return
+    # Currently no-op - config/env override not implemented
+    pass
 
 
 def _plan_once(args: argparse.Namespace) -> Dict[str, Any]:

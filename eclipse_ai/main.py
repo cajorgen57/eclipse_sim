@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List, Union
 from types import SimpleNamespace
 
-from . import state_assembler, board_parser, tech_parser, image_ingestion, rules_engine, evaluator  # keep existing imports
+from . import state_assembler, board_parser, tech_parser, image_ingestion
 from .board_parser import parse_board
 from .game_models import GameState
 from .image_ingestion import load_and_calibrate
@@ -90,10 +90,21 @@ def build_state_from_args(args) -> GameState:
 
 def run_legacy_planner(args, state: GameState) -> List[SimpleNamespace]:
     """
-    Run the existing (legacy) MCTSPlanner and return a 'ranked actions' list
-    compatible with eclipse_ai.cli's simple printing (type/payload).
+    DEPRECATED: Run the legacy MCTSPlanner.
+    
+    This function is deprecated and will be removed in a future version.
+    Use PW_MCTSPlanner via --planner pw_mcts instead.
+    
+    Returns a 'ranked actions' list compatible with eclipse_ai.cli's simple printing (type/payload).
     We represent each recommended first-step as an object with .type and .payload.
     """
+    import warnings
+    warnings.warn(
+        "run_legacy_planner is deprecated. Use --planner pw_mcts to use PW_MCTSPlanner instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    
     sims  = int(getattr(args, "sims", 400))
     depth = int(getattr(args, "depth", 2))
     risk  = float(getattr(args, "risk_aversion", 0.25))
@@ -123,7 +134,7 @@ def recommend(
     prior_state: Optional[Union[GameState, Dict[str, Any]]] = None,
     manual_inputs: Optional[Dict[str, Any]] = None,
     top_k: int = 5,
-    planner: str = "legacy",
+    planner: str = "pw_mcts",  # Changed from "legacy" - legacy planner is deprecated
     pw_alpha: float = 0.6,
     pw_c: float = 1.5,
     prior_scale: float = 0.5,
@@ -220,6 +231,14 @@ def recommend(
                 "overlays": [],
             })
     else:
+        # Legacy planner path (deprecated)
+        import warnings
+        warnings.warn(
+            f"Planner '{planner_choice}' is deprecated. Use 'pw_mcts' instead. "
+            "See MIGRATION_GUIDE.md for details.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         planner_impl = MCTSPlanner(simulations=simulations, risk_aversion=risk_aversion)
         plans = planner_impl.plan(state, state.active_player, depth=depth, top_k=top_k)
 
@@ -286,13 +305,13 @@ def main() -> None:
         dest="risk_aversion",
         type=float,
         default=0.25,
-        help="Risk aversion coefficient for the legacy planner",
+        help="Risk aversion coefficient (used by legacy planner only, deprecated)",
     )
     parser.add_argument(
         "--planner",
         choices=["legacy", "pw_mcts"],
-        default="legacy",
-        help="Planner backend to use",
+        default="pw_mcts",
+        help="Planner backend to use (legacy is deprecated, use pw_mcts)",
     )
     parser.add_argument("--pw-alpha", dest="pw_alpha", type=float, default=0.6, help="Progressive widening alpha")
     parser.add_argument("--pw-c", dest="pw_c", type=float, default=1.5, help="Progressive widening constant")
