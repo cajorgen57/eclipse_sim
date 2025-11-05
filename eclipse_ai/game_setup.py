@@ -1,6 +1,9 @@
 """Game setup functions for creating proper turn 1 board states."""
 from __future__ import annotations
 
+import csv
+import random
+from pathlib import Path
 from typing import Dict, List, Optional, Mapping
 
 from .game_models import (
@@ -18,7 +21,7 @@ from .game_models import (
 )
 from .species_data import get_species, SpeciesConfig
 from .state_assembler import _initialise_player_state, _refresh_player_economies
-from .technology import load_tech_definitions
+from .technology import load_tech_definitions, build_starting_tech_market
 try:
     from .data.exploration_tiles import tile_counts_by_ring
 except ImportError:
@@ -119,6 +122,8 @@ def new_game(
     for pid in player_ids:
         species_map[pid] = species_by_player.get(pid, "terrans")
     
+    rng = random.Random(seed)
+
     # Create base state
     state = GameState(
         round=1,
@@ -128,6 +133,7 @@ def new_game(
         map=MapState(),
         tech_display=TechDisplay(),
         bags={},
+        exploration_tile_bags={},
         tech_definitions=load_tech_definitions(),
         turn_order=player_ids,
         turn_index=0,
@@ -140,10 +146,10 @@ def new_game(
     _setup_players(state, player_ids, species_map)
     
     # Setup exploration bags
-    _setup_exploration_bags(state, num_players)
-    
+    _setup_exploration_bags(state, num_players, rng)
+
     # Setup tech display
-    _setup_tech_display(state, num_players)
+    _setup_tech_display(state, num_players, rng)
     
     # Initialize player states (techs, ship designs, etc.)
     for player in state.players.values():
@@ -465,7 +471,7 @@ def _get_player_color(index: int) -> str:
     return colors[index % len(colors)]
 
 
-def _setup_exploration_bags(state: GameState, num_players: int) -> None:
+def _setup_exploration_bags(state: GameState, num_players: int, rng: random.Random) -> None:
     """Set up exploration bags with proper tile counts by ring."""
     tile_counts = tile_counts_by_ring()
     outer_limit = OUTER_SECTORS_BY_PLAYERS.get(num_players, 18)
@@ -497,40 +503,76 @@ def _setup_exploration_bags(state: GameState, num_players: int) -> None:
     outer_limit_for_stack = min(outer_total, outer_limit)
     outer_explored = explored_by_ring.get(3, 0)
     outer_remaining = max(0, outer_limit_for_stack - outer_explored)
+    outer_selection: List[str] = []
+    if outer_remaining > 0:
+        sector_three_tiles = _load_sector_tiles(3)
+        draw_count = min(outer_remaining, len(sector_three_tiles))
+        if draw_count:
+            outer_selection = rng.sample(sector_three_tiles, draw_count)
+    state.exploration_tile_bags["R3"] = list(outer_selection)
     state.bags["R3"] = {"unknown": outer_remaining} if outer_remaining > 0 else {}
 
 
-def _setup_tech_display(state: GameState, num_players: int) -> None:
+def _setup_tech_display(state: GameState, num_players: int, rng: random.Random) -> None:
     """Set up tech display with proper tile counts."""
     tech_count = TECH_TILES_BY_PLAYERS.get(num_players, 16)
-    
-    # Load all techs and select a subset for the market
-    all_techs = load_tech_definitions()
-    tech_list = list(all_techs.values())
-    
-    # Filter out rare techs and starting techs owned by players
-    available_techs = []
-    owned_tech_names = set()
-    for player in state.players.values():
-        owned_tech_names.update(tech.lower() for tech in player.known_techs)
-    
-    for tech in tech_list:
-        if tech.is_rare:
+
+    owned_tech_names = {tech for player in state.players.values() for tech in (player.known_techs or [])}
+    market_ids, tech_bags, tier_counts = build_starting_tech_market(tech_count, owned_tech_names, rng)
+
+    state.tech_bags = tech_bags
+    state.market = list(market_ids)
+
+    # Map market ids to display names using loaded definitions
+    definitions = state.tech_definitions or load_tech_definitions()
+    available_names: List[str] = []
+    for tech_id in market_ids:
+        tech = definitions.get(tech_id)
+        if tech is None:
             continue
-        if tech.name.lower() in owned_tech_names:
-            continue
-        available_techs.append(tech.name)
-    
-    # Select random subset (or use a deterministic selection)
-    # For now, just take first N non-rare techs
-    state.tech_display.available = available_techs[:tech_count]
-    
-    # Count by tier (simplified - would need tier data from tech definitions)
-    state.tech_display.tier_counts = {
-        "I": min(tech_count, 6),
-        "II": min(max(0, tech_count - 6), 4),
-        "III": min(max(0, tech_count - 10), 2),
-    }
+        available_names.append(tech.name)
+    state.tech_display.available = available_names
+
+    # Ensure all tiers present even if zero draws occurred
+    normalized_counts = {"I": 0, "II": 0, "III": 0}
+    normalized_counts.update(tier_counts)
+    state.tech_display.tier_counts = normalized_counts
+
+
+_SECTOR_TILE_CACHE: Dict[int, List[str]] = {}
+
+
+def _load_sector_tiles(sector: int) -> List[str]:
+    """Load tile numbers for a given sector from the master CSV file."""
+
+    if sector in _SECTOR_TILE_CACHE:
+        return list(_SECTOR_TILE_CACHE[sector])
+
+    tiles: List[str] = []
+    csv_path = Path(__file__).resolve().parents[1] / "eclipse_tiles.csv"
+    try:
+        with csv_path.open("r", encoding="utf-8", newline="") as handle:
+            reader = csv.DictReader(handle)
+            for row in reader:
+                if not row:
+                    continue
+                try:
+                    row_sector = int((row.get("Sector") or "").strip())
+                except ValueError:
+                    continue
+                if row_sector != sector:
+                    continue
+                tile_number = row.get("TileNumber") or row.get("Tile") or row.get("id")
+                if tile_number is None:
+                    continue
+                tile_str = str(tile_number).strip()
+                if tile_str:
+                    tiles.append(tile_str)
+    except FileNotFoundError as exc:  # pragma: no cover - configuration error
+        raise RuntimeError(f"Missing exploration tile data file at {csv_path}") from exc
+
+    _SECTOR_TILE_CACHE[sector] = list(tiles)
+    return list(tiles)
 
 
 __all__ = ["new_game", "OUTER_SECTORS_BY_PLAYERS", "TECH_TILES_BY_PLAYERS"]

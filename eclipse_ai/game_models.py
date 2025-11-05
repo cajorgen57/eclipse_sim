@@ -364,6 +364,7 @@ class GameState:
     players: Dict[str, PlayerState] = field(default_factory=dict)
     map: MapState = field(default_factory=MapState)
     tech_display: TechDisplay = field(default_factory=TechDisplay)
+    exploration_tile_bags: Dict[str, List[str]] = field(default_factory=dict)
     bags: Dict[str, Dict[str, int]] = field(default_factory=dict)  # bag per ring: tile_type -> count
     tech_bags: Dict[str, List[str]] = field(default_factory=dict)
     market: List[str] = field(default_factory=list)

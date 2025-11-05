@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import csv
+from collections import Counter, defaultdict
 from pathlib import Path
+from random import Random
 from typing import Dict, List, Optional, Set, Tuple
 
 from .game_models import GameState, PlayerState, Tech
@@ -13,6 +16,7 @@ class ResearchError(RuntimeError):
 
 
 _TECH_DATA_CACHE: Optional[Dict[str, Tech]] = None
+_TECH_TILE_POOL_CACHE: Optional[Dict[str, List[str]]] = None
 
 
 MARKET_SIZES_BY_PLAYER_COUNT = {
@@ -26,6 +30,10 @@ MARKET_SIZES_BY_PLAYER_COUNT = {
 
 def _tech_data_path() -> Path:
     return Path(__file__).resolve().parent / "data" / "tech.json"
+
+
+def _tech_tile_pool_path() -> Path:
+    return Path(__file__).resolve().parent / "data" / "tech_market.csv"
 
 
 def load_tech_definitions() -> Dict[str, Tech]:
@@ -75,6 +83,117 @@ def load_tech_definitions() -> Dict[str, Tech]:
 
     _TECH_DATA_CACHE = catalog
     return catalog
+
+
+def load_tech_tile_pool() -> Dict[str, List[str]]:
+    """Return the randomized tile pool entries grouped by tier.
+
+    The pool is expanded according to the "frequency" column so each entry
+    represents a single physical tile. Callers receive a defensive copy so the
+    caller may shuffle or consume the lists without mutating the cached
+    template.
+    """
+
+    global _TECH_TILE_POOL_CACHE
+    if _TECH_TILE_POOL_CACHE is not None:
+        return {tier: list(tiles) for tier, tiles in _TECH_TILE_POOL_CACHE.items()}
+
+    path = _tech_tile_pool_path()
+    pool: Dict[str, List[str]] = defaultdict(list)
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            for row in reader:
+                if not row:
+                    continue
+                tile_id = (row.get("id") or "").strip()
+                if not tile_id:
+                    continue
+                tier = (row.get("tier") or "").strip() or "I"
+                freq = row.get("frequency", "1")
+                try:
+                    repeats = max(0, int(freq))
+                except (TypeError, ValueError):
+                    repeats = 1
+                pool[tier].extend([tile_id] * repeats)
+    except FileNotFoundError as exc:  # pragma: no cover - configuration error
+        raise ResearchError(f"technology market data file missing: {path}") from exc
+
+    _TECH_TILE_POOL_CACHE = {tier: list(tiles) for tier, tiles in pool.items()}
+    return {tier: list(tiles) for tier, tiles in _TECH_TILE_POOL_CACHE.items()}
+
+
+def build_starting_tech_market(
+    tech_count: int,
+    owned_tech_names: Set[str],
+    rng: Optional[Random] = None,
+) -> Tuple[List[str], Dict[str, List[str]], Dict[str, int]]:
+    """Generate the initial technology market and leftover bags.
+
+    Args:
+        tech_count: Number of tiles that should be face up in the market.
+        owned_tech_names: Case-insensitive set of technology names already owned
+            at setup; these tiles are removed from the supply entirely.
+        rng: Optional random number generator; defaults to ``random.Random`` if
+            omitted to keep caller control over determinism.
+
+    Returns:
+        Tuple of ``(market_ids, tech_bags, tier_counts)`` where ``market_ids``
+        is the ordered list of technology ids for the face-up market,
+        ``tech_bags`` contains the remaining face-down tiles keyed by tier, and
+        ``tier_counts`` records how many tiles of each tier were drawn into the
+        market.
+    """
+
+    generator = rng or Random()
+    definitions = load_tech_definitions()
+    owned_lower = {name.lower() for name in owned_tech_names}
+    pool = load_tech_tile_pool()
+
+    market: List[str] = []
+    tier_counts: Counter[str] = Counter()
+    tiles_by_tier: Dict[str, List[str]] = {}
+
+    for tier in ("I", "II", "III"):
+        tiles = list(pool.get(tier, []))
+        if tiles:
+            generator.shuffle(tiles)
+        tiles_by_tier[tier] = tiles
+
+    while len(market) < tech_count:
+        total_tiles = sum(len(v) for v in tiles_by_tier.values())
+        if total_tiles <= 0:
+            break
+        pick = generator.randrange(total_tiles)
+        chosen_tier: Optional[str] = None
+        tile_id: Optional[str] = None
+        for tier in ("I", "II", "III"):
+            tier_tiles = tiles_by_tier.get(tier, [])
+            if pick < len(tier_tiles):
+                chosen_tier = tier
+                tile_id = tier_tiles.pop(pick)
+                break
+            pick -= len(tier_tiles)
+        if tile_id is None or chosen_tier is None:
+            break
+        tech = definitions.get(tile_id) or definitions.get(tile_id.lower())
+        if tech is None or tech.is_rare:
+            continue
+        if tech.name.lower() in owned_lower:
+            continue
+        market.append(tile_id)
+        tier_counts[chosen_tier] += 1
+
+    bags: Dict[str, List[str]] = {tier: list(tiles) for tier, tiles in tiles_by_tier.items()}
+
+    rare_tiles = pool.get("Rare", [])
+    rare_tiles = list(rare_tiles)
+    if rare_tiles:
+        generator.shuffle(rare_tiles)
+    bags["Rare"] = rare_tiles
+
+    normalized_counts = {tier: tier_counts.get(tier, 0) for tier in ("I", "II", "III")}
+    return market, bags, normalized_counts
 
 
 def discounted_cost(player: PlayerState, tech: Tech, band_cost: Optional[int] = None) -> int:
