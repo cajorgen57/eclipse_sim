@@ -33,6 +33,7 @@ __all__ = [
     "get_species",
     "all_species",
     "get_registry",
+    "new_game",
     "__version__",
 ]
 
@@ -65,6 +66,7 @@ _EXPORTS = {
     "get_species": ("species_data", "get_species"),
     "all_species": ("species_data", "all_species"),
     "get_registry": ("species_data", "get_registry"),
+    "new_game": ("game_setup", "new_game"),
 }
 
 
