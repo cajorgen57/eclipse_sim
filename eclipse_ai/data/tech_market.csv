@@ -1,0 +1,38 @@
+id,name,tier,frequency
+fusion_drive,Fusion Drive,I,2
+fusion_source,Fusion Source,I,2
+gauss_shield,Gauss Shield,I,2
+improved_hull,Improved Hull,I,2
+nanorobots,Nanorobots,I,2
+neutron_bombs,Neutron Bombs,I,2
+orbital,Orbital,I,2
+plasma_cannon,Plasma Cannon,I,2
+starbase,Starbase,I,2
+advanced_economy,Advanced Economy,II,2
+advanced_labs,Advanced Labs,II,2
+advanced_mining,Advanced Mining,II,2
+advanced_robotics,Advanced Robotics,II,2
+monolith,Monolith,II,2
+phase_shield,Phase Shield,II,2
+positron_computer,Positron Computer,II,2
+tachyon_drive,Tachyon Drive,II,2
+tachyon_source,Tachyon Source,II,2
+antimatter_cannon,Antimatter Cannon,III,1
+artifact_key,Artifact Key,III,1
+gluon_computer,Gluon Computer,III,1
+plasma_missile,Plasma Missile,III,1
+quantum_grid,Quantum Grid,III,1
+wormhole_generator,Wormhole Generator,III,1
+absorption_shield,Absorption Shield,Rare,1
+antimatter_splitter,Antimatter Splitter,Rare,1
+cloaking_device,Cloaking Device,Rare,1
+conifold_field,Conifold Field,Rare,1
+flux_missile,Flux Missile,Rare,1
+improved_logistics,Improved Logistics,Rare,1
+metasynthesis,Metasynthesis,Rare,1
+neutron_absorber,Neutron Absorber,Rare,1
+rift_cannon,Rift Cannon,Rare,1
+sentient_hull,Sentient Hull,Rare,1
+soliton_cannon,Soliton Cannon,Rare,1
+transition_drive,Transition Drive,Rare,1
+zero_point_source,Zero-Point Source,Rare,1
