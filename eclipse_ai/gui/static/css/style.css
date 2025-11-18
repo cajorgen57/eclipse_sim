@@ -1,0 +1,411 @@
+/**
+ * Eclipse AI GUI - Main Stylesheet
+ */
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Custom scrollbar for Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #475569 #1e293b;
+}
+
+/* Tab styles */
+.state-tab {
+    position: relative;
+    transition: all 0.2s;
+}
+
+.state-tab.active {
+    background-color: #334155;
+}
+
+.state-tab:hover {
+    background-color: #334155;
+}
+
+/* Input focus states */
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+    transition: all 0.2s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid #6366f1;
+    outline-offset: 0;
+}
+
+/* Button hover effects */
+button {
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Toast animations */
+.toast {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Loading spinner */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Gradient text */
+.bg-clip-text {
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Card hover effects */
+.hover\:shadow-lg:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+.hover\:shadow-xl:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth transitions */
+.transition {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Utility classes */
+.opacity-0 {
+    opacity: 0;
+}
+
+.opacity-100 {
+    opacity: 1;
+}
+
+.translate-x-full {
+    transform: translateX(100%);
+}
+
+/* Form elements in dark mode */
+input[type="checkbox"] {
+    accent-color: #6366f1;
+}
+
+/* Status indicator pulse animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+#status-indicator div {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Accordion animation */
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.accordion-content.open {
+    max-height: 500px;
+}
+
+/* Plan card selection */
+.plan-card.selected {
+    border: 2px solid #6366f1;
+    background: #1e1b4b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .w-3\/5 {
+        width: 50%;
+    }
+    .w-2\/5 {
+        width: 50%;
+    }
+}
+
+@media (max-width: 768px) {
+    .w-3\/5,
+    .w-2\/5 {
+        width: 100%;
+    }
+    
+    .flex {
+        flex-direction: column;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        overflow: visible;
+    }
+    
+    #loading-overlay,
+    #toast-container {
+        display: none !important;
+    }
+}
+
+/* Tooltip styles for tech cards */
+.tech-tooltip[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    white-space: pre-line;
+    z-index: 1000;
+    font-size: 0.75rem;
+    max-width: 200px;
+    pointer-events: none;
+    margin-bottom: 0.25rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced card animations - subtle shine effect */
+.tech-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.tech-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.03) 50%,
+        transparent 70%
+    );
+    transform: rotate(45deg);
+    transition: all 0.8s ease;
+}
+
+.tech-card:hover::before {
+    left: 100%;
+}
+
+/* Resource bar animations */
+@keyframes fillBar {
+    from {
+        width: 0;
+    }
+    to {
+        width: var(--fill-width);
+    }
+}
+
+.resource-bar {
+    animation: fillBar 1s ease-out forwards;
+}
+
+/* Stat badge pulse on hover */
+.stat-badge {
+    transition: all 0.2s;
+}
+
+.stat-badge:hover {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+}
+
+/* Category badge glow */
+.category-badge {
+    box-shadow: 0 0 10px currentColor;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Tier section fade-in */
+.tier-section {
+    animation: fadeSlideIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Player card enhancements */
+.player-card {
+    transition: all 0.2s ease;
+}
+
+.player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Ship blueprint card enhancements */
+.ship-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.ship-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transition: left 0.5s;
+}
+
+.ship-card:hover::after {
+    left: 100%;
+}
+
+/* Board View Tabs */
+.board-tab {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    background: #374151;
+    color: #9ca3af;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-tab:hover {
+    background: #4b5563;
+    color: #f3f4f6;
+}
+
+.board-tab.active {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
+}
+
+/* Board View Content Areas */
+.board-view-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    transition: opacity 0.2s ease;
+}
+
+.board-view-content.hidden {
+    display: none;
+}
+
+.board-view-content.active {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Ensure tech market and player views fill their space */
+#view-tech,
+#view-players {
+    min-height: 0;
+}
+
+#tech-market-container,
+#players-board-container {
+    min-height: 100%;
+}
+

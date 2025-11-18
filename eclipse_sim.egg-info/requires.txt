@@ -1,0 +1,15 @@
+pyyaml>=6.0
+
+[dev]
+black>=24.4.0
+mypy>=1.9.0
+pre-commit>=3.7.0
+pytest-cov>=4.1
+pytest>=7.4
+ruff>=0.5.0
+
+[gui]
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+jinja2>=3.1.0

@@ -1,0 +1,380 @@
+{
+  "round": 1,
+  "active_player": "P1",
+  "players": {
+    "P1": {
+      "player_id": "P1",
+      "species_id": "orion",
+      "color": "purple",
+      "known_techs": [
+        "Gauss Shield",
+        "Neutron Bombs"
+      ],
+      "resources": {
+        "money": 3,
+        "science": 3,
+        "materials": 5
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1
+        },
+        "cruiser": {
+          "computer": 0,
+          "shield": 1,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1
+        }
+      },
+      "passed": false
+    },
+    "P2": {
+      "player_id": "P2",
+      "species_id": "terrans",
+      "color": "blue",
+      "known_techs": [
+        "Starbase"
+      ],
+      "resources": {
+        "money": 2,
+        "science": 3,
+        "materials": 3
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1
+        },
+        "cruiser": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1
+        }
+      },
+      "passed": false
+    },
+    "P3": {
+      "player_id": "P3",
+      "species_id": "eridani",
+      "color": "red",
+      "known_techs": [
+        "Gauss Shield",
+        "Fusion Drive",
+        "Plasma Cannon"
+      ],
+      "resources": {
+        "money": 4,
+        "science": 4,
+        "materials": 4
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1
+        },
+        "cruiser": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1
+        }
+      },
+      "passed": false
+    },
+    "P4": {
+      "player_id": "P4",
+      "species_id": "hydran",
+      "color": "green",
+      "known_techs": [
+        "Advanced Labs"
+      ],
+      "resources": {
+        "money": 2,
+        "science": 5,
+        "materials": 2
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1
+        },
+        "cruiser": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1
+        }
+      },
+      "passed": false
+    }
+  },
+  "map": {
+    "hexes": {
+      "GC": {
+        "id": "GC",
+        "ring": 0,
+        "axial_q": 0,
+        "axial_r": 0,
+        "rotation": 0,
+        "wormholes": [0, 1, 2, 3, 4, 5],
+        "planets": [],
+        "pieces": {},
+        "ancients": 0,
+        "discovery_tile": "pending",
+        "revealed": true,
+        "tile_number": 1
+      },
+      "232": {
+        "id": "232",
+        "ring": 2,
+        "axial_q": 2,
+        "axial_r": -1,
+        "rotation": 0,
+        "wormholes": [0, 3],
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P1"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P1"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P1"
+          }
+        ],
+        "pieces": {
+          "P1": {
+            "ships": {
+              "interceptor": 0,
+              "cruiser": 1,
+              "dreadnought": 0,
+              "starbase": 0
+            },
+            "discs": 1,
+            "cubes": {
+              "orange": 1,
+              "pink": 1,
+              "brown": 1
+            }
+          }
+        },
+        "ancients": 0,
+        "discovery_tile": null,
+        "revealed": true,
+        "tile_number": 232
+      },
+      "220": {
+        "id": "220",
+        "ring": 2,
+        "axial_q": 1,
+        "axial_r": 1,
+        "rotation": 0,
+        "wormholes": [0, 3],
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P2"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P2"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P2"
+          }
+        ],
+        "pieces": {
+          "P2": {
+            "ships": {
+              "interceptor": 1,
+              "cruiser": 0,
+              "dreadnought": 0,
+              "starbase": 0
+            },
+            "discs": 1,
+            "cubes": {
+              "orange": 1,
+              "pink": 1,
+              "brown": 1
+            }
+          }
+        },
+        "ancients": 0,
+        "discovery_tile": null,
+        "revealed": true,
+        "tile_number": 220
+      },
+      "222": {
+        "id": "222",
+        "ring": 2,
+        "axial_q": -1,
+        "axial_r": 2,
+        "rotation": 0,
+        "wormholes": [0, 3],
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P3"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P3"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P3"
+          }
+        ],
+        "pieces": {
+          "P3": {
+            "ships": {
+              "interceptor": 2,
+              "cruiser": 0,
+              "dreadnought": 0,
+              "starbase": 0
+            },
+            "discs": 1,
+            "cubes": {
+              "orange": 1,
+              "pink": 1,
+              "brown": 1
+            }
+          }
+        },
+        "ancients": 0,
+        "discovery_tile": null,
+        "revealed": true,
+        "tile_number": 222
+      },
+      "224": {
+        "id": "224",
+        "ring": 2,
+        "axial_q": -2,
+        "axial_r": 1,
+        "rotation": 0,
+        "wormholes": [0, 3],
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P4"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P4"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P4"
+          }
+        ],
+        "pieces": {
+          "P4": {
+            "ships": {
+              "interceptor": 2,
+              "cruiser": 0,
+              "dreadnought": 0,
+              "starbase": 0
+            },
+            "discs": 1,
+            "cubes": {
+              "orange": 1,
+              "pink": 1,
+              "brown": 1
+            }
+          }
+        },
+        "ancients": 0,
+        "discovery_tile": null,
+        "revealed": true,
+        "tile_number": 224
+      }
+    }
+  },
+  "tech_display": {
+    "available": [
+      "Plasma Cannon",
+      "Fusion Drive",
+      "Advanced Mining",
+      "Positron Computer",
+      "Gauss Shield",
+      "Neutron Absorber"
+    ],
+    "tier_counts": {
+      "I": 6,
+      "II": 4,
+      "III": 2
+    }
+  },
+  "bags": {
+    "reputation": {
+      "unknown": 10
+    },
+    "discovery_I": {
+      "unknown": 8
+    },
+    "discovery_II": {
+      "unknown": 6
+    },
+    "discovery_III": {
+      "unknown": 4
+    }
+  }
+}

@@ -1,0 +1,219 @@
+# =============================================================================
+# Eclipse AI Strategy Profiles
+# =============================================================================
+# These profiles override base weights from weights.yaml to bias AI behavior
+# toward specific playstyles. Load a profile to customize AI strategy.
+#
+# Usage in Python:
+#   from eclipse_ai.value import profiles
+#   weights = profiles.load_profile("aggressive")
+#
+# Usage via CLI:
+#   --manual '{"_weights_profile": "aggressive"}'
+# =============================================================================
+
+# --- BALANCED (Default) ---
+# Uses base weights.yaml as-is
+balanced: {}
+
+# --- AGGRESSIVE PROFILE ---
+# Prioritize military strength and territorial conquest
+# Best for: Species with combat bonuses, high-conflict games
+aggressive:
+  # Boost military values
+  fleet_dreadnoughts: 0.85          # vs 0.60 base
+  dreadnought_firepower: 0.40       # vs 0.25 base
+  dreadnought_defense: 0.28         # vs 0.20 base
+  fleet_cruisers: 0.45              # vs 0.35 base
+  cruiser_firepower: 0.22           # vs 0.15 base
+  fleet_power: 0.15                 # vs 0.08 base
+  total_firepower_designs: 0.15     # vs 0.08 base
+  
+  # View contested areas as opportunities
+  contested_hexes: 0.05             # vs -0.15 base (positive = seek conflict)
+  enemy_ships_total: -0.04          # vs -0.08 base (less worried)
+  threat_ratio: -0.18               # vs -0.30 base (less risk-averse)
+  
+  # Reduce economic patience
+  science_income: 0.20              # vs 0.25 base
+  materials_income: 0.25            # vs 0.20 base (need ships!)
+  orange_net_income: 0.18           # vs 0.22 base
+  
+  # Prioritize expansion over consolidation
+  controlled_hexes: 0.40            # vs 0.30 base
+  colonized_planets: 0.35           # vs 0.40 base
+  reachable_hexes: 0.25             # vs 0.18 base (mobility matters)
+
+# --- ECONOMIC PROFILE ---
+# Prioritize resource generation and technological advancement
+# Best for: Long games, tech-focused species, low-conflict tables
+economic:
+  # Boost economic values
+  science_income: 0.38              # vs 0.25 base
+  materials_income: 0.28            # vs 0.20 base
+  money_income: 0.22                # vs 0.15 base
+  total_income: 0.10                # vs 0.05 base
+  orange_net_income: 0.35           # vs 0.22 base
+  orange_efficiency: 0.25           # vs 0.15 base
+  
+  # Territory and planets
+  colonized_planets: 0.55           # vs 0.40 base
+  pink_planets: 0.60                # vs 0.45 base (science planets)
+  orange_planets: 0.45              # vs 0.35 base
+  brown_planets: 0.48               # vs 0.38 base
+  planet_diversity: 0.45            # vs 0.30 base
+  
+  # Technology advancement
+  tech_count: 0.30                  # vs 0.20 base
+  science: 0.12                     # vs 0.08 base
+  
+  # Reduce military urgency
+  fleet_power: 0.05                 # vs 0.08 base
+  fleet_dreadnoughts: 0.45          # vs 0.60 base
+  contested_hexes: -0.25            # vs -0.15 base (avoid conflict more)
+  threat_ratio: -0.45               # vs -0.30 base (more defensive)
+
+# --- TECH RUSH PROFILE ---
+# Maximize technology acquisition speed
+# Best for: Tech victory conditions, science-generating species
+tech_rush:
+  # Maximize science generation
+  science: 0.15                     # vs 0.08 base
+  science_income: 0.45              # vs 0.25 base
+  pink_planets: 0.75                # vs 0.45 base
+  
+  # Technology advancement
+  tech_count: 0.40                  # vs 0.20 base
+  military_tech: 0.35               # vs 0.22 base
+  grid_tech: 0.28                   # vs 0.18 base
+  nano_tech: 0.28                   # vs 0.18 base
+  
+  # Strategic techs
+  has_wormhole_generator: 0.80      # vs 0.60 base
+  
+  # Balance: need some economy and defense
+  orange_net_income: 0.28           # vs 0.22 base
+  fleet_starbases: 0.50             # vs 0.40 base (defensive)
+  fleet_power: 0.05                 # vs 0.08 base (less aggressive)
+  
+  # Reduce military focus
+  fleet_dreadnoughts: 0.40          # vs 0.60 base
+  contested_hexes: -0.20            # vs -0.15 base
+
+# --- DEFENSIVE PROFILE ---
+# Prioritize secure borders and defensive positioning
+# Best for: Defensive species, early game safety, surrounded players
+defensive:
+  # Defensive structures and tech
+  fleet_starbases: 0.70             # vs 0.40 base
+  starbase_defense: 0.28            # vs 0.15 base
+  starbase_firepower: 0.18          # vs 0.12 base
+  
+  # Ship durability over firepower
+  interceptor_defense: 0.10         # vs 0.06 base
+  cruiser_defense: 0.18             # vs 0.12 base
+  dreadnought_defense: 0.30         # vs 0.20 base
+  total_defense_designs: 0.12       # vs 0.06 base
+  
+  # Secure territory
+  controlled_hexes: 0.50            # vs 0.30 base
+  influence_hexes: 0.35             # vs 0.25 base
+  
+  # Risk aversion
+  threat_ratio: -0.55               # vs -0.30 base (very risk-averse)
+  contested_hexes: -0.35            # vs -0.15 base (avoid conflict)
+  danger_max: -0.40                 # vs -0.25 base
+  danger_mean: -0.18                # vs -0.10 base
+  enemy_ships_total: -0.15          # vs -0.08 base
+  
+  # Balanced economy for sustainability
+  orange_net_income: 0.30           # vs 0.22 base
+  orange_efficiency: 0.22           # vs 0.15 base
+
+# --- EXPANSION PROFILE ---
+# Rapid territorial expansion and colonization
+# Best for: Early game, species with exploration bonuses
+expansion:
+  # Territory acquisition
+  controlled_hexes: 0.50            # vs 0.30 base
+  colonized_planets: 0.60           # vs 0.40 base
+  reachable_hexes: 0.30             # vs 0.18 base
+  
+  # Mobility for expansion
+  avg_mobility: 0.20                # vs 0.12 base
+  interceptor_mobility: 0.08        # vs 0.05 base
+  cruiser_mobility: 0.12            # vs 0.08 base
+  dreadnought_mobility: 0.15        # vs 0.10 base
+  has_wormhole_generator: 0.85      # vs 0.60 base
+  
+  # Resource diversity
+  planet_diversity: 0.45            # vs 0.30 base
+  wild_planets: 0.65                # vs 0.50 base
+  
+  # Discovery value
+  discoveries: 1.5                  # vs 1.2 base
+  monoliths: 1.8                    # vs 1.5 base
+  
+  # Less focus on military
+  fleet_power: 0.06                 # vs 0.08 base
+  fleet_dreadnoughts: 0.45          # vs 0.60 base
+
+# --- LATE GAME PROFILE ---
+# Optimize for endgame VP maximization
+# Best for: Rounds 7+, closing out victories
+late_game:
+  # VP sources
+  vp_now: 2.5                       # vs 2.0 base
+  reputation_tiles: 1.0             # vs 0.8 base
+  reputation_value: 0.6             # vs 0.4 base
+  discoveries: 1.5                  # vs 1.2 base
+  monoliths: 2.0                    # vs 1.5 base
+  ambassadors: 0.5                  # vs 0.3 base
+  
+  # Immediate impact tech
+  tech_count: 0.15                  # vs 0.20 base (less time to benefit)
+  
+  # Military for VP denial
+  fleet_power: 0.12                 # vs 0.08 base
+  contested_hexes: 0.0              # vs -0.15 base (neutral on conflict)
+  
+  # Reduce long-term investments
+  science_income: 0.18              # vs 0.25 base
+  colonized_planets: 0.30           # vs 0.40 base
+  
+  # Round urgency
+  late_game: 0.25                   # vs 0.10 base
+  round_index: 0.03                 # vs 0.01 base
+
+# --- TURTLE PROFILE ---
+# Extreme defensive play with minimal expansion
+# Best for: Difficult positions, rebuilding after setback
+turtle:
+  # Maximum defense
+  fleet_starbases: 0.80             # vs 0.40 base
+  starbase_defense: 0.35            # vs 0.15 base
+  total_defense_designs: 0.15       # vs 0.06 base
+  
+  # Economic efficiency over expansion
+  orange_net_income: 0.40           # vs 0.22 base
+  orange_efficiency: 0.35           # vs 0.15 base
+  spare_discs: 0.20                 # vs 0.12 base
+  
+  # Minimal territory
+  controlled_hexes: 0.20            # vs 0.30 base
+  colonized_planets: 0.30           # vs 0.40 base
+  influence_hexes: 0.15             # vs 0.25 base
+  
+  # Maximum risk aversion
+  threat_ratio: -0.70               # vs -0.30 base
+  contested_hexes: -0.50            # vs -0.15 base
+  danger_max: -0.50                 # vs -0.25 base
+  enemy_ships_total: -0.20          # vs -0.08 base
+  
+  # Tech for defense
+  military_tech: 0.15               # vs 0.22 base (defensive tech)
+  
+  # Avoid aggression
+  fleet_dreadnoughts: 0.35          # vs 0.60 base
+  fleet_power: 0.04                 # vs 0.08 base
+

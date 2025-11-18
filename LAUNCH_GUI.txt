@@ -1,0 +1,59 @@
+═══════════════════════════════════════════════════════════════
+  ECLIPSE AI TESTING GUI - LAUNCH INSTRUCTIONS
+═══════════════════════════════════════════════════════════════
+
+🎯 Quick Start:
+
+1. Install dependencies:
+   $ pip install -e ".[gui]"
+
+2. Launch the server:
+   $ python -m eclipse_ai.gui.run
+   
+   OR
+   
+   $ ./start_gui.sh
+
+3. Open your browser to:
+   http://localhost:8000
+
+4. Load the "orion_round1" fixture and click "Generate Predictions"
+
+═══════════════════════════════════════════════════════════════
+
+📖 Documentation:
+
+- Quick Start:  eclipse_ai/gui/QUICK_START.md
+- Usage Guide:  eclipse_ai/gui/USAGE_GUIDE.md  
+- Technical:    eclipse_ai/gui/README.md
+- Summary:      GUI_IMPLEMENTATION_COMPLETE.md
+
+═══════════════════════════════════════════════════════════════
+
+✨ Features:
+
+✓ Interactive hex map visualization
+✓ State editing (forms + JSON)
+✓ Configuration panel
+✓ Strategy profile selection
+✓ Real-time predictions
+✓ Visual overlays
+✓ Results comparison
+
+═══════════════════════════════════════════════════════════════
+
+🔧 Troubleshooting:
+
+Problem: Dependencies not installed
+Fix: pip install fastapi uvicorn[standard] jinja2 python-multipart
+
+Problem: Port 8000 in use
+Fix: Kill existing process or change port in app.py
+
+Problem: Predictions fail
+Fix: Load a fixture first, check browser console
+
+═══════════════════════════════════════════════════════════════
+
+Ready to test! 🚀
+

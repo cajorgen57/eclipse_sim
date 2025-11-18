@@ -1,0 +1,613 @@
+{
+  "round": 1,
+  "active_player": "orion",
+  "initial_resources": {
+    "money": 2,
+    "science": 1,
+    "materials": 5
+  },
+  "configuration": {
+    "simulations": 400,
+    "depth": 4,
+    "max_steps": 4,
+    "profile": "balanced"
+  },
+  "plans": [
+    {
+      "plan_number": 1,
+      "num_actions": 4,
+      "expected_value": 4.702,
+      "visits": 1,
+      "steps": [
+        {
+          "step": 1,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 2,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 3,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 4,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        }
+      ],
+      "final_resources": {
+        "money": 2,
+        "science": 1,
+        "materials": 5
+      },
+      "total_resource_delta": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "strategy_narrative": "Step 1: Explore Ring 1 sector to expand territory and discover resources\n    Step 2: Explore Ring 1 sector to expand territory and discover resources\n    Step 3: Explore Ring 1 sector to expand territory and discover resources\n    Step 4: Explore Ring 1 sector to expand territory and discover resources"
+    },
+    {
+      "plan_number": 2,
+      "num_actions": 4,
+      "expected_value": 4.702,
+      "visits": 1,
+      "steps": [
+        {
+          "step": 1,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 2,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 3,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 2,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 4,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        }
+      ],
+      "final_resources": {
+        "money": 2,
+        "science": 1,
+        "materials": 5
+      },
+      "total_resource_delta": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "strategy_narrative": "Step 1: Explore Ring 1 sector to expand territory and discover resources\n    Step 2: Explore Ring 1 sector to expand territory and discover resources\n    Step 3: Explore Ring 2 sector to expand territory and discover resources\n    Step 4: Explore Ring 1 sector to expand territory and discover resources"
+    },
+    {
+      "plan_number": 3,
+      "num_actions": 4,
+      "expected_value": 4.702,
+      "visits": 1,
+      "steps": [
+        {
+          "step": 1,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 2,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 3,
+          "action": "BUILD",
+          "payload": {
+            "hex": "230",
+            "ships": {
+              "cruiser": 1
+            }
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 4,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        }
+      ],
+      "final_resources": {
+        "money": 2,
+        "science": 1,
+        "materials": 5
+      },
+      "total_resource_delta": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "strategy_narrative": "Step 1: Explore Ring 1 sector to expand territory and discover resources\n    Step 2: Explore Ring 1 sector to expand territory and discover resources\n    Step 3: Build 1\u00d7 cruiser (Cost: 0 materials)\n    Step 4: Explore Ring 1 sector to expand territory and discover resources"
+    },
+    {
+      "plan_number": 4,
+      "num_actions": 4,
+      "expected_value": 4.702,
+      "visits": 1,
+      "steps": [
+        {
+          "step": 1,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 2,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 2,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 3,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 4,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        }
+      ],
+      "final_resources": {
+        "money": 2,
+        "science": 1,
+        "materials": 5
+      },
+      "total_resource_delta": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "strategy_narrative": "Step 1: Explore Ring 1 sector to expand territory and discover resources\n    Step 2: Explore Ring 2 sector to expand territory and discover resources\n    Step 3: Explore Ring 1 sector to expand territory and discover resources\n    Step 4: Explore Ring 1 sector to expand territory and discover resources"
+    },
+    {
+      "plan_number": 5,
+      "num_actions": 4,
+      "expected_value": 4.702,
+      "visits": 1,
+      "steps": [
+        {
+          "step": 1,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 2,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 2,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 3,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 2,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        },
+        {
+          "step": 4,
+          "action": "EXPLORE",
+          "payload": {
+            "ring": 1,
+            "draws": 1,
+            "direction": "adjacent from ring 1"
+          },
+          "resources_before": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resources_after": {
+            "money": 2,
+            "science": 1,
+            "materials": 5
+          },
+          "resource_delta": {
+            "money": 0,
+            "science": 0,
+            "materials": 0
+          },
+          "success": true
+        }
+      ],
+      "final_resources": {
+        "money": 2,
+        "science": 1,
+        "materials": 5
+      },
+      "total_resource_delta": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "strategy_narrative": "Step 1: Explore Ring 1 sector to expand territory and discover resources\n    Step 2: Explore Ring 2 sector to expand territory and discover resources\n    Step 3: Explore Ring 2 sector to expand territory and discover resources\n    Step 4: Explore Ring 1 sector to expand territory and discover resources"
+    }
+  ]
+}

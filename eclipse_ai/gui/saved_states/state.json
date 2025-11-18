@@ -1,0 +1,2708 @@
+{
+  "round": 3,
+  "active_player": "P1",
+  "phase": "ACTION",
+  "players": {
+    "P1": {
+      "player_id": "P1",
+      "color": "orange",
+      "resources": {
+        "money": 2,
+        "science": 3,
+        "materials": 3
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "cruiser": {
+          "computer": 1,
+          "shield": 0,
+          "initiative": 3,
+          "hull": 2,
+          "cannons": 1,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "dreadnought": {
+          "computer": 1,
+          "shield": 1,
+          "initiative": 2,
+          "hull": 3,
+          "cannons": 2,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "starbase": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 4,
+          "hull": 2,
+          "cannons": 2,
+          "missiles": 0,
+          "drives": 0,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        }
+      },
+      "reputation": [],
+      "diplomacy": {},
+      "ambassadors": {},
+      "has_traitor": false,
+      "alliance_id": null,
+      "alliance_tile": null,
+      "known_techs": [
+        "Starbase"
+      ],
+      "owned_tech_ids": [
+        "Starbase"
+      ],
+      "tech_count_by_category": {
+        "military": 1
+      },
+      "science": 3,
+      "influence_discs": 9,
+      "unlocked_parts": [],
+      "unlocked_structures": [
+        "starbase"
+      ],
+      "available_components": {},
+      "species_id": "terrans",
+      "species_flags": {},
+      "action_overrides": {},
+      "build_overrides": {},
+      "move_overrides": {},
+      "explore_overrides": {},
+      "cannot_build": [],
+      "vp_bonuses": {},
+      "species_pools": {},
+      "special_resources": {},
+      "economy": {
+        "orange_bank": 2,
+        "orange_income": 0,
+        "orange_upkeep_fixed": 1,
+        "action_slots_filled": 0,
+        "action_track_cum_cost": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          9,
+          12,
+          16,
+          21,
+          27
+        ]
+      },
+      "influence_track": [
+        {
+          "id": "P1-disc-1",
+          "extra": false
+        },
+        {
+          "id": "P1-disc-2",
+          "extra": false
+        },
+        {
+          "id": "P1-disc-3",
+          "extra": false
+        },
+        {
+          "id": "P1-disc-4",
+          "extra": false
+        },
+        {
+          "id": "P1-disc-5",
+          "extra": false
+        },
+        {
+          "id": "P1-disc-6",
+          "extra": false
+        },
+        {
+          "id": "P1-disc-7",
+          "extra": false
+        },
+        {
+          "id": "P1-disc-8",
+          "extra": false
+        },
+        {
+          "id": "P1-disc-9",
+          "extra": false
+        }
+      ],
+      "action_spaces": {
+        "explore": [],
+        "influence": [],
+        "research": [],
+        "upgrade": [],
+        "build": [],
+        "move": [],
+        "reaction": []
+      },
+      "colonies": {
+        "220": {
+          "orange": 1,
+          "pink": 1,
+          "brown": 1
+        }
+      },
+      "population": {
+        "orange": 0,
+        "pink": 0,
+        "brown": 0
+      },
+      "colony_ships": {
+        "face_up": {
+          "orange": 1,
+          "pink": 1,
+          "brown": 1,
+          "wild": 0
+        },
+        "face_down": {
+          "orange": 0,
+          "pink": 0,
+          "brown": 0,
+          "wild": 0
+        }
+      },
+      "passed": false,
+      "collapsed": false,
+      "has_wormhole_generator": false,
+      "population_tracks": {
+        "money": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "science": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "materials": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        }
+      },
+      "influence_track_detailed": {
+        "upkeep_values": [
+          0,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          14,
+          16,
+          18
+        ],
+        "disc_positions": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "discs_on_hexes": [],
+      "discs_on_actions": {},
+      "cubes_on_hexes": {}
+    },
+    "P2": {
+      "player_id": "P2",
+      "color": "blue",
+      "resources": {
+        "money": 2,
+        "science": 3,
+        "materials": 3
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "cruiser": {
+          "computer": 1,
+          "shield": 0,
+          "initiative": 3,
+          "hull": 2,
+          "cannons": 1,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "dreadnought": {
+          "computer": 1,
+          "shield": 1,
+          "initiative": 2,
+          "hull": 3,
+          "cannons": 2,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "starbase": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 4,
+          "hull": 2,
+          "cannons": 2,
+          "missiles": 0,
+          "drives": 0,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        }
+      },
+      "reputation": [],
+      "diplomacy": {},
+      "ambassadors": {},
+      "has_traitor": false,
+      "alliance_id": null,
+      "alliance_tile": null,
+      "known_techs": [
+        "Starbase"
+      ],
+      "owned_tech_ids": [
+        "Starbase"
+      ],
+      "tech_count_by_category": {
+        "military": 1
+      },
+      "science": 3,
+      "influence_discs": 9,
+      "unlocked_parts": [],
+      "unlocked_structures": [
+        "starbase"
+      ],
+      "available_components": {},
+      "species_id": "terrans",
+      "species_flags": {},
+      "action_overrides": {},
+      "build_overrides": {},
+      "move_overrides": {},
+      "explore_overrides": {},
+      "cannot_build": [],
+      "vp_bonuses": {},
+      "species_pools": {},
+      "special_resources": {},
+      "economy": {
+        "orange_bank": 2,
+        "orange_income": 0,
+        "orange_upkeep_fixed": 1,
+        "action_slots_filled": 0,
+        "action_track_cum_cost": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          9,
+          12,
+          16,
+          21,
+          27
+        ]
+      },
+      "influence_track": [
+        {
+          "id": "P2-disc-1",
+          "extra": false
+        },
+        {
+          "id": "P2-disc-2",
+          "extra": false
+        },
+        {
+          "id": "P2-disc-3",
+          "extra": false
+        },
+        {
+          "id": "P2-disc-4",
+          "extra": false
+        },
+        {
+          "id": "P2-disc-5",
+          "extra": false
+        },
+        {
+          "id": "P2-disc-6",
+          "extra": false
+        },
+        {
+          "id": "P2-disc-7",
+          "extra": false
+        },
+        {
+          "id": "P2-disc-8",
+          "extra": false
+        },
+        {
+          "id": "P2-disc-9",
+          "extra": false
+        }
+      ],
+      "action_spaces": {
+        "explore": [],
+        "influence": [],
+        "research": [],
+        "upgrade": [],
+        "build": [],
+        "move": [],
+        "reaction": []
+      },
+      "colonies": {
+        "221": {
+          "orange": 1,
+          "pink": 1,
+          "brown": 1
+        }
+      },
+      "population": {
+        "orange": 0,
+        "pink": 0,
+        "brown": 0
+      },
+      "colony_ships": {
+        "face_up": {
+          "orange": 1,
+          "pink": 1,
+          "brown": 1,
+          "wild": 0
+        },
+        "face_down": {
+          "orange": 0,
+          "pink": 0,
+          "brown": 0,
+          "wild": 0
+        }
+      },
+      "passed": false,
+      "collapsed": false,
+      "has_wormhole_generator": false,
+      "population_tracks": {
+        "money": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "science": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "materials": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        }
+      },
+      "influence_track_detailed": {
+        "upkeep_values": [
+          0,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          14,
+          16,
+          18
+        ],
+        "disc_positions": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "discs_on_hexes": [],
+      "discs_on_actions": {},
+      "cubes_on_hexes": {}
+    },
+    "P3": {
+      "player_id": "P3",
+      "color": "teal",
+      "resources": {
+        "money": 2,
+        "science": 3,
+        "materials": 3
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "cruiser": {
+          "computer": 1,
+          "shield": 0,
+          "initiative": 3,
+          "hull": 2,
+          "cannons": 1,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "dreadnought": {
+          "computer": 1,
+          "shield": 1,
+          "initiative": 2,
+          "hull": 3,
+          "cannons": 2,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "starbase": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 4,
+          "hull": 2,
+          "cannons": 2,
+          "missiles": 0,
+          "drives": 0,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        }
+      },
+      "reputation": [],
+      "diplomacy": {},
+      "ambassadors": {},
+      "has_traitor": false,
+      "alliance_id": null,
+      "alliance_tile": null,
+      "known_techs": [
+        "Starbase"
+      ],
+      "owned_tech_ids": [
+        "Starbase"
+      ],
+      "tech_count_by_category": {
+        "military": 1
+      },
+      "science": 3,
+      "influence_discs": 9,
+      "unlocked_parts": [],
+      "unlocked_structures": [
+        "starbase"
+      ],
+      "available_components": {},
+      "species_id": "terrans",
+      "species_flags": {},
+      "action_overrides": {},
+      "build_overrides": {},
+      "move_overrides": {},
+      "explore_overrides": {},
+      "cannot_build": [],
+      "vp_bonuses": {},
+      "species_pools": {},
+      "special_resources": {},
+      "economy": {
+        "orange_bank": 2,
+        "orange_income": 0,
+        "orange_upkeep_fixed": 1,
+        "action_slots_filled": 0,
+        "action_track_cum_cost": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          9,
+          12,
+          16,
+          21,
+          27
+        ]
+      },
+      "influence_track": [
+        {
+          "id": "P3-disc-1",
+          "extra": false
+        },
+        {
+          "id": "P3-disc-2",
+          "extra": false
+        },
+        {
+          "id": "P3-disc-3",
+          "extra": false
+        },
+        {
+          "id": "P3-disc-4",
+          "extra": false
+        },
+        {
+          "id": "P3-disc-5",
+          "extra": false
+        },
+        {
+          "id": "P3-disc-6",
+          "extra": false
+        },
+        {
+          "id": "P3-disc-7",
+          "extra": false
+        },
+        {
+          "id": "P3-disc-8",
+          "extra": false
+        },
+        {
+          "id": "P3-disc-9",
+          "extra": false
+        }
+      ],
+      "action_spaces": {
+        "explore": [],
+        "influence": [],
+        "research": [],
+        "upgrade": [],
+        "build": [],
+        "move": [],
+        "reaction": []
+      },
+      "colonies": {
+        "223": {
+          "orange": 1,
+          "pink": 1,
+          "brown": 1
+        }
+      },
+      "population": {
+        "orange": 0,
+        "pink": 0,
+        "brown": 0
+      },
+      "colony_ships": {
+        "face_up": {
+          "orange": 1,
+          "pink": 1,
+          "brown": 1,
+          "wild": 0
+        },
+        "face_down": {
+          "orange": 0,
+          "pink": 0,
+          "brown": 0,
+          "wild": 0
+        }
+      },
+      "passed": false,
+      "collapsed": false,
+      "has_wormhole_generator": false,
+      "population_tracks": {
+        "money": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "science": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "materials": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        }
+      },
+      "influence_track_detailed": {
+        "upkeep_values": [
+          0,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          14,
+          16,
+          18
+        ],
+        "disc_positions": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "discs_on_hexes": [],
+      "discs_on_actions": {},
+      "cubes_on_hexes": {}
+    },
+    "P4": {
+      "player_id": "P4",
+      "color": "green",
+      "resources": {
+        "money": 2,
+        "science": 3,
+        "materials": 3
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "cruiser": {
+          "computer": 1,
+          "shield": 0,
+          "initiative": 3,
+          "hull": 2,
+          "cannons": 1,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "dreadnought": {
+          "computer": 1,
+          "shield": 1,
+          "initiative": 2,
+          "hull": 3,
+          "cannons": 2,
+          "missiles": 0,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "starbase": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 4,
+          "hull": 2,
+          "cannons": 2,
+          "missiles": 0,
+          "drives": 0,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        }
+      },
+      "reputation": [],
+      "diplomacy": {},
+      "ambassadors": {},
+      "has_traitor": false,
+      "alliance_id": null,
+      "alliance_tile": null,
+      "known_techs": [
+        "Starbase"
+      ],
+      "owned_tech_ids": [
+        "Starbase"
+      ],
+      "tech_count_by_category": {
+        "military": 1
+      },
+      "science": 3,
+      "influence_discs": 9,
+      "unlocked_parts": [],
+      "unlocked_structures": [
+        "starbase"
+      ],
+      "available_components": {},
+      "species_id": "terrans",
+      "species_flags": {},
+      "action_overrides": {},
+      "build_overrides": {},
+      "move_overrides": {},
+      "explore_overrides": {},
+      "cannot_build": [],
+      "vp_bonuses": {},
+      "species_pools": {},
+      "special_resources": {},
+      "economy": {
+        "orange_bank": 2,
+        "orange_income": 0,
+        "orange_upkeep_fixed": 1,
+        "action_slots_filled": 0,
+        "action_track_cum_cost": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          9,
+          12,
+          16,
+          21,
+          27
+        ]
+      },
+      "influence_track": [
+        {
+          "id": "P4-disc-1",
+          "extra": false
+        },
+        {
+          "id": "P4-disc-2",
+          "extra": false
+        },
+        {
+          "id": "P4-disc-3",
+          "extra": false
+        },
+        {
+          "id": "P4-disc-4",
+          "extra": false
+        },
+        {
+          "id": "P4-disc-5",
+          "extra": false
+        },
+        {
+          "id": "P4-disc-6",
+          "extra": false
+        },
+        {
+          "id": "P4-disc-7",
+          "extra": false
+        },
+        {
+          "id": "P4-disc-8",
+          "extra": false
+        },
+        {
+          "id": "P4-disc-9",
+          "extra": false
+        }
+      ],
+      "action_spaces": {
+        "explore": [],
+        "influence": [],
+        "research": [],
+        "upgrade": [],
+        "build": [],
+        "move": [],
+        "reaction": []
+      },
+      "colonies": {
+        "225": {
+          "orange": 1,
+          "pink": 1,
+          "brown": 1
+        }
+      },
+      "population": {
+        "orange": 0,
+        "pink": 0,
+        "brown": 0
+      },
+      "colony_ships": {
+        "face_up": {
+          "orange": 1,
+          "pink": 1,
+          "brown": 1,
+          "wild": 0
+        },
+        "face_down": {
+          "orange": 0,
+          "pink": 0,
+          "brown": 0,
+          "wild": 0
+        }
+      },
+      "passed": false,
+      "collapsed": false,
+      "has_wormhole_generator": false,
+      "population_tracks": {
+        "money": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "science": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        },
+        "materials": {
+          "track_values": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            7,
+            9,
+            11,
+            13
+          ],
+          "cube_positions": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+          ]
+        }
+      },
+      "influence_track_detailed": {
+        "upkeep_values": [
+          0,
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          14,
+          16,
+          18
+        ],
+        "disc_positions": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "discs_on_hexes": [],
+      "discs_on_actions": {},
+      "cubes_on_hexes": {}
+    }
+  },
+  "map": {
+    "hexes": {
+      "220": {
+        "id": "220",
+        "ring": 2,
+        "wormholes": [
+          0,
+          3
+        ],
+        "neighbors": {},
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P1"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P1"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P1"
+          }
+        ],
+        "pieces": {
+          "P1": {
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0,
+            "discs": 1,
+            "cubes": {
+              "orange": 1,
+              "pink": 1,
+              "brown": 1
+            },
+            "discovery": 0
+          }
+        },
+        "ancients": 0,
+        "monolith": false,
+        "orbital": false,
+        "anomaly": false,
+        "explored": true,
+        "has_warp_portal": false,
+        "has_deep_warp_portal": false,
+        "is_warp_nexus": false,
+        "has_gcds": false,
+        "revealed": true,
+        "axial_q": 2,
+        "axial_r": -1,
+        "rotation": 0,
+        "tile_number": 220,
+        "discovery_tile": null
+      },
+      "221": {
+        "id": "221",
+        "ring": 2,
+        "wormholes": [
+          0,
+          3
+        ],
+        "neighbors": {},
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P2"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P2"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P2"
+          }
+        ],
+        "pieces": {
+          "P2": {
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0,
+            "discs": 1,
+            "cubes": {
+              "orange": 1,
+              "pink": 1,
+              "brown": 1
+            },
+            "discovery": 0
+          }
+        },
+        "ancients": 0,
+        "monolith": false,
+        "orbital": false,
+        "anomaly": false,
+        "explored": true,
+        "has_warp_portal": false,
+        "has_deep_warp_portal": false,
+        "is_warp_nexus": false,
+        "has_gcds": false,
+        "revealed": true,
+        "axial_q": 1,
+        "axial_r": 1,
+        "rotation": 0,
+        "tile_number": 221,
+        "discovery_tile": null
+      },
+      "223": {
+        "id": "223",
+        "ring": 2,
+        "wormholes": [
+          0,
+          3
+        ],
+        "neighbors": {},
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P3"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P3"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P3"
+          }
+        ],
+        "pieces": {
+          "P3": {
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0,
+            "discs": 1,
+            "cubes": {
+              "orange": 1,
+              "pink": 1,
+              "brown": 1
+            },
+            "discovery": 0
+          }
+        },
+        "ancients": 0,
+        "monolith": false,
+        "orbital": false,
+        "anomaly": false,
+        "explored": true,
+        "has_warp_portal": false,
+        "has_deep_warp_portal": false,
+        "is_warp_nexus": false,
+        "has_gcds": false,
+        "revealed": true,
+        "axial_q": -1,
+        "axial_r": 2,
+        "rotation": 0,
+        "tile_number": 223,
+        "discovery_tile": null
+      },
+      "225": {
+        "id": "225",
+        "ring": 2,
+        "wormholes": [
+          0,
+          3
+        ],
+        "neighbors": {},
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P4"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P4"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P4"
+          }
+        ],
+        "pieces": {
+          "P4": {
+            "ships": {
+              "interceptor": 1
+            },
+            "starbase": 0,
+            "discs": 1,
+            "cubes": {
+              "orange": 1,
+              "pink": 1,
+              "brown": 1
+            },
+            "discovery": 0
+          }
+        },
+        "ancients": 0,
+        "monolith": false,
+        "orbital": false,
+        "anomaly": false,
+        "explored": true,
+        "has_warp_portal": false,
+        "has_deep_warp_portal": false,
+        "is_warp_nexus": false,
+        "has_gcds": false,
+        "revealed": true,
+        "axial_q": -2,
+        "axial_r": 1,
+        "rotation": 0,
+        "tile_number": 225,
+        "discovery_tile": null
+      },
+      "GC": {
+        "id": "GC",
+        "ring": 0,
+        "wormholes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "neighbors": {},
+        "planets": [],
+        "pieces": {},
+        "ancients": 0,
+        "monolith": false,
+        "orbital": false,
+        "anomaly": false,
+        "explored": true,
+        "has_warp_portal": false,
+        "has_deep_warp_portal": false,
+        "is_warp_nexus": false,
+        "has_gcds": true,
+        "revealed": true,
+        "axial_q": 0,
+        "axial_r": 0,
+        "rotation": 0,
+        "tile_number": 1,
+        "discovery_tile": "pending"
+      }
+    },
+    "adjacency": {}
+  },
+  "tech_display": {
+    "available": [],
+    "track": {
+      "grid": [],
+      "nano": [],
+      "qunatum": []
+    }
+  },
+  "exploration_tile_bags": {
+    "R3": [
+      "308",
+      "323",
+      "309",
+      "395",
+      "398",
+      "316",
+      "381",
+      "396",
+      "304",
+      "305",
+      "312",
+      "313",
+      "393",
+      "319"
+    ]
+  },
+  "bags": {
+    "R1": {
+      "unknown": 11
+    },
+    "R2": {
+      "unknown": 13
+    },
+    "R3": {
+      "unknown": 14
+    }
+  },
+  "tech_bags": {
+    "I": [],
+    "II": [],
+    "III": [],
+    "Rare": []
+  },
+  "market": [],
+  "tech_definitions": {
+    "neutron_bombs": {
+      "id": "neutron_bombs",
+      "name": "Neutron Bombs",
+      "category": "military",
+      "base_cost": 2,
+      "is_rare": false,
+      "cost_range": [
+        2,
+        2
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Neutron Bombs": {
+      "id": "neutron_bombs",
+      "name": "Neutron Bombs",
+      "category": "military",
+      "base_cost": 2,
+      "is_rare": false,
+      "cost_range": [
+        2,
+        2
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "starbase": {
+      "id": "starbase",
+      "name": "Starbase",
+      "category": "military",
+      "base_cost": 3,
+      "is_rare": false,
+      "cost_range": [
+        3,
+        4
+      ],
+      "grants_parts": [],
+      "grants_structures": [
+        "starbase"
+      ],
+      "immediate_effect": null
+    },
+    "Starbase": {
+      "id": "starbase",
+      "name": "Starbase",
+      "category": "military",
+      "base_cost": 3,
+      "is_rare": false,
+      "cost_range": [
+        3,
+        4
+      ],
+      "grants_parts": [],
+      "grants_structures": [
+        "starbase"
+      ],
+      "immediate_effect": null
+    },
+    "plasma_cannon": {
+      "id": "plasma_cannon",
+      "name": "Plasma Cannon",
+      "category": "military",
+      "base_cost": 4,
+      "is_rare": false,
+      "cost_range": [
+        4,
+        6
+      ],
+      "grants_parts": [
+        "plasma_cannon"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Plasma Cannon": {
+      "id": "plasma_cannon",
+      "name": "Plasma Cannon",
+      "category": "military",
+      "base_cost": 4,
+      "is_rare": false,
+      "cost_range": [
+        4,
+        6
+      ],
+      "grants_parts": [
+        "plasma_cannon"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "phase_shield": {
+      "id": "phase_shield",
+      "name": "Phase Shield",
+      "category": "military",
+      "base_cost": 5,
+      "is_rare": false,
+      "cost_range": [
+        5,
+        8
+      ],
+      "grants_parts": [
+        "phase_shield"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Phase Shield": {
+      "id": "phase_shield",
+      "name": "Phase Shield",
+      "category": "military",
+      "base_cost": 5,
+      "is_rare": false,
+      "cost_range": [
+        5,
+        8
+      ],
+      "grants_parts": [
+        "phase_shield"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "advanced_mining": {
+      "id": "advanced_mining",
+      "name": "Advanced Mining",
+      "category": "military",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        10
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "advanced_mining": true
+      }
+    },
+    "Advanced Mining": {
+      "id": "advanced_mining",
+      "name": "Advanced Mining",
+      "category": "military",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        10
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "advanced_mining": true
+      }
+    },
+    "tachyon_source": {
+      "id": "tachyon_source",
+      "name": "Tachyon Source",
+      "category": "military",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        12
+      ],
+      "grants_parts": [
+        "tachyon_source"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Tachyon Source": {
+      "id": "tachyon_source",
+      "name": "Tachyon Source",
+      "category": "military",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        12
+      ],
+      "grants_parts": [
+        "tachyon_source"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "gluon_computer": {
+      "id": "gluon_computer",
+      "name": "Gluon Computer",
+      "category": "military",
+      "base_cost": 7,
+      "is_rare": false,
+      "cost_range": [
+        7,
+        14
+      ],
+      "grants_parts": [
+        "gluon_computer"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Gluon Computer": {
+      "id": "gluon_computer",
+      "name": "Gluon Computer",
+      "category": "military",
+      "base_cost": 7,
+      "is_rare": false,
+      "cost_range": [
+        7,
+        14
+      ],
+      "grants_parts": [
+        "gluon_computer"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "plasma_missile": {
+      "id": "plasma_missile",
+      "name": "Plasma Missile",
+      "category": "military",
+      "base_cost": 8,
+      "is_rare": false,
+      "cost_range": [
+        8,
+        16
+      ],
+      "grants_parts": [
+        "plasma_missile"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Plasma Missile": {
+      "id": "plasma_missile",
+      "name": "Plasma Missile",
+      "category": "military",
+      "base_cost": 8,
+      "is_rare": false,
+      "cost_range": [
+        8,
+        16
+      ],
+      "grants_parts": [
+        "plasma_missile"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "gauss_shield": {
+      "id": "gauss_shield",
+      "name": "Gauss Shield",
+      "category": "grid",
+      "base_cost": 2,
+      "is_rare": false,
+      "cost_range": [
+        2,
+        2
+      ],
+      "grants_parts": [
+        "gauss_shield"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Gauss Shield": {
+      "id": "gauss_shield",
+      "name": "Gauss Shield",
+      "category": "grid",
+      "base_cost": 2,
+      "is_rare": false,
+      "cost_range": [
+        2,
+        2
+      ],
+      "grants_parts": [
+        "gauss_shield"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "fusion_source": {
+      "id": "fusion_source",
+      "name": "Fusion Source",
+      "category": "grid",
+      "base_cost": 3,
+      "is_rare": false,
+      "cost_range": [
+        3,
+        4
+      ],
+      "grants_parts": [
+        "fusion_source"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Fusion Source": {
+      "id": "fusion_source",
+      "name": "Fusion Source",
+      "category": "grid",
+      "base_cost": 3,
+      "is_rare": false,
+      "cost_range": [
+        3,
+        4
+      ],
+      "grants_parts": [
+        "fusion_source"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "improved_hull": {
+      "id": "improved_hull",
+      "name": "Improved Hull",
+      "category": "grid",
+      "base_cost": 4,
+      "is_rare": false,
+      "cost_range": [
+        4,
+        6
+      ],
+      "grants_parts": [
+        "improved_hull"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Improved Hull": {
+      "id": "improved_hull",
+      "name": "Improved Hull",
+      "category": "grid",
+      "base_cost": 4,
+      "is_rare": false,
+      "cost_range": [
+        4,
+        6
+      ],
+      "grants_parts": [
+        "improved_hull"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "positron_computer": {
+      "id": "positron_computer",
+      "name": "Positron Computer",
+      "category": "grid",
+      "base_cost": 5,
+      "is_rare": false,
+      "cost_range": [
+        5,
+        8
+      ],
+      "grants_parts": [
+        "positron_computer"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Positron Computer": {
+      "id": "positron_computer",
+      "name": "Positron Computer",
+      "category": "grid",
+      "base_cost": 5,
+      "is_rare": false,
+      "cost_range": [
+        5,
+        8
+      ],
+      "grants_parts": [
+        "positron_computer"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "advanced_economy": {
+      "id": "advanced_economy",
+      "name": "Advanced Economy",
+      "category": "grid",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        10
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "advanced_economy": true
+      }
+    },
+    "Advanced Economy": {
+      "id": "advanced_economy",
+      "name": "Advanced Economy",
+      "category": "grid",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        10
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "advanced_economy": true
+      }
+    },
+    "tachyon_drive": {
+      "id": "tachyon_drive",
+      "name": "Tachyon Drive",
+      "category": "grid",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        12
+      ],
+      "grants_parts": [
+        "tachyon_drive"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Tachyon Drive": {
+      "id": "tachyon_drive",
+      "name": "Tachyon Drive",
+      "category": "grid",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        12
+      ],
+      "grants_parts": [
+        "tachyon_drive"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "antimatter_cannon": {
+      "id": "antimatter_cannon",
+      "name": "Antimatter Cannon",
+      "category": "grid",
+      "base_cost": 7,
+      "is_rare": false,
+      "cost_range": [
+        7,
+        14
+      ],
+      "grants_parts": [
+        "antimatter_cannon"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Antimatter Cannon": {
+      "id": "antimatter_cannon",
+      "name": "Antimatter Cannon",
+      "category": "grid",
+      "base_cost": 7,
+      "is_rare": false,
+      "cost_range": [
+        7,
+        14
+      ],
+      "grants_parts": [
+        "antimatter_cannon"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "quantum_grid": {
+      "id": "quantum_grid",
+      "name": "Quantum Grid",
+      "category": "grid",
+      "base_cost": 8,
+      "is_rare": false,
+      "cost_range": [
+        8,
+        16
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "influence_disk": 2
+      }
+    },
+    "Quantum Grid": {
+      "id": "quantum_grid",
+      "name": "Quantum Grid",
+      "category": "grid",
+      "base_cost": 8,
+      "is_rare": false,
+      "cost_range": [
+        8,
+        16
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "influence_disk": 2
+      }
+    },
+    "nanorobots": {
+      "id": "nanorobots",
+      "name": "Nanorobots",
+      "category": "nano",
+      "base_cost": 2,
+      "is_rare": false,
+      "cost_range": [
+        2,
+        2
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "nanorobots": true
+      }
+    },
+    "Nanorobots": {
+      "id": "nanorobots",
+      "name": "Nanorobots",
+      "category": "nano",
+      "base_cost": 2,
+      "is_rare": false,
+      "cost_range": [
+        2,
+        2
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "nanorobots": true
+      }
+    },
+    "fusion_drive": {
+      "id": "fusion_drive",
+      "name": "Fusion Drive",
+      "category": "nano",
+      "base_cost": 3,
+      "is_rare": false,
+      "cost_range": [
+        3,
+        4
+      ],
+      "grants_parts": [
+        "fusion_drive"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Fusion Drive": {
+      "id": "fusion_drive",
+      "name": "Fusion Drive",
+      "category": "nano",
+      "base_cost": 3,
+      "is_rare": false,
+      "cost_range": [
+        3,
+        4
+      ],
+      "grants_parts": [
+        "fusion_drive"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "orbital": {
+      "id": "orbital",
+      "name": "Orbital",
+      "category": "nano",
+      "base_cost": 4,
+      "is_rare": false,
+      "cost_range": [
+        4,
+        6
+      ],
+      "grants_parts": [],
+      "grants_structures": [
+        "orbital"
+      ],
+      "immediate_effect": null
+    },
+    "Orbital": {
+      "id": "orbital",
+      "name": "Orbital",
+      "category": "nano",
+      "base_cost": 4,
+      "is_rare": false,
+      "cost_range": [
+        4,
+        6
+      ],
+      "grants_parts": [],
+      "grants_structures": [
+        "orbital"
+      ],
+      "immediate_effect": null
+    },
+    "advanced_robotics": {
+      "id": "advanced_robotics",
+      "name": "Advanced Robotics",
+      "category": "nano",
+      "base_cost": 5,
+      "is_rare": false,
+      "cost_range": [
+        5,
+        8
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "influence_disk": 1
+      }
+    },
+    "Advanced Robotics": {
+      "id": "advanced_robotics",
+      "name": "Advanced Robotics",
+      "category": "nano",
+      "base_cost": 5,
+      "is_rare": false,
+      "cost_range": [
+        5,
+        8
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "influence_disk": 1
+      }
+    },
+    "advanced_labs": {
+      "id": "advanced_labs",
+      "name": "Advanced Labs",
+      "category": "nano",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        10
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "advanced_labs": true
+      }
+    },
+    "Advanced Labs": {
+      "id": "advanced_labs",
+      "name": "Advanced Labs",
+      "category": "nano",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        10
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "advanced_labs": true
+      }
+    },
+    "monolith": {
+      "id": "monolith",
+      "name": "Monolith",
+      "category": "nano",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        12
+      ],
+      "grants_parts": [],
+      "grants_structures": [
+        "monolith"
+      ],
+      "immediate_effect": null
+    },
+    "Monolith": {
+      "id": "monolith",
+      "name": "Monolith",
+      "category": "nano",
+      "base_cost": 6,
+      "is_rare": false,
+      "cost_range": [
+        6,
+        12
+      ],
+      "grants_parts": [],
+      "grants_structures": [
+        "monolith"
+      ],
+      "immediate_effect": null
+    },
+    "wormhole_generator": {
+      "id": "wormhole_generator",
+      "name": "Wormhole Generator",
+      "category": "nano",
+      "base_cost": 7,
+      "is_rare": false,
+      "cost_range": [
+        7,
+        14
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "wormhole_generator": true
+      }
+    },
+    "Wormhole Generator": {
+      "id": "wormhole_generator",
+      "name": "Wormhole Generator",
+      "category": "nano",
+      "base_cost": 7,
+      "is_rare": false,
+      "cost_range": [
+        7,
+        14
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "wormhole_generator": true
+      }
+    },
+    "artifact_key": {
+      "id": "artifact_key",
+      "name": "Artifact Key",
+      "category": "nano",
+      "base_cost": 8,
+      "is_rare": false,
+      "cost_range": [
+        8,
+        16
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "artifact_key": true
+      }
+    },
+    "Artifact Key": {
+      "id": "artifact_key",
+      "name": "Artifact Key",
+      "category": "nano",
+      "base_cost": 8,
+      "is_rare": false,
+      "cost_range": [
+        8,
+        16
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "artifact_key": true
+      }
+    },
+    "absorption_shield": {
+      "id": "absorption_shield",
+      "name": "Absorption Shield",
+      "category": "rare",
+      "base_cost": 6,
+      "is_rare": true,
+      "cost_range": [
+        6,
+        7
+      ],
+      "grants_parts": [
+        "absorption_shield"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Absorption Shield": {
+      "id": "absorption_shield",
+      "name": "Absorption Shield",
+      "category": "rare",
+      "base_cost": 6,
+      "is_rare": true,
+      "cost_range": [
+        6,
+        7
+      ],
+      "grants_parts": [
+        "absorption_shield"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "antimatter_splitter": {
+      "id": "antimatter_splitter",
+      "name": "Antimatter Splitter",
+      "category": "rare",
+      "base_cost": 5,
+      "is_rare": true,
+      "cost_range": [
+        5,
+        5
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "antimatter_splitter": true
+      }
+    },
+    "Antimatter Splitter": {
+      "id": "antimatter_splitter",
+      "name": "Antimatter Splitter",
+      "category": "rare",
+      "base_cost": 5,
+      "is_rare": true,
+      "cost_range": [
+        5,
+        5
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "antimatter_splitter": true
+      }
+    },
+    "cloaking_device": {
+      "id": "cloaking_device",
+      "name": "Cloaking Device",
+      "category": "rare",
+      "base_cost": 7,
+      "is_rare": true,
+      "cost_range": [
+        6,
+        7
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Cloaking Device": {
+      "id": "cloaking_device",
+      "name": "Cloaking Device",
+      "category": "rare",
+      "base_cost": 7,
+      "is_rare": true,
+      "cost_range": [
+        6,
+        7
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "conifold_field": {
+      "id": "conifold_field",
+      "name": "Conifold Field",
+      "category": "rare",
+      "base_cost": 5,
+      "is_rare": true,
+      "cost_range": [
+        5,
+        5
+      ],
+      "grants_parts": [
+        "conifold_field"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Conifold Field": {
+      "id": "conifold_field",
+      "name": "Conifold Field",
+      "category": "rare",
+      "base_cost": 5,
+      "is_rare": true,
+      "cost_range": [
+        5,
+        5
+      ],
+      "grants_parts": [
+        "conifold_field"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "flux_missile": {
+      "id": "flux_missile",
+      "name": "Flux Missile",
+      "category": "rare",
+      "base_cost": 8,
+      "is_rare": true,
+      "cost_range": [
+        8,
+        11
+      ],
+      "grants_parts": [
+        "flux_missile"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Flux Missile": {
+      "id": "flux_missile",
+      "name": "Flux Missile",
+      "category": "rare",
+      "base_cost": 8,
+      "is_rare": true,
+      "cost_range": [
+        8,
+        11
+      ],
+      "grants_parts": [
+        "flux_missile"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "improved_logistics": {
+      "id": "improved_logistics",
+      "name": "Improved Logistics",
+      "category": "rare",
+      "base_cost": 6,
+      "is_rare": true,
+      "cost_range": [
+        6,
+        7
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "move_action": 1
+      }
+    },
+    "Improved Logistics": {
+      "id": "improved_logistics",
+      "name": "Improved Logistics",
+      "category": "rare",
+      "base_cost": 6,
+      "is_rare": true,
+      "cost_range": [
+        6,
+        7
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "move_action": 1
+      }
+    },
+    "metasynthesis": {
+      "id": "metasynthesis",
+      "name": "Metasynthesis",
+      "category": "rare",
+      "base_cost": 11,
+      "is_rare": true,
+      "cost_range": [
+        11,
+        17
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "advanced_labs": true,
+        "advanced_materials": true,
+        "advanced_economy": true
+      }
+    },
+    "Metasynthesis": {
+      "id": "metasynthesis",
+      "name": "Metasynthesis",
+      "category": "rare",
+      "base_cost": 11,
+      "is_rare": true,
+      "cost_range": [
+        11,
+        17
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "advanced_labs": true,
+        "advanced_materials": true,
+        "advanced_economy": true
+      }
+    },
+    "neutron_absorber": {
+      "id": "neutron_absorber",
+      "name": "Neutron Absorber",
+      "category": "rare",
+      "base_cost": 5,
+      "is_rare": true,
+      "cost_range": [
+        5,
+        5
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "neutron_absorber": true
+      }
+    },
+    "Neutron Absorber": {
+      "id": "neutron_absorber",
+      "name": "Neutron Absorber",
+      "category": "rare",
+      "base_cost": 5,
+      "is_rare": true,
+      "cost_range": [
+        5,
+        5
+      ],
+      "grants_parts": [],
+      "grants_structures": [],
+      "immediate_effect": {
+        "neutron_absorber": true
+      }
+    },
+    "rift_cannon": {
+      "id": "rift_cannon",
+      "name": "Rift Cannon",
+      "category": "rare",
+      "base_cost": 7,
+      "is_rare": true,
+      "cost_range": [
+        7,
+        9
+      ],
+      "grants_parts": [
+        "rift_cannon"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Rift Cannon": {
+      "id": "rift_cannon",
+      "name": "Rift Cannon",
+      "category": "rare",
+      "base_cost": 7,
+      "is_rare": true,
+      "cost_range": [
+        7,
+        9
+      ],
+      "grants_parts": [
+        "rift_cannon"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "sentient_hull": {
+      "id": "sentient_hull",
+      "name": "Sentient Hull",
+      "category": "rare",
+      "base_cost": 5,
+      "is_rare": true,
+      "cost_range": [
+        5,
+        5
+      ],
+      "grants_parts": [
+        "sentient_hull"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Sentient Hull": {
+      "id": "sentient_hull",
+      "name": "Sentient Hull",
+      "category": "rare",
+      "base_cost": 5,
+      "is_rare": true,
+      "cost_range": [
+        5,
+        5
+      ],
+      "grants_parts": [
+        "sentient_hull"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "soliton_cannon": {
+      "id": "soliton_cannon",
+      "name": "Soliton Cannon",
+      "category": "rare",
+      "base_cost": 7,
+      "is_rare": true,
+      "cost_range": [
+        7,
+        9
+      ],
+      "grants_parts": [
+        "soliton_cannon"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Soliton Cannon": {
+      "id": "soliton_cannon",
+      "name": "Soliton Cannon",
+      "category": "rare",
+      "base_cost": 7,
+      "is_rare": true,
+      "cost_range": [
+        7,
+        9
+      ],
+      "grants_parts": [
+        "soliton_cannon"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "transition_drive": {
+      "id": "transition_drive",
+      "name": "Transition Drive",
+      "category": "rare",
+      "base_cost": 7,
+      "is_rare": true,
+      "cost_range": [
+        7,
+        9
+      ],
+      "grants_parts": [
+        "transition_drive"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Transition Drive": {
+      "id": "transition_drive",
+      "name": "Transition Drive",
+      "category": "rare",
+      "base_cost": 7,
+      "is_rare": true,
+      "cost_range": [
+        7,
+        9
+      ],
+      "grants_parts": [
+        "transition_drive"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "zero_point_source": {
+      "id": "zero_point_source",
+      "name": "Zero-Point Source",
+      "category": "rare",
+      "base_cost": 10,
+      "is_rare": true,
+      "cost_range": [
+        10,
+        15
+      ],
+      "grants_parts": [
+        "zero_point_source"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    },
+    "Zero-Point Source": {
+      "id": "zero_point_source",
+      "name": "Zero-Point Source",
+      "category": "rare",
+      "base_cost": 10,
+      "is_rare": true,
+      "cost_range": [
+        10,
+        15
+      ],
+      "grants_parts": [
+        "zero_point_source"
+      ],
+      "grants_structures": [],
+      "immediate_effect": null
+    }
+  },
+  "starting_player": "P1",
+  "pending_starting_player": null,
+  "turn_order": [
+    "P1",
+    "P2",
+    "P3",
+    "P4"
+  ],
+  "turn_index": 0,
+  "feature_flags": {},
+  "alliances": {},
+  "reactions_active": {},
+  "connectivity_metrics": {},
+  "possible_actions": [],
+  "can_explore": true,
+  "can_move_ships": false
+}

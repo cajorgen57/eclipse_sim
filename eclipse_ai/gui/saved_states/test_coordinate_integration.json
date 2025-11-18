@@ -1,0 +1,99 @@
+{
+  "round": 1,
+  "active_player": "P1",
+  "phase": "ACTION",
+  "map": {
+    "hexes": {
+      "GC": {
+        "id": "GC",
+        "ring": 0,
+        "axial_q": 0,
+        "axial_r": 0,
+        "rotation": 0,
+        "wormholes": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "explored": true,
+        "revealed": true,
+        "has_gcds": true,
+        "ancients": 0,
+        "discovery_tile": "pending"
+      },
+      "201": {
+        "id": "201",
+        "ring": 2,
+        "axial_q": 2,
+        "axial_r": 0,
+        "rotation": 0,
+        "wormholes": [
+          0,
+          3
+        ],
+        "explored": true,
+        "revealed": true,
+        "has_gcds": false,
+        "ancients": 0,
+        "discovery_tile": null,
+        "controlled_by": "P1",
+        "ships": {
+          "interceptor": 1
+        },
+        "influence_discs": 1,
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P1"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P1"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P1"
+          }
+        ]
+      },
+      "232": {
+        "id": "232",
+        "ring": 2,
+        "axial_q": 0,
+        "axial_r": 2,
+        "rotation": 0,
+        "wormholes": [
+          0,
+          3
+        ],
+        "explored": true,
+        "revealed": true,
+        "has_gcds": false,
+        "ancients": 0,
+        "discovery_tile": null,
+        "controlled_by": "P2",
+        "ships": {
+          "interceptor": 2
+        },
+        "influence_discs": 1,
+        "planets": [
+          {
+            "type": "orange",
+            "colonized_by": "P2"
+          },
+          {
+            "type": "pink",
+            "colonized_by": "P2"
+          },
+          {
+            "type": "brown",
+            "colonized_by": "P2"
+          }
+        ]
+      }
+    }
+  }
+}

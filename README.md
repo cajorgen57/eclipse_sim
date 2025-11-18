@@ -1,0 +1,313 @@
+# Eclipse AI Toolkit
+
+Advanced AI system for *Eclipse: New Dawn for the Galaxy* with:
+- **Visual Testing GUI**: Web-based interface for rapid testing and experimentation 🆕
+- **Comprehensive Evaluation**: 75+ game state features for intelligent decision-making
+- **Multi-Step Planning**: Generate coherent 2-6 action turn strategies with state progression
+- **Strategy Profiles**: 8 pre-configured playstyles (aggressive, economic, tech rush, etc.)
+- **Progressive Widening MCTS**: Sophisticated tree search with action prioritization
+- **Opponent Modeling**: Threat analysis and behavior inference
+- **Flexible Tuning**: Easy customization via profiles, weights, and planner parameters
+
+The toolkit reconstructs game states from table snapshots, simulates outcomes, and recommends
+optimal plans using progressive widening Monte Carlo tree search (PW-MCTS).
+
+## Quick start
+
+### Option 1: Visual Testing GUI (Recommended) 🆕
+
+The easiest way to test and experiment with the AI:
+
+```bash
+# Install GUI dependencies
+pip install -e ".[gui]"
+
+# Start the GUI server
+python -m eclipse_ai.gui.run
+# Or use the quick start script:
+./start_gui.sh
+
+# Open browser to http://localhost:8000
+```
+
+Features:
+- 🎲 **Dynamic game generation** with proper board setup, random tech draws, and exploration tiles
+- 🎭 **Species selection** for multi-player scenarios (all base game + expansions)
+- 🎮 **Interactive hex map visualization**
+- 📝 **Load and edit game states** (form-based + JSON editor)
+- ⚙️ **Configure planner settings** and strategy profiles
+- 🎯 **Generate predictions** with visual overlays and action annotations
+- 📊 **Compare different strategies** side-by-side
+
+See [eclipse_ai/gui/USAGE_GUIDE.md](eclipse_ai/gui/USAGE_GUIDE.md) for detailed instructions.
+
+### Option 2: Command Line
+
+1. **Run the bundled Orion smoke test.** Parse the demo board/tech photos, assemble a game state,
+   and execute the Progressive Widening MCTS planner.
+
+   ```bash
+   python -m eclipse_ai.eclipse_test.run_test \
+       --board eclipse_ai/eclipse_test/board.jpg \
+       --tech eclipse_ai/eclipse_test/tech.jpg \
+       --sims 600 --depth 3 --topk 5 \
+       --output orion_round1.json
+   ```
+
+2. **Use strategy profiles for better decisions.** Apply pre-configured playstyles:
+
+   ```python
+   from eclipse_ai import recommend
+   
+   # Use aggressive profile for combat-focused play
+   result = recommend(
+       "board.jpg",
+       "tech.jpg", 
+       manual_inputs={"_profile": "aggressive"}
+   )
+   ```
+
+   Available profiles: `balanced`, `aggressive`, `economic`, `tech_rush`, `defensive`, 
+   `expansion`, `late_game`, `turtle`. See [TUNING_GUIDE.md](TUNING_GUIDE.md) for details.
+
+3. **Customize for higher quality.** Increase simulations and depth:
+
+   ```python
+   result = recommend(
+       "board.jpg",
+       "tech.jpg",
+       manual_inputs={
+           "_planner": {
+               "simulations": 1000,  # Default: 600
+               "depth": 4,           # Default: 3
+           }
+       }
+   )
+   ```
+
+   See [TUNING_GUIDE.md](TUNING_GUIDE.md) for comprehensive tuning options.
+
+4. **Generate multi-step turn plans.** Create coherent strategies with 2-6 sequential actions:
+
+   ```bash
+   # Full turn planning with state progression
+   python tests/test_orion_full_turn.py --verbose \
+       --sims 600 --depth 4 --max-steps 5 \
+       --output my_turn_plan.json
+   ```
+
+   This generates complete turn strategies showing:
+   - Sequential action plans (e.g., Explore → Build → Research → Influence)
+   - Resource changes after each action
+   - Strategy narratives explaining the plan
+   - Multiple alternative strategies ranked by expected value
+
+   See [MULTI_STEP_PLANNING.md](MULTI_STEP_PLANNING.md) for detailed documentation.
+
+5. **Render a shareable report.** Convert a saved JSON run into an SVG summary card for
+   presentation or archival.
+
+   ```bash
+   python -m eclipse_ai.render_report orion_round1.json \
+       --output orion_round1.svg \
+       --title "Orion Opening"
+   ```
+
+## Repository layout
+
+```text
+eclipse_ai/                      ← importable Python package
+  # Core parsing & state
+  board_parser.py                ← translate calibrated board images into map data
+  tech_parser.py                 ← extract technology market state from the tech display
+  state_assembler.py             ← merge parsed fragments and manual overrides into GameState
+  image_ingestion.py             ← image calibration and preprocessing
+  
+  # Game models & rules
+  game_models.py                 ← dataclasses for players, hexes, bags, and action payloads
+  rules_engine.py                ← rules engine for action legality
+  rules/                         ← centralized rules API
+    api.py                       ← single source of truth for action enumeration and application
+  action_gen/                   ← action generation modules
+    explore.py, research.py, build.py, upgrade.py, move_fight.py, etc.
+    actions.py                   ← action application helpers
+  
+  # Planning & evaluation
+  planners/                      ← planning algorithms
+    mcts_pw.py                   ← Progressive Widening MCTS planner (PW_MCTSPlanner)
+  search_policy.py              ← MCTS utilities and selection policies
+  evaluator.py                   ← action and state evaluation
+  value/                         ← feature extraction and weighted evaluation
+    features.py                  ← state feature extraction (75+ features)
+    weights.yaml                  ← evaluation weights
+    profiles.yaml                 ← strategy profile configurations
+  
+  # Simulation
+  simulators/                    ← combat and exploration Monte Carlo kernels
+    combat.py                    ← combat resolution
+    exploration.py               ← exploration tile sampling
+  explore_eval.py                ← exploration expected value calculations
+  
+  # Game mechanics
+  movement.py                    ← helpers for faction-specific activation limits
+  research.py                    ← shared logic for tech availability and cost adjustments
+  influence.py                   ← influence disc accounting, diplomacy hooks, upkeep helpers
+  technology.py                  ← tech research logic
+  round_flow.py                  ← action/phase management and upkeep resolution
+  pathing.py                     ← connectivity and reachability
+  alliances.py                   ← alliance and diplomacy mechanics
+  
+  # Opponent modeling
+  opponents/                     ← opponent behavior modeling
+    model.py, infer.py, observe.py, threat.py, stats.py
+  
+  # State & economy
+  models/                        ← economic and player state models
+    economy.py                   ← economy tracking
+    player_state.py              ← player state management
+  state/                         ← state loading utilities
+  uncertainty.py                 ← belief states and hidden information
+  
+  # Data & configuration
+  data/                          ← game data files
+    species.json                 ← species definitions
+    tech.json                     ← technology definitions
+    tech_costs_second_dawn.json  ← expansion tech costs
+    constants.py                 ← game constants
+    exploration_tiles.py         ← exploration tile data
+  config.py                       ← configuration management
+  
+  # Scoring & reporting
+  scoring/                       ← endgame VP calculators and species valuation helpers
+    endgame.py                   ← endgame scoring
+    species.py                   ← species-specific scoring
+  reports/                       ← report generation
+    run_report.py                ← planning report builder
+  render_report.py                ← SVG report rendering
+  
+  # UI & visualization
+  overlay.py                     ← vector overlay builders for UI/AR consumers
+  resource_colors.py             ← resource color normalization
+  
+  # Utilities
+  map/                           ← sector deck metadata and canonical hex definitions
+    hex.py, connectivity.py, decks.py
+  validators.py                  ← validation utilities
+  hashing.py                     ← state hashing
+  hidden_info.py                 ← hidden information handling
+  diplomacy.py                    ← diplomacy utilities
+  ship_parts.py                  ← ship component definitions
+  species_data.py                ← species data access
+  
+  # Entry points
+  main.py                        ← main API (recommend function)
+  cli.py                         ← command-line interface
+  
+  # Testing & examples
+  eclipse_test/                  ← CLI smoke tests, fixtures, and SVG renderer
+    cases/                       ← test cases
+tests/                           ← pytest suite covering rules, combat, economy, and parsing
+scripts/                         ← utilities for development and data wrangling
+notebooks & PDFs                 ← exploratory analyses (Jupyter notebooks)
+```
+
+## Core workflow
+
+1. **Image ingestion.** `load_and_calibrate` rectifies and annotates raw photos (EXIF-aware when
+   Pillow/OpenCV are installed) before parsing.
+2. **Parsing.** `parse_board` and `parse_tech` translate calibrated images or JSON sidecars into
+   structured map and tech display objects.
+3. **State assembly.** `assemble_state` combines parsed fragments with tech definitions, ensures
+   bags/players exist, and applies manual overrides for simulations.
+4. **Action enumeration.** `rules_engine.legal_actions` and `rules.api.enumerate_actions` produce
+   pragmatic explore/research/build/move/upgrade/influence/diplomacy options, delegating to helper
+   modules for research pricing and other rule nuances.
+5. **Simulation & scoring.** Exploration and combat Monte Carlo kernels feed
+   `evaluator.evaluate_action`, which aggregates risk-aware VP estimates for each candidate action
+   using 75+ state features and configurable weights.
+6. **Planning.** `PW_MCTSPlanner.plan` rolls out multi-step action sequences using progressive
+   widening to balance exploration and exploitation. Produces ranked plans with confidence metrics
+   and overlays for visualization.
+7. **Round flow helpers.** `round_flow.begin_round`, `take_action`, `take_reaction`, and upkeep
+   utilities maintain action discs, turn order, and economic collapse rules for downstream
+   integrations.
+
+## Running tests
+
+Install development dependencies (see `pyproject.toml`) and execute the pytest suite from the
+repository root:
+
+```bash
+pytest -q
+```
+
+Pytest discovers scenarios under `tests/`, which is organized around reusable fixtures, golden plan
+outputs, and focused modules for rules legality, combat math, exploration EV checks, planner
+reproducibility, species traits, and performance guards. See `Agents_Testing.md` for comprehensive
+testing guidelines.
+
+Common focused runs include:
+
+```bash
+pytest -q --maxfail=1 -m "golden"
+pytest -q -k combat --durations=10
+pytest -q -m "not slow"
+```
+
+These targets keep heavy simulations behind opt-in markers while preserving fast feedback loops for
+the default CI configuration.
+
+## Extending the toolkit
+
+* **Add new factions or movement mechanics.** Modify `PlayerState` flags and helpers in
+  `movement.py`, `influence.py`, and `species_data.py`.
+* **Customize scoring and evaluation.** Edit evaluation weights in `eclipse_ai/value/weights.yaml`
+  or create custom strategy profiles in `eclipse_ai/value/profiles.yaml`. See `TUNING_GUIDE.md`
+  for comprehensive customization options.
+* **Expand research catalogs.** Update technology definitions in `eclipse_ai/data/tech.json` and
+  adjust research logic in `research.py` and `technology.py`.
+* **Modify endgame scoring.** Update VP calculations in `eclipse_ai/scoring/endgame.py` and
+  species-specific scoring in `eclipse_ai/scoring/species.py`.
+* **Build custom UIs.** Consume JSON output from `recommend()` and use vector overlays from
+  `overlay.py` for visualization and AR applications.
+
+## Documentation
+
+- **[Agents.md](Agents.md)** - Authoritative reference for AI agents, canonical rules, and code architecture
+- **[Agents_Testing.md](Agents_Testing.md)** - Testing philosophy and comprehensive test guidelines
+- **[TUNING_GUIDE.md](TUNING_GUIDE.md)** - Complete guide to customizing AI behavior, strategy profiles, and parameters
+- **[MULTI_STEP_PLANNING.md](MULTI_STEP_PLANNING.md)** - Detailed documentation on multi-step turn planning
+- **[Species_Starts.md](Species_Starts.md)** - Species starting conditions and fixture data
+- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Recent implementation changes and architecture decisions
+
+## Key Features
+
+### Progressive Widening MCTS
+- Balances exploration and exploitation using adaptive action widening
+- Configurable simulation count and depth for quality/speed tradeoff
+- Produces confidence metrics (visit counts) for each recommended plan
+
+### Comprehensive Evaluation
+- 75+ state features covering VP, economy, military, territory, and threats
+- Weighted evaluation with customizable profiles (aggressive, economic, defensive, etc.)
+- Risk-aware scoring using Monte Carlo combat simulations
+
+### Multi-Step Planning
+- Generates coherent 2-6 action turn strategies
+- Tracks state progression and resource deltas after each action
+- Provides multiple alternative plans with expected value rankings
+
+### Opponent Modeling
+- Threat analysis and danger assessment for each hex
+- Behavior inference from observed actions
+- Fleet strength comparison and combat probability estimation
+
+### Hidden Information Tracking
+- Belief states for exploration bag contents
+- Probability distributions for discovery tiles
+- Bayesian updates as tiles are drawn
+
+## License
+
+No explicit license has been declared. Treat the contents as proprietary unless you have
+permission from the maintainers.

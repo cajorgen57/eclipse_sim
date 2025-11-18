@@ -1,0 +1,122 @@
+{
+  "_meta": {
+    "schema": "eclipse.species.tracks.v1",
+    "description": "Population and Influence track configurations for each species",
+    "notes": [
+      "track_values: Production/upkeep numbers printed on each square/circle",
+      "initial_cube_positions: True = cube present at game start, False = empty",
+      "initial_disc_positions: True = disc present at game start, False = empty",
+      "Production/upkeep = leftmost visible (no cube/disc) value on track"
+    ]
+  },
+  "default": {
+    "population_tracks": {
+      "money": {
+        "track_values": [0, 2, 3, 4, 5, 7, 9, 11, 13],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Terran baseline - rightmost square empty at start"
+      },
+      "science": {
+        "track_values": [0, 2, 3, 4, 5, 7, 9, 11, 13],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Terran baseline - rightmost square empty at start"
+      },
+      "materials": {
+        "track_values": [0, 2, 3, 4, 5, 7, 9, 11, 13],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Terran baseline - rightmost square empty at start"
+      }
+    },
+    "influence_track": {
+      "upkeep_values": [0, 0, 1, 2, 3, 5, 7, 10, 13, 17, 21, 25, 30],
+      "initial_disc_positions": [true, true, true, true, true, true, true, true, true, true, true, true, true],
+      "comment": "All 13 discs start on track at game start (Eclipse Second Dawn standard track)"
+    }
+  },
+  "terrans": {
+    "comment": "Uses default tracks (baseline species)"
+  },
+  "hydran": {
+    "population_tracks": {
+      "money": {
+        "track_values": [0, 2, 3, 4, 5, 6, 8, 10, 12],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Hydran has different track layout"
+      },
+      "science": {
+        "track_values": [0, 3, 4, 5, 7, 9, 11, 14, 17],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Hydran emphasizes science production"
+      },
+      "materials": {
+        "track_values": [0, 2, 3, 4, 5, 6, 7, 9, 11],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Hydran has lower materials track"
+      }
+    }
+  },
+  "eridani": {
+    "influence_track": {
+      "upkeep_values": [0, 0, 1, 2, 3, 5, 7, 10, 13, 17, 21, 25, 30],
+      "initial_disc_positions": [true, true, true, true, true, true, true, true, true, true, true, false, false],
+      "comment": "Eridani starts with 2 fewer discs (11 instead of 13)"
+    }
+  },
+  "planta": {
+    "population_tracks": {
+      "money": {
+        "track_values": [0, 2, 3, 5, 6, 8, 10, 12, 14],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Planta has higher money track"
+      },
+      "science": {
+        "track_values": [0, 1, 2, 3, 4, 5, 6, 8, 10],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Planta has lower science track"
+      },
+      "materials": {
+        "track_values": [0, 2, 3, 5, 6, 8, 10, 12, 14],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Planta has higher materials track"
+      }
+    }
+  },
+  "mechanema": {
+    "population_tracks": {
+      "money": {
+        "track_values": [0, 2, 3, 4, 5, 6, 7, 9, 11],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false]
+      },
+      "science": {
+        "track_values": [0, 2, 4, 5, 6, 8, 10, 12, 15],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Mechanema emphasizes science"
+      },
+      "materials": {
+        "track_values": [0, 2, 3, 4, 5, 6, 8, 10, 12],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false]
+      }
+    }
+  },
+  "orion": {
+    "population_tracks": {
+      "money": {
+        "track_values": [0, 2, 3, 4, 5, 6, 8, 10, 12],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false]
+      },
+      "science": {
+        "track_values": [0, 2, 3, 4, 5, 6, 7, 9, 11],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false]
+      },
+      "materials": {
+        "track_values": [0, 3, 4, 5, 7, 9, 11, 14, 17],
+        "initial_cube_positions": [true, true, true, true, true, true, true, true, false],
+        "comment": "Orion emphasizes materials (military production)"
+      }
+    }
+  },
+  "draco": {
+    "comment": "Descendants of Draco - uses default tracks with special rules"
+  }
+}
+

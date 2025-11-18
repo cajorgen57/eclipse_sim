@@ -1,0 +1,355 @@
+{
+  "_meta": {
+    "schema": "eclipse.species.config.v1",
+    "sources": [
+      "Eclipse Second Dawn rulebook",
+      "Rise of the Ancients",
+      "Shadows of the Rift"
+    ],
+    "notes": "Trade rate is expressed as trade goods required -> resources gained. starting_storage uses resource track capacity pips shown on faction boards."
+  },
+  "terrans": {
+    "name": "Terrans",
+    "expansion": "base",
+    "starting_sector": 220,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 2, "science": 3, "materials": 3},
+    "starting_resources": {"money": 2, "science": 3, "materials": 3},
+    "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": ["Starbase"],
+    "starting_discs_delta": 0,
+    "colony_ships": 3,
+    "action_overrides": {},
+    "build_limits": {},
+    "vp_bonuses": {},
+    "cannot_build": [],
+    "notes": [
+      "Baseline faction with Starbase technology preprinted on their Technology Tracks.",
+      "Default human faction (Directorate, Federation, Union, Republic variants)."
+    ]
+  },
+  "eridani": {
+    "name": "Eridani Empire",
+    "expansion": "base",
+    "starting_sector": 222,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 4, "science": 4, "materials": 4},
+    "starting_resources": {"money": 4, "science": 4, "materials": 4},
+    "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": ["Gauss Shield", "Fusion Drive", "Plasma Cannon"],
+    "starting_discs_delta": -2,
+    "starting_reputation_tiles": 2,
+    "colony_ships": 3,
+    "action_overrides": {},
+    "build_limits": {},
+    "vp_bonuses": {},
+    "cannot_build": [],
+    "notes": [
+      "Starts with two fewer Influence Discs (rightmost circles on Influence Track left empty).",
+      "Draws two random Reputation Tiles at the beginning of the game."
+    ]
+  },
+  "hydran": {
+    "name": "Hydran Progress",
+    "expansion": "base",
+    "starting_sector": 224,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 2, "science": 5, "materials": 2},
+    "starting_resources": {"money": 2, "science": 5, "materials": 2},
+    "starting_colonies": {"home": {"science": 1, "science_advanced": 1, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": ["Advanced Labs"],
+    "starting_discs_delta": 0,
+    "colony_ships": 3,
+    "action_overrides": {"research_per_action": 2},
+    "build_limits": {},
+    "vp_bonuses": {},
+    "cannot_build": [],
+    "notes": [
+      "During game setup, place a Population Cube in the Advanced Science Population Square.",
+      "Research focused economy. Hydran Evolution tiles integrate with Octantis Evolution rules when that module is active."
+    ]
+  },
+  "planta": {
+    "name": "Planta",
+    "expansion": "base",
+    "starting_sector": 226,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 4, "science": 2, "materials": 4},
+    "starting_resources": {"money": 4, "science": 2, "materials": 4},
+    "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": ["Starbase"],
+    "starting_discs_delta": 0,
+    "colony_ships": 4,
+    "action_overrides": {"explores_per_action": 2},
+    "build_limits": {},
+    "vp_bonuses": {"hex_control": 1},
+    "cannot_build": [],
+    "notes": [
+      "Starts with four Colony Ships instead of three.",
+      "Root Network: treat controlled hexes as adjacent for movement and influence.",
+      "In two-player games Planta is considered stronger and often recommended to avoid for balance."
+    ]
+  },
+  "mechanema": {
+    "name": "Mechanema",
+    "expansion": "base",
+    "starting_sector": 230,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 5, "science": 2, "materials": 3},
+    "starting_resources": {"money": 5, "science": 2, "materials": 3},
+    "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": ["Neutron Bombs", "Gauss Shield"],
+    "starting_discs_delta": 0,
+    "colony_ships": 3,
+    "action_overrides": {"upgrade_parts_per_action": 3},
+    "build_limits": {"build_discount": "mechanema"},
+    "vp_bonuses": {},
+    "cannot_build": [],
+    "notes": [
+      "May upgrade up to three ship parts per Upgrade action."
+    ]
+  },
+  "orion": {
+    "name": "Orion Hegemony",
+    "expansion": "base",
+    "starting_sector": 232,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 3, "science": 3, "materials": 5},
+    "starting_resources": {"money": 3, "science": 3, "materials": 5},
+    "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": [],
+    "starting_discs_delta": 0,
+    "colony_ships": 3,
+    "action_overrides": {},
+    "build_limits": {"builds_per_action": 3},
+    "vp_bonuses": {},
+    "cannot_build": [],
+    "notes": [
+      "Aggressive faction with cheaper build actions (up to three ships/structures per action)."
+    ]
+  },
+  "draco": {
+    "name": "Descendants of Draco",
+    "expansion": "base",
+    "starting_sector": 228,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 3, "science": 3, "materials": 3},
+    "starting_resources": {"money": 3, "science": 3, "materials": 3},
+    "starting_colonies": {"home": {"money": 1, "science": 1, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 0, "cruiser": 1, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": ["Positron Computer"],
+    "starting_discs_delta": 0,
+    "colony_ships": 3,
+    "action_overrides": {},
+    "build_limits": {},
+    "vp_bonuses": {"ancients_remaining": 1},
+    "cannot_build": [],
+    "notes": [
+      "Starts with a Cruiser instead of an Interceptor on their starting hex.",
+      "May share hexes with Ancients without combat and cannot take their discoveries.",
+      "Considered strong in two-player games; often omitted for balance."
+    ]
+  },
+  "rho_indi": {
+    "name": "Rho Indi Syndicate",
+    "expansion": "rise",
+    "starting_sector": 237,
+    "trade_rate": {"goods": 3, "resources": 2},
+    "starting_storage": {"money": 4, "science": 2, "materials": 3},
+    "starting_resources": {"money": 3, "science": 0, "materials": 0},
+    "starting_colonies": {"home": {"money": 2}},
+    "starting_ships": {"home": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": ["Gluon Computer"],
+    "starting_discs_delta": 0,
+    "colony_ships": 3,
+    "action_overrides": {},
+    "build_limits": {},
+    "vp_bonuses": {},
+    "cannot_build": [],
+    "notes": [
+      "Pillage: gain 1 money when drawing reputation for winning battles."
+    ]
+  },
+  "enlightened": {
+    "name": "Enlightened of Lyra",
+    "expansion": "rise",
+    "starting_sector": 238,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 3, "science": 4, "materials": 2},
+    "starting_resources": {"money": 1, "science": 2, "materials": 1},
+    "starting_colonies": {"home": {"science": 2, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0, "shrine": 0}},
+    "starting_techs": [],
+    "starting_discs_delta": 0,
+    "colony_ships": 2,
+    "action_overrides": {"move_ship_activations": 4},
+    "build_limits": {},
+    "vp_bonuses": {"shrine_vp": 1},
+    "cannot_build": [],
+    "notes": [
+      "May reroll combat dice by flipping Colony Ships and ignore Traitor penalty.",
+      "Starts with two colony ships instead of three."
+    ]
+  },
+  "exiles": {
+    "name": "The Exiles",
+    "expansion": "rise",
+    "starting_sector": 239,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 3, "science": 2, "materials": 4},
+    "starting_resources": {"money": 2, "science": 0, "materials": 2},
+    "starting_colonies": {"home": {"money": 1, "materials": 1}},
+    "starting_ships": {"home": {"interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 1, "monolith": 0}},
+    "starting_techs": ["Cloaking Device", "Orbital"],
+    "starting_discs_delta": 0,
+    "colony_ships": 3,
+    "action_overrides": {},
+    "build_limits": {},
+    "vp_bonuses": {},
+    "cannot_build": ["starbase"],
+    "notes": [
+      "Orbitals count as ships without drives. When destroyed an opponent draws reputation.",
+      "Cannot build Starbases."
+    ]
+  },
+  "magellan": {
+    "name": "Magellan",
+    "expansion": "rise",
+    "starting_sector": 234,
+    "trade_rate": {"goods": 3, "resources": 1},
+    "starting_storage": {"money": 3, "science": 2, "materials": 4},
+    "starting_resources": {"money": 0, "science": 0, "materials": 3},
+    "starting_colonies": {"home": {"materials": 2}},
+    "starting_ships": {"home": {"interceptor": 2, "cruiser": 0, "dreadnought": 0, "starbase": 0}},
+    "starting_structures": {"home": {"orbital": 0, "monolith": 0}},
+    "starting_techs": ["Fusion Source"],
+    "starting_discs_delta": 0,
+    "colony_ships": 3,
+    "action_overrides": {},
+    "build_limits": {},
+    "vp_bonuses": {"orbital_vp": 1},
+    "cannot_build": [],
+    "notes": [
+      "Variants: Keepers, Sentinels, Wardens. May flip a Colony Ship at any time for a resource of choice."
+    ]
+  },
+  "shapers": {
+    "name": "Shapers of Dorado",
+    "expansion": "sotr",
+    "starting_discs_delta": 0,
+    "starting_resources": { "money": null, "science": null, "materials": null },
+    "starting_techs": ["Soliton Cannon"],
+    "rare_techs_starting": [],
+    "starting_ships": { "home": { "interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0 } },
+    "starting_structures": { "home": { "orbital": 0, "monolith": 0 } },
+    "trade_rate_money": [3,1],
+    "action_overrides": {},
+    "build_overrides": {},
+    "explore_overrides": {},
+    "move_overrides": { "move_ship_activations_per_action": 2 },
+    "cannot_build": [],
+    "vp_bonuses": {},
+    "special_rules": {
+      "time_distortion_enabled": true,
+      "distortion_pool_size": 2
+    },
+    "notes": [
+      "Starts with Soliton Cannon technology and maintains a Distortion pool for Time Distortion tiles."
+    ]
+  },
+  "unity": {
+    "name": "Pyxis Unity",
+    "expansion": "sotr",
+    "starting_discs_delta": 0,
+    "starting_resources": { "money": 0, "science": 0, "materials": 0 },
+    "starting_techs": ["Advanced Robotics"],
+    "rare_techs_starting": [],
+    "starting_ships": { "home": { "interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0 } },
+    "starting_structures": { "home": { "orbital": 0, "monolith": 0, "deathmoon": 0 } },
+    "trade_rate_money": [3,1],
+    "action_overrides": { "combination_actions_enabled": true },
+    "build_overrides": {},
+    "explore_overrides": {},
+    "move_overrides": { "move_ship_activations_per_action": 2 },
+    "cannot_build": ["starbase"],
+    "vp_bonuses": { "endgame_per_deathmoon": 4 },
+    "special_rules": {
+      "single_resource_transmatter": true,
+      "starbase_minis_are_deathmoons": true,
+      "destroy_deathmoon_opponent_rep_draw": 3
+    },
+    "notes": [
+      "Starbases are treated as Deathmoons with Transmatter logistics and cannot be built as standard Starbases."
+    ]
+  },
+  "octantis_autonomy": {
+    "name": "Octantis Autonomy",
+    "expansion": "sotr",
+    "starting_discs_delta": 0,
+    "starting_resources": { "money": null, "science": null, "materials": null },
+    "starting_techs": ["Fusion Drive"],
+    "rare_techs_starting": [],
+    "starting_ships": { "home": { "interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0 } },
+    "starting_structures": { "home": { "orbital": 0, "monolith": 0 } },
+    "trade_rate_money": [3,1],
+    "action_overrides": {},
+    "build_overrides": {},
+    "explore_overrides": {},
+    "move_overrides": { "move_ship_activations_per_action": 2 },
+    "cannot_build": [],
+    "vp_bonuses": {},
+    "special_rules": {
+      "evolution_enabled": true,
+      "evolution_pool_size": 5,
+      "mutagen_production_per_round": 2,
+      "colony_update_evolution_pool": true,
+      "colony_update_distortion_pool": true
+    },
+    "notes": [
+      "Evolution: maintain a five-tile Evolution pool refreshed via Colony Ships and produce Mutagen each round."
+    ]
+  },
+  "octantis_vanguard": {
+    "name": "Octantis Vanguard",
+    "expansion": "sotr",
+    "starting_discs_delta": 0,
+    "starting_resources": { "money": null, "science": null, "materials": null },
+    "starting_techs": ["Fusion Drive"],
+    "rare_techs_starting": [],
+    "starting_ships": { "home": { "interceptor": 1, "cruiser": 0, "dreadnought": 0, "starbase": 0 } },
+    "starting_structures": { "home": { "orbital": 0, "monolith": 0 } },
+    "trade_rate_money": [3,1],
+    "action_overrides": {},
+    "build_overrides": {},
+    "explore_overrides": {},
+    "move_overrides": { "move_ship_activations_per_action": 2 },
+    "cannot_build": [],
+    "vp_bonuses": {},
+    "special_rules": {
+      "evolution_enabled": true,
+      "evolution_pool_size": 5,
+      "mutagen_production_per_round": 2,
+      "colony_update_evolution_pool": true,
+      "colony_update_distortion_pool": true
+    },
+    "notes": [
+      "Evolution: maintain a five-tile Evolution pool refreshed via Colony Ships and produce Mutagen each round."
+    ]
+  }
+}

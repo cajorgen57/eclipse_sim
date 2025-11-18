@@ -1,0 +1,78 @@
+{
+  "round": 1,
+  "active_player": "P1",
+  "phase": "ACTION",
+  "players": {
+    "P1": {
+      "player_id": "P1",
+      "color": "orange",
+      "resources": {
+        "money": 2,
+        "science": 3,
+        "materials": 3
+      },
+      "income": {
+        "money": 0,
+        "science": 0,
+        "materials": 0
+      },
+      "ship_designs": {
+        "interceptor": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 2,
+          "hull": 1,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "cruiser": {
+          "computer": 1,
+          "shield": 0,
+          "initiative": 3,
+          "hull": 2,
+          "cannons": 1,
+          "missiles": 0,
+          "drive": 1,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "dreadnought": {
+          "computer": 1,
+          "shield": 1,
+          "initiative": 2,
+          "hull": 3,
+          "cannons": 2,
+          "missiles": 0,
+          "drive": 1,
+          "drives": 1,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        },
+        "starbase": {
+          "computer": 0,
+          "shield": 0,
+          "initiative": 4,
+          "hull": 2,
+          "cannons": 2,
+          "missiles": 0,
+          "drive": 0,
+          "drives": 0,
+          "has_jump_drive": false,
+          "interceptor_bays": 0
+        }
+      },
+      "reputation": [],
+      "diplomacy": {},
+      "ambassadors": {},
+      "has_traitor": false,
+      "alliance_id": null,
+      "alliance_tile": null,
+      "known_techs": [
+        "Starbase"
+      ],
+      "owned_tech_ids": 

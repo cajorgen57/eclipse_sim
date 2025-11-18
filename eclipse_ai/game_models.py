@@ -1,0 +1,564 @@
+from __future__ import annotations
+import sys
+from dataclasses import dataclass, field, asdict, is_dataclass, fields
+from typing import Dict, Iterable, List, Optional, Tuple, Any, Set, Literal, get_args, get_origin, get_type_hints
+from enum import Enum
+import json
+from .types import ShipDesign
+from .resource_colors import RESOURCE_COLOR_ORDER
+from .models.economy import Economy
+
+def _build_dataclass(cls, data: Dict[str, Any]):
+    """Recursively coerce nested dicts/lists into a dataclass instance."""
+    if not is_dataclass(cls):
+        return data
+    type_hints = get_type_hints(cls, globalns=sys.modules[cls.__module__].__dict__)
+    kwargs = {}
+    for f in fields(cls):
+        if f.name not in data:
+            continue  # keep default
+        v = data[f.name]
+        ft = type_hints.get(f.name, f.type)
+        origin = get_origin(ft)
+
+        if v is None:
+            # Treat nulls for dataclass/container fields as "use the default".
+            # Many callers omit nested structures entirely and some serializers
+            # explicitly emit `null`; in those cases we still want the default
+            # dataclass/list/dict instance instead of propagating ``None`` and
+            # breaking attribute access later on (e.g. PlayerState.resources
+            # should remain a Resources dataclass). Only fall back to the
+            # default when the target type is a dataclass or collection; simple
+            # Optional scalars should still honour the explicit ``None``.
+            union_args = get_args(ft) if origin is not None else ()
+            if is_dataclass(ft) or origin in (list, dict) or any(
+                is_dataclass(arg) for arg in union_args if arg is not type(None)
+            ):
+                continue
+
+        if is_dataclass(ft) and isinstance(v, dict):
+            kwargs[f.name] = _build_dataclass(ft, v)
+        elif origin in (list, set, tuple) and isinstance(v, (list, set, tuple)):
+            type_args = get_args(ft) or (Any,)
+            # Handle tuple with multiple type args (e.g., tuple[int, str, bool])
+            if origin is tuple and len(type_args) > 1:
+                # Fixed-length tuple with heterogeneous types - just pass through
+                kwargs[f.name] = tuple(v)
+            else:
+                # Homogeneous collection (list[T], set[T], or tuple[T, ...])
+                inner = type_args[0] if type_args else Any
+                if inner and is_dataclass(inner):
+                    items = [_build_dataclass(inner, x) if isinstance(x, dict) else x for x in v]
+                else:
+                    items = list(v)
+                if origin is set:
+                    kwargs[f.name] = set(items)
+                elif origin is tuple:
+                    kwargs[f.name] = tuple(items)
+                else:
+                    kwargs[f.name] = items
+        elif origin is dict and isinstance(v, dict):
+            kt, vt = get_args(ft) or (Any, Any)
+            if vt and is_dataclass(vt):
+                kwargs[f.name] = {k: _build_dataclass(vt, x) if isinstance(x, dict) else x for k, x in v.items()}
+            else:
+                kwargs[f.name] = v
+        else:
+            kwargs[f.name] = v
+    return cls(**kwargs)
+
+def _deep_override(obj: Any, updates: Any) -> Any:
+    """Shallow replace for lists, recursive merge for dicts/dataclasses."""
+    if updates is None:
+        return obj
+    if is_dataclass(obj):
+        for k, v in updates.items():
+            cur = getattr(obj, k, None)
+            setattr(obj, k, _deep_override(cur, v))
+        return obj
+    if isinstance(obj, dict) and isinstance(updates, dict):
+        for k, v in updates.items():
+            obj[k] = _deep_override(obj.get(k), v)
+        return obj
+    # lists and scalars get replaced entirely
+    return updates
+
+
+class ActionType(str, Enum):
+    EXPLORE = "Explore"
+    MOVE = "Move"
+    BUILD = "Build"
+    UPGRADE = "Upgrade"
+    INFLUENCE = "Influence"
+    RESEARCH = "Research"
+    DIPLOMACY = "Diplomacy"
+    PASS = "Pass"
+    REACTION = "Reaction"
+
+
+@dataclass
+class Disc:
+    id: str
+    extra: bool = False
+
+
+def _default_population() -> Dict[str, int]:
+    return {color: 0 for color in RESOURCE_COLOR_ORDER}
+
+
+def _default_action_spaces() -> Dict[str, List[Disc]]:
+    return {
+        "explore": [],
+        "influence": [],
+        "research": [],
+        "upgrade": [],
+        "build": [],
+        "move": [],
+        "reaction": [],
+    }
+
+
+@dataclass
+class ColonyShips:
+    face_up: Dict[str, int] = field(
+        default_factory=lambda: {color: 0 for color in RESOURCE_COLOR_ORDER} | {"wild": 0}
+    )
+    face_down: Dict[str, int] = field(
+        default_factory=lambda: {color: 0 for color in RESOURCE_COLOR_ORDER} | {"wild": 0}
+    )
+
+@dataclass
+class Resources:
+    money: int = 0
+    science: int = 0
+    materials: int = 0
+
+
+
+@dataclass
+class ShipDesign:
+    computer: int = 0
+    shield: int = 0
+    initiative: int = 0
+    hull: int = 1
+    cannons: int = 0
+    missiles: int = 0
+    drives: int = 0
+    has_jump_drive: bool = False
+    interceptor_bays: int = 0
+    def movement_value(self) -> int:
+        """Return the total movement points provided by installed drives."""
+        return max(0, int(self.drives if self.drives else self.drive))
+
+
+@dataclass
+class Pieces:
+    ships: Dict[str, int] = field(default_factory=dict)  # class -> count
+    starbase: int = 0
+    discs: int = 0
+    cubes: Dict[str, int] = field(default_factory=dict)  # keyed by canonical resource colors
+    discovery: int = 0
+
+@dataclass
+class Planet:
+    type: str  # "orange" money, "pink" science, "brown" materials, "wild", etc.
+    colonized_by: Optional[str] = None
+
+@dataclass
+class Hex:
+    id: str
+    ring: int
+    wormholes: List[int] = field(default_factory=list)  # 0..5 edges present
+    neighbors: Dict[int, str] = field(default_factory=dict)  # edge -> neighbor hex id
+    planets: List[Planet] = field(default_factory=list)
+    pieces: Dict[str, Pieces] = field(default_factory=dict)  # player_id -> Pieces
+    ancients: int = 0
+    monolith: bool = False
+    orbital: bool = False
+    anomaly: bool = False
+    explored: bool = True
+    has_warp_portal: bool = False
+    has_deep_warp_portal: bool = False
+    is_warp_nexus: bool = False
+    has_gcds: bool = False
+    revealed: bool = False
+    # Axial coordinate system (flat-top hex grid)
+    axial_q: int = 0  # Horizontal axis (East-West)
+    axial_r: int = 0  # Diagonal axis (Northeast-Southwest)
+    rotation: int = 0  # Rotation applied when tile was placed (0-5)
+    tile_number: int = 0  # Combat ordering number (higher resolves first, except center=last)
+    discovery_tile: Optional[str] = None  # Discovery tile state: "pending", "placed:<id>", etc.
+
+    def __post_init__(self) -> None:
+        # Maintain backwards compatibility with historical ``explored`` flags while
+        # adding an explicit ``revealed`` attribute for visibility checks.
+        explored = bool(getattr(self, "explored", False))
+        revealed = bool(getattr(self, "revealed", False))
+        if explored and not revealed:
+            self.revealed = True
+
+@dataclass
+class TechDisplay:
+    available: List[str] = field(default_factory=list)
+    track: Dict[str, list] = field(default_factory=lambda: {"grid":[],"nano":[],"qunatum":[]})
+
+Effect = Dict[str, Any]
+
+
+@dataclass
+class Tech:
+    id: str
+    name: str
+    category: Literal["military", "grid", "nano", "quantum", "rare", "biotech", "economy"]
+    base_cost: int
+    is_rare: bool = False
+    cost_range: Tuple[int, int] = (0, 0)
+    grants_parts: List[str] = field(default_factory=list)
+    grants_structures: List[str] = field(default_factory=list)
+    immediate_effect: Optional[Effect] = None
+
+
+@dataclass
+class PopulationTrack:
+    """
+    Represents one resource's population track.
+    
+    During Upkeep Phase, production is determined by the leftmost visible (no cube) 
+    square on the track. Each square has a production value printed on it.
+    
+    Reference: Eclipse Rulebook - Upkeep Phase
+    """
+    track_values: List[int] = field(default_factory=list)  # Production numbers on each square
+    cube_positions: List[bool] = field(default_factory=list)  # True if cube is on this square
+    
+    def get_production(self) -> int:
+        """
+        Returns leftmost visible (no cube) production value.
+        This is the income you receive for this resource during Upkeep Phase.
+        """
+        for value, has_cube in zip(self.track_values, self.cube_positions):
+            if not has_cube:
+                return value
+        # All squares covered by cubes → production is 0
+        return 0
+    
+    def remove_cube_at(self, index: int) -> bool:
+        """Remove cube from specified position (when colonizing). Returns True if successful."""
+        if 0 <= index < len(self.cube_positions) and self.cube_positions[index]:
+            self.cube_positions[index] = False
+            return True
+        return False
+    
+    def add_cube_at(self, index: int) -> bool:
+        """Add cube to specified position (when returning from hex). Returns True if successful."""
+        if 0 <= index < len(self.cube_positions) and not self.cube_positions[index]:
+            self.cube_positions[index] = True
+            return True
+        return False
+
+
+@dataclass
+class InfluenceTrack:
+    """
+    Represents the influence track.
+    
+    During Upkeep Phase, upkeep cost is determined by the leftmost visible (no disc)
+    circle on the track. The cost increases as more discs are placed on the map/actions.
+    
+    Reference: Eclipse Rulebook - Upkeep Phase
+    """
+    upkeep_values: List[int] = field(default_factory=list)  # Upkeep costs for each position
+    disc_positions: List[bool] = field(default_factory=list)  # True if disc is on this circle
+    
+    def get_upkeep(self) -> int:
+        """
+        Returns upkeep cost based on the influence track.
+        
+        In Eclipse, your upkeep is determined by how many discs are OFF the track:
+        - All discs on track (0 off) = 0 upkeep
+        - 1 disc off = upkeep_values[0]
+        - 2 discs off = upkeep_values[1]
+        - etc.
+        
+        This is the money cost you pay during Upkeep Phase.
+        """
+        discs_off = self.discs_off_track
+        if discs_off == 0:
+            return 0
+        if discs_off > len(self.upkeep_values):
+            # All discs are off the track
+            return self.upkeep_values[-1] if self.upkeep_values else 0
+        # Return the value corresponding to the number of discs off track
+        return self.upkeep_values[discs_off - 1]
+    
+    def remove_disc_at(self, index: int) -> bool:
+        """Remove disc from track (to place on hex/action). Returns True if successful."""
+        if 0 <= index < len(self.disc_positions) and self.disc_positions[index]:
+            self.disc_positions[index] = False
+            return True
+        return False
+    
+    def add_disc_at(self, index: int) -> bool:
+        """Add disc back to track. Returns True if successful."""
+        if 0 <= index < len(self.disc_positions) and not self.disc_positions[index]:
+            self.disc_positions[index] = True
+            return True
+        return False
+    
+    @property
+    def total_discs(self) -> int:
+        """Total number of discs (on track + off track)."""
+        return len(self.disc_positions)
+    
+    @property
+    def discs_on_track(self) -> int:
+        """Number of discs currently on the track."""
+        return sum(1 for has_disc in self.disc_positions if has_disc)
+    
+    @property
+    def discs_off_track(self) -> int:
+        """Number of discs currently off the track (on map/actions)."""
+        return self.total_discs - self.discs_on_track
+
+
+@dataclass
+class PlayerState:
+    player_id: str
+    color: str
+    resources: Resources = field(default_factory=Resources)
+    income: Resources = field(default_factory=Resources)
+    ship_designs: Dict[str, ShipDesign] = field(default_factory=dict)  # interceptor, cruiser, dreadnought, starbase
+    reputation: List[int] = field(default_factory=list)
+    diplomacy: Dict[str, str] = field(default_factory=dict)
+    ambassadors: Dict[str, bool] = field(default_factory=dict)
+    has_traitor: bool = False
+    alliance_id: Optional[str] = None
+    alliance_tile: Optional[Literal["+2", "-3"]] = None
+    known_techs: List[str] = field(default_factory=list)
+    owned_tech_ids: Set[str] = field(default_factory=set)
+    tech_count_by_category: Dict[str, int] = field(default_factory=dict)
+    science: int = 0
+    unlocked_parts: Set[str] = field(default_factory=set)
+    unlocked_structures: Set[str] = field(default_factory=set)
+    available_components: Dict[str, int] = field(default_factory=dict)
+    species_id: Optional[str] = None
+    species_flags: Dict[str, Any] = field(default_factory=dict)
+    action_overrides: Dict[str, Any] = field(default_factory=dict)
+    build_overrides: Dict[str, Any] = field(default_factory=dict)
+    move_overrides: Dict[str, Any] = field(default_factory=dict)
+    explore_overrides: Dict[str, Any] = field(default_factory=dict)
+    cannot_build: Set[str] = field(default_factory=set)
+    vp_bonuses: Dict[str, Any] = field(default_factory=dict)
+    species_pools: Dict[str, Any] = field(default_factory=dict)
+    special_resources: Dict[str, int] = field(default_factory=dict)
+    economy: Economy = field(default_factory=Economy)
+    influence_track: List[Disc] = field(default_factory=list)
+    action_spaces: Dict[str, List[Disc]] = field(default_factory=_default_action_spaces)
+    colonies: Dict[str, Dict[str, int]] = field(default_factory=dict)
+    population: Dict[str, int] = field(default_factory=_default_population)
+    colony_ships: ColonyShips = field(default_factory=ColonyShips)
+    passed: bool = False
+    collapsed: bool = False
+    has_wormhole_generator: bool = False
+    
+    # Population and Influence Tracks (for multi-round simulation)
+    population_tracks: Dict[str, PopulationTrack] = field(default_factory=dict)  # "money", "science", "materials"
+    influence_track_detailed: Optional[InfluenceTrack] = None  # Detailed influence track with upkeep values
+    discs_on_hexes: List[str] = field(default_factory=list)  # Hex IDs where player has influence discs
+    discs_on_actions: Dict[str, bool] = field(default_factory=dict)  # Action name -> has disc this round
+    cubes_on_hexes: Dict[str, Dict[str, int]] = field(default_factory=dict)  # hex_id -> {resource_type -> count}
+    
+    def get_money_production(self) -> int:
+        """Get money production from population track (for Upkeep Phase)."""
+        if "money" in self.population_tracks:
+            return self.population_tracks["money"].get_production()
+        return 0
+    
+    def get_science_production(self) -> int:
+        """Get science production from population track (for Upkeep Phase)."""
+        if "science" in self.population_tracks:
+            return self.population_tracks["science"].get_production()
+        return 0
+    
+    def get_materials_production(self) -> int:
+        """Get materials production from population track (for Upkeep Phase)."""
+        if "materials" in self.population_tracks:
+            return self.population_tracks["materials"].get_production()
+        return 0
+    
+    def get_upkeep_cost(self) -> int:
+        """Get influence upkeep cost (money cost during Upkeep Phase)."""
+        if self.influence_track_detailed:
+            return self.influence_track_detailed.get_upkeep()
+        return 0
+    
+    def get_net_money_change(self) -> int:
+        """Calculate net money change during Upkeep: income - upkeep."""
+        return self.get_money_production() - self.get_upkeep_cost()
+
+
+@dataclass
+class Alliance:
+    id: str
+    members: List[str] = field(default_factory=list)
+    founded: bool = False
+    betrayers: Set[str] = field(default_factory=set)
+
+
+@dataclass
+class MapState:
+    hexes: Dict[str, Hex] = field(default_factory=dict)
+    adjacency: Dict[str, List[str]] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        # Ensure existing hex entries are treated as revealed.
+        for hex_obj in self.hexes.values():
+            if hasattr(hex_obj, "revealed"):
+                hex_obj.revealed = bool(getattr(hex_obj, "revealed", False) or getattr(hex_obj, "explored", False))
+            else:
+                setattr(hex_obj, "revealed", bool(getattr(hex_obj, "explored", False)))
+            if not hasattr(hex_obj, "explored"):
+                setattr(hex_obj, "explored", bool(getattr(hex_obj, "revealed", False)))
+
+    def hex_exists(self, hex_id: str) -> bool:
+        return hex_id in self.hexes
+
+    def is_revealed(self, hex_id: str) -> bool:
+        hex_obj = self.hexes.get(hex_id)
+        if hex_obj is None:
+            return False
+        if hasattr(hex_obj, "revealed"):
+            return bool(getattr(hex_obj, "revealed", False))
+        return bool(getattr(hex_obj, "explored", False))
+
+    def neighbors(self, hex_id: str) -> Dict[int, Optional[str]]:
+        """Return a mapping of edges to neighbouring hex ids (or ``None``)."""
+
+        hx = self.hexes.get(hex_id)
+        if hx is None:
+            return {}
+        raw = (getattr(hx, "neighbors", {}) or {}).items()
+        neighbors: Dict[int, Optional[str]] = {}
+        for edge, nbr in raw:
+            try:
+                edge_idx = int(edge)
+            except (TypeError, ValueError):
+                # Ignore malformed edge identifiers to keep callers safe.
+                continue
+            neighbors[edge_idx] = nbr
+        return neighbors
+
+    def _wormhole_edges(self, hex_obj: Hex) -> Set[int]:
+        edges: Set[int] = set()
+        faces: Set[Int] = set[int]() # wormholes are on faces between edges not ont the edge of the hex
+        wormholes: Iterable[Any] = getattr(hex_obj, "wormholes", ()) or ()
+        for edge in wormholes:
+            try:
+                edges.add(int(edge))
+            except (TypeError, ValueError):
+                continue
+        return edges
+
+    @staticmethod
+    def _opposite_edge(edge: int) -> int:
+        return (edge + 3) % 6
+
+    def wormholes_match(self, src_id: str, dst_id: str, edge: int) -> bool:
+        """Return ``True`` when the wormholes align between neighbouring hexes."""
+
+        src = self.hexes.get(src_id)
+        dst = self.hexes.get(dst_id)
+        if src is None or dst is None:
+            return False
+        try:
+            edge_idx = int(edge)
+        except (TypeError, ValueError):
+            return False
+
+        src_edges = self._wormhole_edges(src)
+        dst_edges = self._wormhole_edges(dst)
+        if edge_idx not in src_edges:
+            return False
+        opp_edge = self._opposite_edge(edge_idx)
+        return opp_edge in dst_edges
+
+    def place_hex(self, hex_obj: Hex) -> None:
+        self.hexes[hex_obj.id] = hex_obj
+        if hasattr(hex_obj, "revealed"):
+            hex_obj.revealed = True
+        else:
+            setattr(hex_obj, "revealed", True)
+        if hasattr(hex_obj, "explored"):
+            hex_obj.explored = True
+        else:
+            setattr(hex_obj, "explored", True)
+
+    def revealed_connected_neighbors(self, src_id: str) -> Iterable[str]:
+        """Yield ids of neighbouring hexes that are both revealed and connected."""
+
+        for edge, neighbor_id in self.neighbors(src_id).items():
+            if neighbor_id is None:
+                continue
+            neighbor_str = str(neighbor_id)
+            if not self.is_revealed(neighbor_str):
+                continue
+            if self.wormholes_match(src_id, neighbor_str, edge):
+                yield neighbor_str
+
+
+@dataclass
+class GameState:
+    round: int = 1
+    active_player: str = "you"
+    phase: str = "action"
+    players: Dict[str, PlayerState] = field(default_factory=dict)
+    map: MapState = field(default_factory=MapState)
+    tech_display: TechDisplay = field(default_factory=TechDisplay)
+    exploration_tile_bags: Dict[str, List[str]] = field(default_factory=dict)
+    bags: Dict[str, Dict[str, int]] = field(default_factory=dict)  # bag per ring: tile_type -> count
+    tech_bags: Dict[str, List[str]] = field(default_factory=dict)
+    market: List[str] = field(default_factory=list)
+    tech_definitions: Dict[str, Tech] = field(default_factory=dict)
+    phase: str = "ACTION"
+    starting_player: Optional[str] = None
+    pending_starting_player: Optional[str] = None
+    turn_order: List[str] = field(default_factory=list)
+    turn_index: int = 0
+    feature_flags: Dict[str, bool] = field(default_factory=dict)
+    alliances: Dict[str, Alliance] = field(default_factory=dict)
+    reactions_active: Dict[str, bool] = field(default_factory=dict)
+    connectivity_metrics: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    possible_actions: Set[ActionType] = field(default_factory=set)
+    can_explore: bool = True
+    can_move_ships: bool = False
+
+    def to_json(self) -> str:
+        def _normalize(value: Any) -> Any:
+            if isinstance(value, set):
+                return sorted(value)
+            if isinstance(value, dict):
+                return {k: _normalize(v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [_normalize(v) for v in value]
+            return value
+
+        return json.dumps(_normalize(asdict(self)), indent=2)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "GameState":
+        return _build_dataclass(cls, data)
+    def apply_overrides(self, overrides: Dict[str, Any]) -> "GameState":
+        _deep_override(self, overrides)
+        return self
+
+
+@dataclass
+class Action:
+    type: ActionType
+    payload: Dict[str, Any] = field(default_factory=dict)
+
+@dataclass
+class Score:
+    expected_vp: float
+    risk: float
+    details: Dict[str, Any] = field(default_factory=dict)

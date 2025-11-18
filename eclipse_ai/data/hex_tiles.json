@@ -1,0 +1,475 @@
+{
+  "tiles": {
+    "001": {
+      "id": "001",
+      "stack": "CENTER",
+      "ring": 0,
+      "wormholes": [0, 1, 2, 3, 4, 5],
+      "vp": 0,
+      "discoverySlots": 1,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 1,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0
+      }
+    },
+    "101": {
+      "id": "101",
+      "stack": "I",
+      "ring": 1,
+      "wormholes": [0, 1, 3, 4],
+      "vp": 2,
+      "discoverySlots": 1,
+      "ancients": 1,
+      "artifacts": 0,
+      "number": 101,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 0,
+        "materialsBasic": 1,
+        "materialsAdvanced": 1
+      }
+    },
+    "102": {
+      "id": "102",
+      "stack": "I",
+      "ring": 1,
+      "wormholes": [0, 2, 3, 5],
+      "vp": 3,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 102,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0
+      }
+    },
+    "103": {
+      "id": "103",
+      "stack": "I",
+      "ring": 1,
+      "wormholes": [1, 2, 4, 5],
+      "vp": 2,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 103,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 1,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0,
+        "wildBasic": 1
+      }
+    },
+    "104": {
+      "id": "104",
+      "stack": "I",
+      "ring": 1,
+      "wormholes": [0, 1, 2, 3, 4, 5],
+      "vp": 2,
+      "discoverySlots": 1,
+      "ancients": 2,
+      "artifacts": 0,
+      "number": 104,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 1,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0
+      }
+    },
+    "105": {
+      "id": "105",
+      "stack": "I",
+      "ring": 1,
+      "wormholes": [0, 2, 3, 4],
+      "vp": 3,
+      "discoverySlots": 1,
+      "ancients": 1,
+      "artifacts": 0,
+      "number": 105,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 1,
+        "wildBasic": 0
+      }
+    },
+    "106": {
+      "id": "106",
+      "stack": "I",
+      "ring": 1,
+      "wormholes": [1, 3, 4, 5],
+      "vp": 2,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 106,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 0,
+        "materialsBasic": 1,
+        "materialsAdvanced": 0
+      }
+    },
+    "107": {
+      "id": "107",
+      "stack": "I",
+      "ring": 1,
+      "wormholes": [0, 1, 2, 4],
+      "vp": 2,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 107,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 1,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 1,
+        "wildBasic": 1
+      }
+    },
+    "108": {
+      "id": "108",
+      "stack": "I",
+      "ring": 1,
+      "wormholes": [0, 2, 3, 4, 5],
+      "vp": 2,
+      "discoverySlots": 1,
+      "ancients": 1,
+      "artifacts": 0,
+      "number": 108,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 1,
+        "materialsBasic": 0,
+        "materialsAdvanced": 1
+      }
+    },
+    "201": {
+      "id": "201",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [0, 3],
+      "vp": 1,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 201,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0
+      }
+    },
+    "202": {
+      "id": "202",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [1, 4],
+      "vp": 1,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 202,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 1,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0
+      }
+    },
+    "203": {
+      "id": "203",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [0, 1, 2, 3, 4, 5],
+      "vp": 1,
+      "discoverySlots": 1,
+      "ancients": 2,
+      "artifacts": 0,
+      "number": 203,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 0,
+        "materialsBasic": 1,
+        "materialsAdvanced": 0
+      }
+    },
+    "204": {
+      "id": "204",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [2, 5],
+      "vp": 2,
+      "discoverySlots": 1,
+      "ancients": 1,
+      "artifacts": 0,
+      "number": 204,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 1,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 1,
+        "wildBasic": 1
+      }
+    },
+    "205": {
+      "id": "205",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [0, 1, 3, 4],
+      "vp": 1,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 205,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 1,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0,
+        "wildBasic": 1
+      }
+    },
+    "206": {
+      "id": "206",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [1, 2, 4, 5],
+      "vp": 1,
+      "discoverySlots": 1,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 206,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 1,
+        "materialsAdvanced": 0
+      }
+    },
+    "207": {
+      "id": "207",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [0, 2, 3, 5],
+      "vp": 1,
+      "discoverySlots": 1,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 207,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0
+      }
+    },
+    "208": {
+      "id": "208",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [1, 2, 3],
+      "vp": 1,
+      "discoverySlots": 1,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 208,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0
+      }
+    },
+    "209": {
+      "id": "209",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [3, 4, 5],
+      "vp": 1,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 209,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 1,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0
+      }
+    },
+    "210": {
+      "id": "210",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [0, 1, 5],
+      "vp": 1,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 210,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 1,
+        "materialsAdvanced": 0
+      }
+    },
+    "211": {
+      "id": "211",
+      "stack": "II",
+      "ring": 2,
+      "wormholes": [0, 1, 2, 4],
+      "vp": 2,
+      "discoverySlots": 1,
+      "ancients": 1,
+      "artifacts": 0,
+      "number": 211,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 1,
+        "materialsAdvanced": 1,
+        "wildBasic": 1
+      }
+    },
+    "301": {
+      "id": "301",
+      "stack": "III",
+      "ring": 3,
+      "wormholes": [0, 3],
+      "vp": 2,
+      "discoverySlots": 1,
+      "ancients": 2,
+      "artifacts": 0,
+      "number": 301,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 0,
+        "materialsBasic": 2,
+        "materialsAdvanced": 1
+      }
+    },
+    "302": {
+      "id": "302",
+      "stack": "III",
+      "ring": 3,
+      "wormholes": [1, 4],
+      "vp": 2,
+      "discoverySlots": 1,
+      "ancients": 1,
+      "artifacts": 0,
+      "number": 302,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 1,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 1,
+        "materialsAdvanced": 0,
+        "wildBasic": 1
+      }
+    },
+    "303": {
+      "id": "303",
+      "stack": "III",
+      "ring": 3,
+      "wormholes": [2, 5],
+      "vp": 2,
+      "discoverySlots": 1,
+      "ancients": 1,
+      "artifacts": 0,
+      "number": 303,
+      "pop": {
+        "moneyBasic": 0,
+        "moneyAdvanced": 0,
+        "scienceBasic": 0,
+        "scienceAdvanced": 0,
+        "materialsBasic": 0,
+        "materialsAdvanced": 0,
+        "wildBasic": 1
+      }
+    },
+    "222": {
+      "id": "222",
+      "stack": "START",
+      "ring": 2,
+      "wormholes": [0, 3],
+      "vp": 0,
+      "discoverySlots": 0,
+      "ancients": 0,
+      "artifacts": 0,
+      "number": 222,
+      "pop": {
+        "moneyBasic": 1,
+        "moneyAdvanced": 0,
+        "scienceBasic": 1,
+        "scienceAdvanced": 0,
+        "materialsBasic": 1,
+        "materialsAdvanced": 0
+      }
+    }
+  },
+  "metadata": {
+    "version": "2.0",
+    "description": "Eclipse hex tile definitions with axial coordinates, wormholes, and population data",
+    "edge_numbering": "0=E, 1=NE, 2=NW, 3=W, 4=SW, 5=SE (clockwise from East)",
+    "notes": "This is a sample set. Complete Eclipse tile data should include all 60+ tiles from the physical game."
+  }
+}
+

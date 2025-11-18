@@ -1,0 +1,52 @@
+{
+  "regular_tech": {
+    "Military": [
+      {"name": "Neutron Bombs", "min_cost": 2, "max_cost": 2},
+      {"name": "Starbase", "min_cost": 3, "max_cost": 4},
+      {"name": "Plasma Cannon", "min_cost": 4, "max_cost": 6},
+      {"name": "Phase Shield", "min_cost": 5, "max_cost": 8},
+      {"name": "Advanced Mining", "min_cost": 6, "max_cost": 10},
+      {"name": "Tachyon Source", "min_cost": 6, "max_cost": 12},
+      {"name": "Gluon Computer", "min_cost": 7, "max_cost": 14},
+      {"name": "Plasma Missile", "min_cost": 8, "max_cost": 16}
+    ],
+    "Grid": [
+      {"name": "Gauss Shield", "min_cost": 2, "max_cost": 2},
+      {"name": "Fusion Source", "min_cost": 3, "max_cost": 4},
+      {"name": "Improved Hull", "min_cost": 4, "max_cost": 6},
+      {"name": "Positron Computer", "min_cost": 5, "max_cost": 8},
+      {"name": "Advanced Economy", "min_cost": 6, "max_cost": 10},
+      {"name": "Tachyon Drive", "min_cost": 6, "max_cost": 12},
+      {"name": "Antimatter Cannon", "min_cost": 7, "max_cost": 14},
+      {"name": "Quantum Grid", "min_cost": 8, "max_cost": 16}
+    ],
+    "Nano": [
+      {"name": "Nanorobots", "min_cost": 2, "max_cost": 2},
+      {"name": "Fusion Drive", "min_cost": 3, "max_cost": 4},
+      {"name": "Orbital", "min_cost": 4, "max_cost": 6},
+      {"name": "Advanced Robotics", "min_cost": 5, "max_cost": 8},
+      {"name": "Advanced Labs", "min_cost": 6, "max_cost": 10},
+      {"name": "Monolith", "min_cost": 6, "max_cost": 12},
+      {"name": "Wormhole Generator", "min_cost": 7, "max_cost": 14},
+      {"name": "Artifact Key", "min_cost": 8, "max_cost": 16}
+    ]
+  },
+  "rare_technologies": [
+    {"name": "Absorption Shield", "min_cost": 6, "max_cost": 7},
+    {"name": "Ancient Labs", "min_cost": 9, "max_cost": 13},
+    {"name": "Antimatter Splitter", "min_cost": 5, "max_cost": 5},
+    {"name": "Cloaking Device", "min_cost": 6, "max_cost": 7},
+    {"name": "Conifold Field", "min_cost": 5, "max_cost": 5},
+    {"name": "Flux Missile", "min_cost": 8, "max_cost": 11},
+    {"name": "Improved Logistics", "min_cost": 6, "max_cost": 7},
+    {"name": "Metasynthesis", "min_cost": 11, "max_cost": 17},
+    {"name": "Neutron Absorber", "min_cost": 5, "max_cost": 5},
+    {"name": "Pico Modulator", "min_cost": 8, "max_cost": 11},
+    {"name": "Rift Cannon", "min_cost": 7, "max_cost": 9},
+    {"name": "Sentient Hull", "min_cost": 6, "max_cost": 7},
+    {"name": "Soliton Cannon", "min_cost": 7, "max_cost": 9},
+    {"name": "Transition Drive", "min_cost": 7, "max_cost": 9},
+    {"name": "Warp Portal", "min_cost": 7, "max_cost": 9},
+    {"name": "Zero-Point Source", "min_cost": 10, "max_cost": 15}
+  ]
+}

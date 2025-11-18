@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eclipse-sim"
+version = "0.1.0"
+description = "AI planning tools for Eclipse board game simulations"
+readme = "README.md"
+authors = [{ name = "Eclipse AI Contributors" }]
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.4.0",
+    "mypy>=1.9.0",
+    "pre-commit>=3.7.0",
+    "pytest-cov>=4.1",
+    "pytest>=7.4",
+    "ruff>=0.5.0",
+]
+gui = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "python-multipart>=0.0.6",
+    "jinja2>=3.1.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.setuptools.packages.find]
+include = ["eclipse_ai*"]

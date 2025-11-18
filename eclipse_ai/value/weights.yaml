@@ -1,0 +1,157 @@
+# =============================================================================
+# Eclipse AI Evaluation Weights
+# =============================================================================
+# These weights define how the AI values different aspects of game state.
+# Higher weights mean the AI prioritizes that feature more.
+# Negative weights penalize that aspect.
+#
+# Tuning guide:
+# - Increase combat weights for aggressive play
+# - Increase economy weights for expansive/peaceful play
+# - Increase territory weights for map control strategies
+# - Adjust round-specific weights to change early/mid/late game priorities
+# =============================================================================
+
+# ===== VP & Scoring (Direct value) =====
+vp_now: 2.0                    # Current VP is extremely valuable (endgame metric)
+reputation_tiles: 0.8          # Each reputation tile
+reputation_value: 0.4          # VP value of reputation tiles
+discoveries: 1.2               # Discovery tiles (often 2-4 VP each)
+monoliths: 1.5                 # Monoliths (3 VP each + benefits)
+ambassadors: 0.3               # Ambassadors (can convert to reputation)
+
+# ===== Economy (Resource generation & management) =====
+money: 0.07                    # Current money stockpile
+science: 0.08                  # Current science (more valuable - buys tech)
+materials: 0.05                # Current materials (builds ships)
+total_resources: 0.02          # Bonus for resource diversity
+
+money_income: 0.20             # Money per turn (compounds over time)
+science_income: 0.25           # Science per turn (enables tech advantage)
+materials_income: 0.15         # Materials per turn (enables fleet growth)
+total_income: 0.05             # Bonus for balanced income
+
+orange_bank: 0.04              # Orange stockpile
+orange_income: 0.18            # Orange per turn (enables actions)
+orange_upkeep: -0.08           # Upkeep cost (negative = bad)
+orange_net_income: 0.22        # Net orange income (income - upkeep)
+orange_efficiency: 0.15        # Economic efficiency ratio
+action_capacity: 0.25          # Remaining action capacity this turn
+
+influence_discs: -0.05         # Discs on board (upkeep cost)
+spare_discs: 0.12              # Available discs (action flexibility)
+action_slots_filled: -0.03     # Action slots used (cost tracking)
+
+# ===== Military (Combat capability) =====
+# Ship design quality
+interceptor_firepower: 0.08    # Interceptor guns
+cruiser_firepower: 0.15        # Cruiser guns
+dreadnought_firepower: 0.25    # Dreadnought guns (most valuable)
+starbase_firepower: 0.12       # Starbase guns
+
+interceptor_defense: 0.06      # Interceptor durability
+cruiser_defense: 0.12          # Cruiser durability
+dreadnought_defense: 0.20      # Dreadnought durability
+starbase_defense: 0.15         # Starbase durability
+
+interceptor_mobility: 0.05     # Interceptor movement
+cruiser_mobility: 0.08         # Cruiser movement
+dreadnought_mobility: 0.10     # Dreadnought movement (enables aggression)
+
+interceptor_initiative: 0.03   # Initiative advantage
+cruiser_initiative: 0.05
+dreadnought_initiative: 0.07
+starbase_initiative: 0.02
+
+total_firepower_designs: 0.08  # Overall offensive capability
+total_defense_designs: 0.06    # Overall defensive capability
+avg_mobility: 0.12             # Average fleet mobility
+
+# Fleet composition (actual ships)
+fleet_interceptors: 0.15       # Interceptors on board
+fleet_cruisers: 0.35           # Cruisers on board
+fleet_dreadnoughts: 0.60       # Dreadnoughts on board (most valuable)
+fleet_starbases: 0.40          # Starbases on board (defensive value)
+total_fleet_size: 0.10         # Overall fleet presence
+fleet_power: 0.08              # Combined fleet strength
+
+# ===== Territory (Map control & position) =====
+controlled_hexes: 0.30         # Hexes under control
+influence_hexes: 0.25          # Hexes with influence discs
+colonized_planets: 0.40        # Total colonized planets
+reachable_hexes: 0.18          # Connectivity/mobility
+
+# Planet types (resource generation)
+orange_planets: 0.35           # Money planets
+pink_planets: 0.45             # Science planets (very valuable)
+brown_planets: 0.38            # Materials planets
+wild_planets: 0.50             # Wild planets (flexible)
+planet_diversity: 0.30         # Balanced planet portfolio
+
+# ===== Strategic Position (Tech & capability) =====
+tech_count: 0.20               # Total technologies owned
+military_tech: 0.22            # Military technologies
+grid_tech: 0.18                # Grid technologies (economy)
+nano_tech: 0.18                # Nano technologies (economy)
+has_wormhole_generator: 0.60   # Wormhole generator (huge mobility boost)
+
+# Game state
+round_index: 0.01              # Current round (slight urgency increase)
+early_game: 0.0                # Early game indicator
+mid_game: 0.0                  # Mid game indicator  
+late_game: 0.10                # Late game bonus (urgency to score)
+
+# Action state
+has_passed: -0.50              # Passed this round (negative flexibility)
+is_collapsed: -2.0             # Economic collapse (very bad)
+
+# ===== Threats & Opposition (Risk assessment) =====
+danger_max: -0.25              # Maximum threat from any opponent
+danger_mean: -0.10             # Average threat level
+opp_aggression_max: -0.15      # Most aggressive opponent
+opp_tech_max: -0.12            # Most tech-advanced opponent
+
+enemy_ships_total: -0.08       # Total enemy ships on board
+contested_hexes: -0.15         # Hexes with both friendly & enemy presence
+threat_ratio: -0.30            # Enemy fleet size / your fleet size
+
+# =============================================================================
+# Strategy Profiles (uncomment sections to bias AI behavior)
+# =============================================================================
+
+# --- AGGRESSIVE PROFILE ---
+# Boost military values, reduce economic patience
+# Uncomment these to override base values:
+# fleet_dreadnoughts: 0.80
+# dreadnought_firepower: 0.40
+# fleet_power: 0.15
+# contested_hexes: 0.10  # View contested hexes as opportunities
+# enemy_ships_total: -0.04  # Less worried about enemies
+
+# --- ECONOMIC PROFILE ---  
+# Boost economy and territory, reduce military urgency
+# Uncomment these to override base values:
+# science_income: 0.35
+# materials_income: 0.28
+# colonized_planets: 0.55
+# pink_planets: 0.60
+# orange_net_income: 0.35
+# fleet_power: 0.04  # Less focus on military
+
+# --- TECH RUSH PROFILE ---
+# Prioritize science generation and technology advancement
+# Uncomment these to override base values:
+# science: 0.15
+# science_income: 0.40
+# tech_count: 0.35
+# military_tech: 0.30
+# pink_planets: 0.70
+
+# --- DEFENSIVE PROFILE ---
+# Prioritize starbases, defensive tech, and secure borders
+# Uncomment these to override base values:
+# fleet_starbases: 0.60
+# starbase_defense: 0.25
+# controlled_hexes: 0.45
+# threat_ratio: -0.50  # Very risk-averse
+# contested_hexes: -0.30  # Avoid conflict
