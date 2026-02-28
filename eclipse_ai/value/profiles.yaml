@@ -44,6 +44,12 @@ aggressive:
   colonized_planets: 0.35           # vs 0.40 base
   reachable_hexes: 0.25             # vs 0.18 base (mobility matters)
 
+  # Combat readiness
+  offensive_readiness: 0.25         # vs 0.12 base
+  fleet_concentration: 0.18         # vs 0.10 base
+  relative_fleet: 0.25              # vs 0.15 base
+  leader_gap: -0.15                 # vs -0.22 base
+
 # --- ECONOMIC PROFILE ---
 # Prioritize resource generation and technological advancement
 # Best for: Long games, tech-focused species, low-conflict tables
@@ -72,6 +78,11 @@ economic:
   fleet_dreadnoughts: 0.45          # vs 0.60 base
   contested_hexes: -0.25            # vs -0.15 base (avoid conflict more)
   threat_ratio: -0.45               # vs -0.30 base (more defensive)
+
+  # Relative advantage
+  relative_economy: 0.22            # vs 0.12 base (economic superiority matters)
+  relative_tech: 0.25               # vs 0.18 base
+  border_defense_coverage: 0.22     # vs 0.15 base (protect investments)
 
 # --- TECH RUSH PROFILE ---
 # Maximize technology acquisition speed
@@ -125,10 +136,14 @@ defensive:
   danger_max: -0.40                 # vs -0.25 base
   danger_mean: -0.18                # vs -0.10 base
   enemy_ships_total: -0.15          # vs -0.08 base
-  
+
   # Balanced economy for sustainability
   orange_net_income: 0.30           # vs 0.22 base
   orange_efficiency: 0.22           # vs 0.15 base
+
+  # Defensive readiness
+  border_defense_coverage: 0.30     # vs 0.15 base (must defend all borders)
+  leader_gap: -0.30                 # vs -0.22 base (very worried about falling behind)
 
 # --- EXPANSION PROFILE ---
 # Rapid territorial expansion and colonization

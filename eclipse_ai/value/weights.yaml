@@ -115,6 +115,19 @@ enemy_ships_total: -0.08       # Total enemy ships on board
 contested_hexes: -0.15         # Hexes with both friendly & enemy presence
 threat_ratio: -0.30            # Enemy fleet size / your fleet size
 
+# ===== Relative Advantage (Position vs opponents) =====
+relative_tech: 0.18            # Tech advantage over opponents
+relative_territory: 0.20       # Territory advantage over opponents
+relative_fleet: 0.15           # Fleet advantage over opponents
+relative_economy: 0.12         # Economic advantage over opponents
+leader_gap: -0.22              # How far the leader is ahead (negative = falling behind is bad)
+
+# ===== Combat Readiness (Battle preparedness) =====
+fleet_concentration: 0.10      # Fleet grouping for offense
+border_defense_coverage: 0.15  # Border defense completeness
+reinforcement_capacity: 0.08   # Ability to build reinforcements
+offensive_readiness: 0.12      # Overall combat preparedness
+
 # =============================================================================
 # Strategy Profiles (uncomment sections to bias AI behavior)
 # =============================================================================
