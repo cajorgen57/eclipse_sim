@@ -13,8 +13,29 @@ def _rate(delta: float, scale: float) -> float:
     return min(1.0, x)
 
 
+def _compute_battle_aggression(snaps: List[Snapshot], pid: int, rounds: int) -> float:
+    """Compute aggression from battle history if available.
+
+    Uses actual combat actions as a stronger signal than ship building alone.
+    """
+    total_battles = 0
+    for snap in snaps:
+        total_battles += snap.battles_in_round_by_player.get(pid, 0)
+    if rounds <= 0:
+        return 0.0
+    # Normalize: 1 battle per round = moderate aggression, 2+ = high
+    return min(1.0, total_battles / (rounds * 1.5))
+
+
 def compute_metrics(hist: OppHistory) -> Dict[int, OpponentMetrics]:
-    """Compute normalized metrics per player from the last window of snapshots."""
+    """Compute normalized metrics per player from the last window of snapshots.
+
+    Improved aggression formula that accounts for:
+    - Actual combat actions (battles initiated)
+    - Fleet buildup rate and composition
+    - Border pressure from fleet positioning
+    - Expansion into contested territory
+    """
     if not hist.has_window:
         return {}
     snaps: List[Snapshot] = hist.window()
@@ -40,14 +61,38 @@ def compute_metrics(hist: OppHistory) -> Dict[int, OpponentMetrics]:
         tech_pace = _rate(d_tech, tech_scale / rounds)
         upgrade_intensity = _rate(d_upg, upgrade_scale / rounds)
 
-        aggression = min(1.0, 0.5 * build_intensity + 0.2 * expansion)
+        # Improved aggression: combines multiple signals
+        battle_aggression = _compute_battle_aggression(snaps, pid, rounds)
+        build_aggression = 0.5 * build_intensity + 0.2 * expansion
 
-        mobility = last.mobility_by_player.get(pid, 0.5)
-        fleet_power = max(0.0, min(1.0, 0.5 * build_intensity + 0.3 * upgrade_intensity + 0.2 * mobility))
+        # If we have battle data, weight it heavily; otherwise fall back to build-based
+        if battle_aggression > 0:
+            aggression = min(1.0, 0.6 * battle_aggression + 0.3 * build_aggression + 0.1 * upgrade_intensity)
+        else:
+            aggression = min(1.0, build_aggression + 0.15 * upgrade_intensity)
 
-        border_pressure = 0.0
+        # Improved mobility: account for expansion rate as a mobility signal
+        base_mobility = last.mobility_by_player.get(pid, 0.5)
+        mobility = min(1.0, base_mobility * 0.7 + expansion * 0.3)
+
+        # Improved fleet power: weight combat-tested fleets higher
+        fleet_power_base = 0.4 * build_intensity + 0.3 * upgrade_intensity + 0.15 * mobility
+        # Battle experience makes fleet power more credible
+        if battle_aggression > 0.3:
+            fleet_power_base += 0.15 * battle_aggression
+        fleet_power = max(0.0, min(1.0, fleet_power_base))
+
+        # Border pressure: infer from expansion into potentially contested areas
+        # If expanding rapidly while also building ships, likely pressuring borders
+        border_pressure = min(1.0, 0.4 * expansion + 0.3 * build_intensity + 0.3 * aggression)
+
         diplomacy_rate = 0.0
-        risk_tolerance = 0.3 + 0.4 * aggression - 0.2 * tech_pace
+
+        # Improved risk tolerance: accounts for battle history
+        risk_tolerance = 0.3 + 0.3 * aggression + 0.1 * battle_aggression - 0.2 * tech_pace
+        # Players who build starbases and don't attack are risk-averse
+        if tech_pace > 0.5 and aggression < 0.2:
+            risk_tolerance *= 0.6
 
         out[pid] = OpponentMetrics(
             aggression=aggression,

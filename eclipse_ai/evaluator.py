@@ -65,18 +65,86 @@ def _load_weights(path: str | None = None, profile: str | None = None):
 def evaluate_state(state, context=None, profile: str | None = None) -> float:
     """
     Evaluate a game state using weighted feature extraction.
-    
+
+    Applies opponent-style-reactive weight adjustments when context is available,
+    making the AI adapt its priorities based on what opponents are doing.
+
     Args:
         state: GameState to evaluate
         context: Optional context with opponent models and threat data
         profile: Optional strategy profile to use (e.g., "aggressive", "economic")
-        
+
     Returns:
         Scalar evaluation score (higher is better)
     """
-    w = _load_weights(None, profile)
+    w = dict(_load_weights(None, profile))
     feats = extract_features(state, context)
+
+    # Opponent-style-reactive weight adjustments
+    if context is not None:
+        opponent_models = getattr(context, "opponent_models", {}) or {}
+        if opponent_models:
+            w = _adjust_weights_for_opponents(w, opponent_models)
+
     return sum(float(w.get(k, 0.0)) * float(v) for k, v in feats.items())
+
+
+def _adjust_weights_for_opponents(weights: dict, opponent_models: dict) -> dict:
+    """Dynamically adjust evaluation weights based on opponent styles.
+
+    When facing aggressive opponents: prioritize defense and fleet strength.
+    When facing techers: prioritize tech pace to keep up.
+    When facing turtles: we can focus on economy (they won't attack).
+    When facing rushers: prioritize early military readiness.
+    """
+    w = dict(weights)
+
+    max_aggression = 0.0
+    max_tech_pace = 0.0
+    any_rusher = False
+    any_turtle = False
+
+    for model in opponent_models.values():
+        metrics = getattr(model, "metrics", None)
+        style = getattr(model, "style", None)
+        if metrics:
+            max_aggression = max(max_aggression, getattr(metrics, "aggression", 0.0))
+            max_tech_pace = max(max_tech_pace, getattr(metrics, "tech_pace", 0.0))
+        if style is not None:
+            style_name = getattr(style, "name", str(style))
+            if "RUSHER" in style_name:
+                any_rusher = True
+            elif "TURTLE" in style_name:
+                any_turtle = True
+
+    # React to aggressive opponents: boost defense and fleet
+    if max_aggression > 0.5:
+        factor = max_aggression - 0.5
+        w["fleet_power"] = w.get("fleet_power", 0.08) + 0.08 * factor
+        w["border_defense_coverage"] = w.get("border_defense_coverage", 0.15) + 0.10 * factor
+        w["fleet_starbases"] = w.get("fleet_starbases", 0.40) + 0.10 * factor
+        w["threat_ratio"] = w.get("threat_ratio", -0.30) - 0.10 * factor
+
+    # React to tech-focused opponents: keep up with tech pace
+    if max_tech_pace > 0.5:
+        factor = max_tech_pace - 0.5
+        w["tech_count"] = w.get("tech_count", 0.20) + 0.08 * factor
+        w["science_income"] = w.get("science_income", 0.25) + 0.06 * factor
+        w["relative_tech"] = w.get("relative_tech", 0.18) + 0.08 * factor
+
+    # React to rushers: prioritize early military
+    if any_rusher:
+        w["fleet_interceptors"] = w.get("fleet_interceptors", 0.15) + 0.05
+        w["reinforcement_capacity"] = w.get("reinforcement_capacity", 0.08) + 0.05
+        w["offensive_readiness"] = w.get("offensive_readiness", 0.12) + 0.05
+
+    # React to turtles: we can afford to focus on economy
+    if any_turtle and max_aggression < 0.3:
+        w["science_income"] = w.get("science_income", 0.25) + 0.04
+        w["colonized_planets"] = w.get("colonized_planets", 0.40) + 0.05
+        w["relative_economy"] = w.get("relative_economy", 0.12) + 0.05
+
+    return w
 
 
 def set_evaluation_profile(profile: str | None) -> None:
@@ -241,6 +309,15 @@ def _score_explore(state: GameState, pid: str, payload: Dict[str, Any]) -> Score
 # ===== Move (with optional combat) =====
 
 def _score_move(state: GameState, pid: str, payload: Dict[str, Any]) -> Score:
+    """Evaluate move actions with strategic positioning awareness.
+
+    Considers:
+    - Territory value of destination hex
+    - Strategic positioning (ring proximity, connectivity)
+    - Fleet consolidation value
+    - Defensive repositioning (moving to threatened hexes)
+    - Blocking opponent expansion paths
+    """
     src = payload.get("from")
     dst = payload.get("to")
     if not dst:
@@ -260,9 +337,54 @@ def _score_move(state: GameState, pid: str, payload: Dict[str, Any]) -> Score:
 
     if (enemy_presence + ancients) == 0:
         terr_ev = _territory_value_of_hex(h_to)
-        # Slight bonus for consolidating fleets
+
+        # Fleet consolidation bonus: grouping ships is tactically valuable
         fleet_bonus = 0.05 * sum(move_ships.values())
-        return Score(expected_vp=terr_ev + fleet_bonus, risk=0.1, details={"positional": True, "territory_ev": round(terr_ev,3)})
+        existing_ships = 0
+        if h_to and pid in h_to.pieces:
+            existing_ships = sum(int(n) for n in h_to.pieces[pid].ships.values())
+        if existing_ships > 0:
+            fleet_bonus += 0.08  # Bonus for joining existing fleet
+
+        # Strategic ring bonus: inner rings are more valuable
+        ring_bonus = 0.0
+        if h_to:
+            ring = getattr(h_to, "ring", 3)
+            if ring == 0:
+                ring_bonus = 0.15  # Center hex
+            elif ring == 1:
+                ring_bonus = 0.08  # Inner ring
+
+        # Defensive repositioning: moving to a hex adjacent to enemies
+        defense_bonus = 0.0
+        if h_to and state.map:
+            # Check if destination is near enemy territory (deterrence value)
+            for adj_id in getattr(h_to, "wormholes", []):
+                adj_hex = state.map.hexes.get(str(adj_id))
+                if adj_hex and _enemy_presence_in_hex(state, pid, adj_hex) > 0:
+                    defense_bonus = 0.1  # Deterrence positioning
+                    break
+
+        # Source hex safety: penalize leaving a valuable hex undefended
+        abandon_penalty = 0.0
+        if h_from and pid in h_from.pieces:
+            remaining_ships = {}
+            for cls, count in h_from.pieces[pid].ships.items():
+                remaining = int(count) - move_ships.get(cls, 0)
+                if remaining > 0:
+                    remaining_ships[cls] = remaining
+            if not remaining_ships and not h_from.pieces[pid].starbase:
+                from_value = _territory_value_of_hex(h_from)
+                if from_value > 0.3:
+                    abandon_penalty = from_value * 0.3
+
+        total_ev = terr_ev + fleet_bonus + ring_bonus + defense_bonus - abandon_penalty
+        return Score(expected_vp=total_ev, risk=0.1, details={
+            "positional": True,
+            "territory_ev": round(terr_ev, 3),
+            "ring_bonus": round(ring_bonus, 3),
+            "defense_bonus": round(defense_bonus, 3),
+        })
 
     # Build combat query from state + payload
     cq = _combat_query_from_state(state, pid, h_from, h_to, move_ships, ancient_count=ancients)
@@ -380,16 +502,78 @@ def _territory_value_of_hex(hx: Optional[Hex]) -> float:
 # ===== Build =====
 
 def _score_build(state: GameState, pid: str, payload: Dict[str, Any]) -> Score:
+    """Evaluate build actions with game-phase and fleet-composition awareness.
+
+    Considers:
+    - Current fleet composition gaps (need interceptors vs dreadnoughts?)
+    - Game phase (early: cheap ships, late: heavy hitters)
+    - Threat level (build urgency in contested areas)
+    - Starbase value based on border exposure
+    """
     ships = dict(payload.get("ships", {}))
     starbase = int(payload.get("starbase", 0))
-    # Econ/position proxy values
-    v = 0.15*ships.get("interceptor",0) + 0.45*ships.get("cruiser",0) + 0.90*ships.get("dreadnought",0) + 0.70*starbase
-    # Slight threat bonus if building in contested hex
+
+    base_values = {"interceptor": 0.15, "cruiser": 0.45, "dreadnought": 0.90}
+
+    you = state.players.get(pid) if state.players else None
+    round_idx = getattr(state, "round_index", 1) or getattr(state, "round", 1)
+
+    fleet = _get_fleet_summary(state, pid)
+    total_fleet = sum(fleet.values())
+
+    # Phase-based value adjustments
+    if round_idx <= 2:
+        phase_mult = {"interceptor": 1.4, "cruiser": 1.1, "dreadnought": 0.7}
+    elif round_idx <= 5:
+        phase_mult = {"interceptor": 0.9, "cruiser": 1.3, "dreadnought": 1.1}
+    else:
+        phase_mult = {"interceptor": 0.7, "cruiser": 1.0, "dreadnought": 1.4}
+
+    # Fleet gap analysis: value ships we lack more
+    gap_mult = {}
+    if total_fleet > 0:
+        if fleet.get("interceptor", 0) == 0 and fleet.get("cruiser", 0) + fleet.get("dreadnought", 0) > 0:
+            gap_mult["interceptor"] = 1.3
+        if fleet.get("cruiser", 0) == 0 and total_fleet >= 2:
+            gap_mult["cruiser"] = 1.2
+        if fleet.get("dreadnought", 0) == 0 and round_idx >= 4:
+            gap_mult["dreadnought"] = 1.3
+
+    v = 0.0
+    for ship_class, count in ships.items():
+        base = base_values.get(ship_class, 0.15)
+        v += count * base * phase_mult.get(ship_class, 1.0) * gap_mult.get(ship_class, 1.0)
+
+    if starbase > 0:
+        starbase_value = 0.70
+        hx = _get_hex(state, payload.get("hex"))
+        if hx:
+            if _enemy_presence_in_hex(state, pid, hx) > 0:
+                starbase_value *= 1.4
+            hex_value = _territory_value_of_hex(hx)
+            if hex_value > 0.5:
+                starbase_value *= 1.2
+        v += starbase * starbase_value
+
     hx = _get_hex(state, payload.get("hex"))
-    threat = 0.15 if _enemy_presence_in_hex(state, pid, hx) > 0 else 0.0
+    pressure = _global_enemy_pressure(state, pid)
+    threat = 0.0
+    if hx and _enemy_presence_in_hex(state, pid, hx) > 0:
+        threat = 0.15 + 0.1 * pressure
+
     expected_vp = v + threat
-    risk = 0.12 if threat == 0.0 else 0.22
-    return Score(expected_vp=expected_vp, risk=risk, details={"ships": ships, "starbase": starbase, "contested": threat > 0})
+    risk = 0.12
+    if you:
+        resources = getattr(you, "resources", None)
+        if resources:
+            materials = getattr(resources, "materials", 0)
+            total_cost = ships.get("interceptor", 0) * 3 + ships.get("cruiser", 0) * 5 + ships.get("dreadnought", 0) * 8
+            if total_cost > materials * 0.8:
+                risk = 0.25
+    if threat > 0:
+        risk = max(risk, 0.22)
+
+    return Score(expected_vp=expected_vp, risk=risk, details={"ships": ships, "starbase": starbase, "contested": threat > 0, "round": round_idx})
 
 # ===== Research =====
 
@@ -618,18 +802,67 @@ def _score_influence(state: GameState, pid: str, payload: Dict[str, Any]) -> Sco
 # ===== Diplomacy =====
 
 def _score_diplomacy(state: GameState, pid: str, payload: Dict[str, Any]) -> Score:
-    # Small positive by default; can increase if targeting the current main rival.
+    """Evaluate diplomacy with deeper game-state awareness.
+
+    Considers:
+    - Ally's fleet strength (stronger ally = more value)
+    - Shared borders (ally on your border reduces threat)
+    - Mutual threat from third parties
+    - Game phase (alliances more valuable late game for VP denial)
+    - Your own vulnerability (weak players benefit more from alliances)
+    """
     target = payload.get("with")
     base = 0.3
-    # Heuristic: if target has many ships, alliance yields more.
-    ships = 0
+    ally_ships = 0
+    shares_border = False
+    your_ships = 0
+
     if target and state.map:
         for hx in state.map.hexes.values():
             p = hx.pieces.get(target)
             if p:
-                ships += sum(int(n) for n in p.ships.values()) + int(p.starbase)
-    bonus = 0.1 if ships >= 4 else 0.0
-    return Score(expected_vp=base + bonus, risk=0.05, details={"ally": target, "ally_ships": ships})
+                ally_ships += sum(int(n) for n in p.ships.values()) + int(p.starbase)
+            p_you = hx.pieces.get(pid)
+            if p_you:
+                your_ships += sum(int(n) for n in p_you.ships.values()) + int(p_you.starbase)
+                # Check if this hex borders the target's territory
+                if p and (sum(int(n) for n in p.ships.values()) + int(p.starbase)) > 0:
+                    shares_border = True
+
+    # Strong ally bonus (scaled, not binary)
+    fleet_bonus = min(0.3, 0.05 * ally_ships)
+
+    # Shared border bonus: alliance neutralizes a direct threat
+    border_bonus = 0.15 if shares_border else 0.0
+
+    # Vulnerability bonus: weak players benefit more from alliances
+    vulnerability_bonus = 0.0
+    if your_ships > 0 and ally_ships > 0:
+        power_ratio = your_ships / max(1, ally_ships)
+        if power_ratio < 0.5:
+            vulnerability_bonus = 0.15  # You're much weaker, alliance is very valuable
+        elif power_ratio < 1.0:
+            vulnerability_bonus = 0.08
+
+    # Late game bonus: alliances help with VP denial
+    round_idx = getattr(state, "round_index", 1) or getattr(state, "round", 1)
+    phase_bonus = 0.1 if round_idx >= 6 else 0.0
+
+    # Mutual threat: if a third party threatens both, alliance is more valuable
+    pressure = _global_enemy_pressure(state, pid)
+    threat_bonus = 0.1 * pressure
+
+    expected_vp = base + fleet_bonus + border_bonus + vulnerability_bonus + phase_bonus + threat_bonus
+    risk = 0.05
+
+    details = {
+        "ally": target,
+        "ally_ships": ally_ships,
+        "shares_border": shares_border,
+        "vulnerability_bonus": round(vulnerability_bonus, 2),
+        "round": round_idx,
+    }
+    return Score(expected_vp=expected_vp, risk=risk, details=details)
 
 # ===== Utilities =====
 

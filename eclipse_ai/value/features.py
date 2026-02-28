@@ -51,7 +51,13 @@ def extract_features(state: Any, context: Any | None = None) -> Dict[str, float]
     
     # ===== Threat & Opposition Features =====
     feats.update(_extract_threat_features(state, player, active_player_id, context))
-    
+
+    # ===== Relative Advantage Features =====
+    feats.update(_extract_relative_advantage_features(state, player, active_player_id))
+
+    # ===== Combat Readiness Features =====
+    feats.update(_extract_combat_readiness_features(state, player, active_player_id))
+
     return feats
 
 
@@ -394,5 +400,191 @@ def _extract_threat_features(state: Any, player: Any, player_id: str, context: A
         feats["enemy_ships_total"] = 0.0
         feats["contested_hexes"] = 0.0
         feats["threat_ratio"] = 0.0
-    
+
+    return feats
+
+
+def _extract_relative_advantage_features(state: Any, player: Any, player_id: str) -> Dict[str, float]:
+    """Extract features measuring relative advantage vs opponents.
+
+    These features help the AI understand its position relative to other players,
+    enabling better strategic decisions about when to attack, defend, or grow.
+    """
+    feats: Dict[str, float] = {}
+    players = getattr(state, "players", {})
+    if not players or len(players) < 2:
+        feats["relative_tech"] = 0.0
+        feats["relative_territory"] = 0.0
+        feats["relative_fleet"] = 0.0
+        feats["relative_economy"] = 0.0
+        feats["leader_gap"] = 0.0
+        return feats
+
+    # Gather metrics for all players
+    my_tech = len(getattr(player, "owned_tech_ids", set()))
+    my_income = 0.0
+    income = getattr(player, "income", None)
+    if income:
+        my_income = float(getattr(income, "money", 0)) + float(getattr(income, "science", 0)) + float(getattr(income, "materials", 0))
+
+    map_state = getattr(state, "map", None)
+    hexes = getattr(map_state, "hexes", {}) if map_state else {}
+
+    # Count territories and ships per player
+    territories_by_player: Dict[str, int] = {}
+    ships_by_player: Dict[str, int] = {}
+    for hex_obj in hexes.values():
+        pieces_dict = getattr(hex_obj, "pieces", {})
+        for pid, pieces in pieces_dict.items():
+            ship_count = sum(int(v) for v in getattr(pieces, "ships", {}).values())
+            ship_count += int(getattr(pieces, "starbase", 0))
+            ships_by_player[pid] = ships_by_player.get(pid, 0) + ship_count
+            discs = int(getattr(pieces, "discs", 0))
+            if discs > 0 or ship_count > 0:
+                territories_by_player[pid] = territories_by_player.get(pid, 0) + 1
+
+    my_territory = territories_by_player.get(player_id, 0)
+    my_fleet = ships_by_player.get(player_id, 0)
+
+    # Compute opponent averages
+    opp_techs = []
+    opp_territories = []
+    opp_fleets = []
+    opp_incomes = []
+    for pid, p in players.items():
+        if pid == player_id:
+            continue
+        opp_techs.append(len(getattr(p, "owned_tech_ids", set())))
+        opp_territories.append(territories_by_player.get(pid, 0))
+        opp_fleets.append(ships_by_player.get(pid, 0))
+        opp_income = getattr(p, "income", None)
+        if opp_income:
+            opp_incomes.append(
+                float(getattr(opp_income, "money", 0)) +
+                float(getattr(opp_income, "science", 0)) +
+                float(getattr(opp_income, "materials", 0))
+            )
+        else:
+            opp_incomes.append(0.0)
+
+    # Relative advantages: positive means we're ahead, negative means behind
+    avg_opp_tech = mean(opp_techs) if opp_techs else 0.0
+    avg_opp_territory = mean(opp_territories) if opp_territories else 0.0
+    avg_opp_fleet = mean(opp_fleets) if opp_fleets else 0.0
+    avg_opp_income = mean(opp_incomes) if opp_incomes else 0.0
+
+    # Normalize to roughly -1..1 range
+    feats["relative_tech"] = float((my_tech - avg_opp_tech) / max(1.0, avg_opp_tech)) if avg_opp_tech > 0 else float(my_tech * 0.2)
+    feats["relative_territory"] = float((my_territory - avg_opp_territory) / max(1.0, avg_opp_territory)) if avg_opp_territory > 0 else float(my_territory * 0.2)
+    feats["relative_fleet"] = float((my_fleet - avg_opp_fleet) / max(1.0, avg_opp_fleet)) if avg_opp_fleet > 0 else float(my_fleet * 0.1)
+    feats["relative_economy"] = float((my_income - avg_opp_income) / max(1.0, avg_opp_income)) if avg_opp_income > 0 else float(my_income * 0.05)
+
+    # Leader gap: how far the leading opponent is ahead of us (0 if we're leading)
+    max_opp_fleet = max(opp_fleets) if opp_fleets else 0
+    max_opp_territory = max(opp_territories) if opp_territories else 0
+    fleet_gap = max(0, max_opp_fleet - my_fleet)
+    territory_gap = max(0, max_opp_territory - my_territory)
+    feats["leader_gap"] = float(fleet_gap * 0.3 + territory_gap * 0.5)
+
+    return feats
+
+
+def _extract_combat_readiness_features(state: Any, player: Any, player_id: str) -> Dict[str, float]:
+    """Extract combat readiness features.
+
+    Measures how prepared the player is for combat, including:
+    - Fleet positioning (concentrated vs spread)
+    - Ship quality relative to combat needs
+    - Resource reserves for reinforcement
+    - Defensive infrastructure coverage
+    """
+    feats: Dict[str, float] = {}
+
+    map_state = getattr(state, "map", None)
+    if not map_state:
+        feats["fleet_concentration"] = 0.0
+        feats["border_defense_coverage"] = 0.0
+        feats["reinforcement_capacity"] = 0.0
+        feats["offensive_readiness"] = 0.0
+        return feats
+
+    hexes = getattr(map_state, "hexes", {})
+
+    # Fleet concentration: ratio of largest fleet group to total fleet
+    fleet_groups = []
+    total_ships = 0
+    starbased_hexes = 0
+    border_hexes_defended = 0
+    border_hexes_total = 0
+
+    for hex_obj in hexes.values():
+        pieces = getattr(hex_obj, "pieces", {}).get(player_id)
+        if not pieces:
+            continue
+
+        ships = getattr(pieces, "ships", {})
+        ship_count = sum(int(v) for v in ships.values())
+        starbase = int(getattr(pieces, "starbase", 0))
+
+        if ship_count > 0:
+            fleet_groups.append(ship_count)
+            total_ships += ship_count
+
+        if starbase > 0:
+            starbased_hexes += 1
+
+        # Check if this is a border hex
+        is_border = False
+        pieces_dict = getattr(hex_obj, "pieces", {})
+        for pid, p in pieces_dict.items():
+            if pid != player_id and sum(int(v) for v in getattr(p, "ships", {}).values()) > 0:
+                is_border = True
+                break
+
+        if is_border:
+            border_hexes_total += 1
+            if ship_count > 0 or starbase > 0:
+                border_hexes_defended += 1
+
+    # Fleet concentration: higher means forces are grouped (good for offense)
+    if total_ships > 0 and fleet_groups:
+        max_group = max(fleet_groups)
+        feats["fleet_concentration"] = float(max_group / total_ships)
+    else:
+        feats["fleet_concentration"] = 0.0
+
+    # Border defense coverage: ratio of defended borders to total borders
+    if border_hexes_total > 0:
+        feats["border_defense_coverage"] = float(border_hexes_defended / border_hexes_total)
+    else:
+        feats["border_defense_coverage"] = 1.0  # No borders = fully covered
+
+    # Reinforcement capacity: resources available for building more ships
+    resources = getattr(player, "resources", None)
+    if resources:
+        materials = float(getattr(resources, "materials", 0))
+        money = float(getattr(resources, "money", 0))
+        # Can we build at least one cruiser? (5 materials, some money for upkeep)
+        feats["reinforcement_capacity"] = min(1.0, (materials / 5.0 + money / 8.0) * 0.5)
+    else:
+        feats["reinforcement_capacity"] = 0.0
+
+    # Offensive readiness: combination of fleet concentration, ship quality, and mobility
+    ship_designs = getattr(player, "ship_designs", {})
+    avg_firepower = 0.0
+    design_count = 0
+    for cls in ["interceptor", "cruiser", "dreadnought"]:
+        design = ship_designs.get(cls)
+        if design:
+            avg_firepower += float(getattr(design, "cannons", 0)) + 0.8 * float(getattr(design, "missiles", 0))
+            design_count += 1
+    if design_count > 0:
+        avg_firepower /= design_count
+
+    feats["offensive_readiness"] = min(1.0,
+        0.4 * feats["fleet_concentration"] +
+        0.3 * min(1.0, avg_firepower / 3.0) +
+        0.3 * min(1.0, total_ships / 6.0)
+    )
+
     return feats
