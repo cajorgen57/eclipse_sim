@@ -205,7 +205,35 @@ async def predict(request: PredictRequest) -> Dict[str, Any]:
                 result["features"] = extracted_features
             except Exception as e:
                 result["features"] = {"error": str(e)}
-        
+
+            # Include opponent analysis
+            try:
+                from eclipse_ai.opponents import analyze_state as opp_analyze
+                rd = getattr(state, "round_index", getattr(state, "round", 1))
+                me_id = getattr(state, "active_player_id", None) or request.state.get("active_player")
+                models, tmap = opp_analyze(state, my_id=me_id, round_idx=rd)
+                opponent_data = {}
+                for pid, model in models.items():
+                    m = model.metrics
+                    opponent_data[str(pid)] = {
+                        "style": getattr(model.style, "name", str(model.style)) if model.style else "Unknown",
+                        "confidence": round(model.confidence, 2),
+                        "aggression": round(m.aggression, 2),
+                        "expansion": round(m.expansion, 2),
+                        "tech_pace": round(m.tech_pace, 2),
+                        "fleet_power": round(m.fleet_power, 2),
+                        "mobility": round(m.mobility, 2),
+                        "border_pressure": round(m.border_pressure, 2),
+                        "risk_tolerance": round(m.risk_tolerance, 2),
+                    }
+                result["opponents"] = opponent_data
+                if tmap:
+                    result["threat_summary"] = {
+                        str(k): round(v, 2) for k, v in tmap.danger_by_opponent.items()
+                    }
+            except Exception:
+                pass
+
         return result
         
     except Exception as e:

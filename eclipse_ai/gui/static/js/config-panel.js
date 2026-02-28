@@ -113,11 +113,10 @@ class ConfigPanel {
                 console.error('window.resultsDisplay not initialized!');
             }
             
-            // Update board renderer with overlays from first plan
+            // Render plan overlays on the canvas for the top plan
             if (window.boardRenderer && result.plans && result.plans.length > 0) {
                 const overlays = result.plans[0].overlays || [];
-                // TODO: Implement overlay rendering in Canvas 2D renderer
-                console.log('Plan overlays:', overlays);
+                window.boardRenderer.setOverlays(overlays);
             }
             
             updateStatus('Prediction complete', 'success');

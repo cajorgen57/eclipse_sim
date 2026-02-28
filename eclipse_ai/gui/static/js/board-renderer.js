@@ -454,9 +454,12 @@ class BoardRenderer {
         // Render connections (wormholes)
         this.renderConnections();
         
+        // Render plan overlays (arrows, circles, icons, labels)
+        this.renderOverlays();
+
         // Render UI elements
         this.renderUI();
-        
+
         // Render tooltip if hovering over a hex
         if (this.hoveredHex && !this.isDragging) {
             this.renderTooltip();
@@ -1424,24 +1427,233 @@ class BoardRenderer {
         return color;
     }
     
+    // ========== Plan Overlay Rendering ==========
+
+    setOverlays(overlays) {
+        this.overlays = overlays;
+        this.render();
+    }
+
+    clearOverlays() {
+        this.overlays = null;
+        this.render();
+    }
+
+    renderOverlays() {
+        if (!this.overlays || this.overlays.length === 0) return;
+
+        this.ctx.save();
+        this.overlays.forEach(overlay => {
+            switch (overlay.type) {
+                case 'arrow':
+                    this._drawOverlayArrow(overlay);
+                    break;
+                case 'circle':
+                    this._drawOverlayCircle(overlay);
+                    break;
+                case 'icon':
+                    this._drawOverlayIcon(overlay);
+                    break;
+                case 'label':
+                    this._drawOverlayLabel(overlay);
+                    break;
+            }
+        });
+        this.ctx.restore();
+    }
+
+    _overlayColor(colorName) {
+        const colors = {
+            green: '#22c55e',
+            yellow: '#eab308',
+            orange: '#f97316',
+            red: '#ef4444',
+        };
+        return colors[colorName] || '#94a3b8';
+    }
+
+    _resolveOverlayHexPos(hexId) {
+        if (!hexId || !this.state?.map?.hexes) return null;
+        const hexData = this.state.map.hexes[hexId];
+        let coords;
+        if (hexData && hexData.axial_q !== undefined && hexData.axial_r !== undefined) {
+            coords = { q: hexData.axial_q, r: hexData.axial_r };
+        } else {
+            coords = this.parseHexId(hexId);
+        }
+        if (!coords) return null;
+        return this.hexToPixel(coords.q, coords.r);
+    }
+
+    _drawOverlayArrow(overlay) {
+        const fromPos = this._resolveOverlayHexPos(overlay.from);
+        const toPos = this._resolveOverlayHexPos(overlay.to);
+        if (!fromPos || !toPos) return;
+
+        const color = this._overlayColor(overlay.style?.color);
+        const width = (overlay.style?.width || 2) * this.zoom;
+
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = width;
+        this.ctx.globalAlpha = 0.8;
+        this.ctx.setLineDash([]);
+
+        // Draw line
+        this.ctx.beginPath();
+        this.ctx.moveTo(fromPos.x, fromPos.y);
+        this.ctx.lineTo(toPos.x, toPos.y);
+        this.ctx.stroke();
+
+        // Draw arrowhead
+        const angle = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x);
+        const headLen = 12 * this.zoom;
+        const headX = toPos.x - Math.cos(angle) * this.hexSize * this.zoom * 0.5;
+        const headY = toPos.y - Math.sin(angle) * this.hexSize * this.zoom * 0.5;
+
+        this.ctx.fillStyle = color;
+        this.ctx.beginPath();
+        this.ctx.moveTo(headX, headY);
+        this.ctx.lineTo(
+            headX - headLen * Math.cos(angle - Math.PI / 6),
+            headY - headLen * Math.sin(angle - Math.PI / 6)
+        );
+        this.ctx.lineTo(
+            headX - headLen * Math.cos(angle + Math.PI / 6),
+            headY - headLen * Math.sin(angle + Math.PI / 6)
+        );
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        this.ctx.globalAlpha = 1;
+    }
+
+    _drawOverlayCircle(overlay) {
+        const hexId = overlay.hex;
+        const pos = this._resolveOverlayHexPos(hexId);
+        if (!pos) return;
+
+        const color = this._overlayColor(overlay.style?.color);
+        const radius = this.hexSize * this.zoom * 0.8;
+
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = 3 * this.zoom;
+        this.ctx.globalAlpha = 0.7;
+
+        if (overlay.style?.dash) {
+            this.ctx.setLineDash([8 * this.zoom, 4 * this.zoom]);
+        } else {
+            this.ctx.setLineDash([]);
+        }
+
+        this.ctx.beginPath();
+        this.ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+        this.ctx.globalAlpha = 1;
+    }
+
+    _drawOverlayIcon(overlay) {
+        const pos = this._resolveOverlayHexPos(overlay.hex);
+        if (!pos) return;
+
+        const color = this._overlayColor(overlay.style?.color);
+        const size = 16 * this.zoom;
+
+        this.ctx.globalAlpha = 0.85;
+        this.ctx.fillStyle = color;
+
+        if (overlay.icon === 'build') {
+            // Hammer icon
+            this.ctx.font = `${size}px sans-serif`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('\u2692', pos.x + this.hexSize * this.zoom * 0.5, pos.y - this.hexSize * this.zoom * 0.5);
+        } else if (overlay.icon === 'influence') {
+            // Flag icon
+            this.ctx.font = `${size}px sans-serif`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('\u2691', pos.x + this.hexSize * this.zoom * 0.5, pos.y - this.hexSize * this.zoom * 0.5);
+        } else {
+            // Generic marker
+            this.drawCircle(
+                pos.x + this.hexSize * this.zoom * 0.4,
+                pos.y - this.hexSize * this.zoom * 0.4,
+                6 * this.zoom, color, null
+            );
+        }
+
+        this.ctx.globalAlpha = 1;
+    }
+
+    _drawOverlayLabel(overlay) {
+        const text = overlay.text || '';
+        if (!text) return;
+
+        const color = this._overlayColor(overlay.style?.color);
+        let x, y;
+
+        if (overlay.anchor?.type === 'hex' && overlay.anchor.id) {
+            const pos = this._resolveOverlayHexPos(overlay.anchor.id);
+            if (!pos) return;
+            x = pos.x;
+            y = pos.y + this.hexSize * this.zoom * 0.75;
+        } else {
+            // Screen-anchored labels: stack in bottom-left corner
+            const step = overlay.meta?.step || 1;
+            x = 20;
+            y = this.canvas.height - 30 - (step - 1) * 22;
+            this.ctx.textAlign = 'left';
+            this._drawLabelBox(x, y, text, color);
+            return;
+        }
+
+        this._drawLabelBox(x, y, text, color);
+    }
+
+    _drawLabelBox(x, y, text, color) {
+        const fontSize = 10;
+        this.ctx.font = `${fontSize}px monospace`;
+        const textWidth = this.ctx.measureText(text).width;
+        const padding = 4;
+        const boxW = textWidth + padding * 2;
+        const boxH = fontSize + padding * 2;
+
+        // Background
+        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        this.ctx.fillRect(x - boxW / 2, y - boxH / 2, boxW, boxH);
+
+        // Border
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(x - boxW / 2, y - boxH / 2, boxW, boxH);
+
+        // Text
+        this.ctx.fillStyle = color;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(text, x, y);
+    }
+
     // Public API
     setState(state) {
         this.state = state;
+        this.overlays = null;
         this.render();
     }
-    
+
     resetView() {
         this.zoom = 1;
         this.offsetX = 0;
         this.offsetY = 0;
         this.render();
     }
-    
+
     zoomIn() {
         this.zoom = Math.min(3, this.zoom * 1.2);
         this.render();
     }
-    
+
     zoomOut() {
         this.zoom = Math.max(0.3, this.zoom / 1.2);
         this.render();
